@@ -464,10 +464,6 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
     setAiSuccessMessage(null);
 
     try {
-      // Simulate/call Gemini API with local heuristics or remote proxy
-      const primaryImg = uploadedImages.length > 0 ? uploadedImages[0] : null;
-
-      // Smart heuristic defaults if image or brand is selected
       setTimeout(() => {
         const detectedBrand = carBrand || 'Mahindra';
         const detectedModel = carModel || (detectedBrand === 'Mahindra' ? 'XUV700' : 'Swift');
@@ -774,304 +770,283 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: '#0B1220' }}
+      style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Top Header Bar */}
-      <View style={styles.topHeader}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <BrandLogo size="sm" variant="icon" theme="dark" showTagline={false} />
-          <View style={{ marginLeft: 10 }}>
-            <Text style={styles.headerTitle}>Post Your Ad</Text>
-            <Text style={styles.headerSub}>Sell genuine spare parts fast</Text>
-          </View>
+      {/* Native-style header */}
+      <View style={styles.nativeHeader}>
+        <TouchableOpacity
+          style={styles.headerBack}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.75}
+        >
+          <IconButton icon="arrow-left" size={22} iconColor="#FFFFFF" style={{ margin: 0 }} />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Text style={styles.nativeHeaderTitle}>Sell Your Part</Text>
+          <Text style={styles.nativeHeaderSub}>Post a spare part for buyers</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {isTaxonomyLoading && (
-            <View style={styles.syncBadge}>
-              <ActivityIndicator size={10} color="#94A3B8" />
-              <Text style={styles.syncText}>Syncing...</Text>
-            </View>
-          )}
-          <View style={styles.freeBadge}>
-            <Text style={styles.freeBadgeText}>Free Listing</Text>
-          </View>
+
+        <TouchableOpacity
+          style={styles.saveDraftButton}
+          onPress={() => Alert.alert('Save Draft', 'Your draft can be saved here.')}
+          activeOpacity={0.75}
+        >
+          <IconButton icon="content-save-outline" size={19} iconColor="#FFFFFF" style={{ margin: 0 }} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Small progress indicator */}
+      <View style={styles.progressWrap}>
+        <View style={styles.progressTrack}>
+          <View style={styles.progressFill} />
         </View>
+        <Text style={styles.progressLabel}>Create your listing</Text>
       </View>
 
       <ScrollView
-        style={styles.scrollArea}
-        contentContainerStyle={{ padding: 14, paddingBottom: 100 }}
+        style={styles.nativeScroll}
+        contentContainerStyle={styles.nativeContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Error Alert Box */}
         {errorMessage && (
           <View style={styles.errorBanner}>
-            <IconButton icon="alert-circle-outline" size={18} iconColor="#EF4444" style={{ margin: 0 }} />
+            <IconButton icon="alert-circle-outline" size={19} iconColor="#DC2626" style={{ margin: 0 }} />
             <Text style={styles.errorText}>{errorMessage}</Text>
           </View>
         )}
 
-        {/* AI Success Notification */}
         {aiSuccessMessage && (
           <View style={styles.aiSuccessBanner}>
-            <Text style={{ fontSize: 14, marginRight: 6 }}>✨</Text>
+            <IconButton icon="check-circle-outline" size={19} iconColor="#059669" style={{ margin: 0 }} />
             <Text style={styles.aiSuccessText}>{aiSuccessMessage}</Text>
           </View>
         )}
 
-        {/* 1. Photos Section */}
-        <Surface style={styles.cardSection} elevation={1}>
-          <View style={styles.sectionHeaderRow}>
+        {/* PHOTOS */}
+        <View style={styles.nativeSection}>
+          <View style={styles.sectionTopRow}>
             <View>
-              <Text style={styles.sectionTitle}>📷 UPLOAD PHOTOS *</Text>
-              <Text style={styles.sectionSubtitle}>Take live photo or select from gallery</Text>
+              <Text style={styles.nativeSectionTitle}>Photos</Text>
+              <Text style={styles.nativeSectionHint}>Add clear photos of your part</Text>
             </View>
-            <View style={styles.photoCountBadge}>
-              <Text style={styles.photoCountText}>{uploadedImages.length} / 6 Photos</Text>
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>{uploadedImages.length}/6</Text>
             </View>
           </View>
 
-          {/* Upload Progress */}
-          {uploadProgress && (
-            <View style={styles.progressBox}>
-              <ActivityIndicator size="small" color="#0066FF" />
-              <Text style={styles.progressText}>{uploadProgress}</Text>
-            </View>
-          )}
-
-          {/* Empty Upload State */}
-          {uploadedImages.length === 0 && (
-            <View
-              style={[
-                styles.emptyUploadBox,
-                submittedAttempt && uploadedImages.length === 0 && styles.errorInputBox,
-              ]}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <IconButton icon="camera" size={24} iconColor="#0066FF" style={{ margin: 0 }} />
-                <Text style={{ color: '#94A3B8', marginHorizontal: 6 }}>|</Text>
-                <IconButton icon="image-multiple" size={24} iconColor="#334155" style={{ margin: 0 }} />
+          {uploadedImages.length === 0 ? (
+            <View style={styles.photoEmpty}>
+              <View style={styles.photoEmptyIcon}>
+                <IconButton icon="camera-plus-outline" size={28} iconColor="#2563EB" style={{ margin: 0 }} />
               </View>
-              <Text style={styles.emptyUploadTitle}>Add Spare Part Photos</Text>
-              <Text style={styles.emptyUploadSub}>Take a live photo or select up to 6 pictures</Text>
+              <Text style={styles.photoEmptyTitle}>Add photos</Text>
+              <Text style={styles.photoEmptyHint}>First photo will be your cover image</Text>
 
-              {/* Action Buttons Side by Side */}
-              <View style={styles.emptyBtnRow}>
-                <TouchableOpacity
-                  style={styles.cameraActionBtn}
-                  onPress={handlePickCamera}
-                  activeOpacity={0.85}
-                >
-                  <IconButton icon="camera" size={16} iconColor="#FFFFFF" style={{ margin: 0 }} />
-                  <Text style={styles.cameraActionText}>Take Photo</Text>
+              <View style={styles.photoActionRow}>
+                <TouchableOpacity style={styles.photoPrimary} onPress={handlePickCamera}>
+                  <IconButton icon="camera-outline" size={19} iconColor="#FFFFFF" style={{ margin: 0 }} />
+                  <Text style={styles.photoPrimaryText}>Camera</Text>
                 </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.galleryActionBtn}
-                  onPress={handlePickGallery}
-                  activeOpacity={0.85}
-                >
-                  <IconButton icon="image-multiple" size={16} iconColor="#FFFFFF" style={{ margin: 0 }} />
-                  <Text style={styles.galleryActionText}>Choose Gallery</Text>
+                <TouchableOpacity style={styles.photoSecondary} onPress={handlePickGallery}>
+                  <IconButton icon="image-multiple-outline" size={19} iconColor="#0F172A" style={{ margin: 0 }} />
+                  <Text style={styles.photoSecondaryText}>Gallery</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          )}
-
-          {/* 3-Column Preview Grid */}
-          {uploadedImages.length > 0 && (
-            <View style={{ marginTop: 6 }}>
-              {/* Quick Add Bar */}
-              {uploadedImages.length < 6 && (
-                <View style={styles.quickAddBar}>
-                  <Text style={styles.quickAddLabel}>Add more:</Text>
-                  <TouchableOpacity style={styles.quickAddCameraBtn} onPress={handlePickCamera}>
-                    <IconButton icon="camera" size={14} iconColor="#FFFFFF" style={{ margin: 0 }} />
-                    <Text style={styles.quickAddBtnText}>Camera</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.quickAddGalleryBtn} onPress={handlePickGallery}>
-                    <IconButton icon="image" size={14} iconColor="#FFFFFF" style={{ margin: 0 }} />
-                    <Text style={styles.quickAddBtnText}>Gallery</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              <View style={styles.gridContainer}>
-                {Array.from({ length: 6 }).map((_, slotIndex) => {
-                  const imgUri = uploadedImages[slotIndex];
-                  if (imgUri) {
-                    const isCover = slotIndex === 0;
-                    return (
-                      <View
-                        key={slotIndex}
-                        style={[
-                          styles.imageSlotBox,
-                          isCover && styles.coverImageSlot,
-                        ]}
-                      >
-                        <Image source={{ uri: imgUri }} style={styles.slotImage} />
-
-                        {/* Cover Tag */}
-                        {isCover && (
-                          <View style={styles.coverBadge}>
-                            <Text style={styles.coverBadgeText}>★ COVER</Text>
-                          </View>
-                        )}
-
-                        {/* Delete Button */}
-                        <TouchableOpacity
-                          style={styles.deletePhotoBtn}
-                          onPress={() => handleRemoveImage(slotIndex)}
-                        >
-                          <IconButton icon="close" size={12} iconColor="#FFFFFF" style={{ margin: 0 }} />
-                        </TouchableOpacity>
-
-                        {/* Bottom Actions Overlay */}
-                        <View style={styles.slotActionsOverlay}>
-                          {!isCover && (
-                            <TouchableOpacity
-                              style={styles.makeCoverBtn}
-                              onPress={() => handleSetCoverPhoto(slotIndex)}
-                            >
-                              <Text style={styles.makeCoverText}>Cover</Text>
-                            </TouchableOpacity>
-                          )}
-                          <View style={{ flexDirection: 'row', marginLeft: 'auto' }}>
-                            {slotIndex > 0 && (
-                              <TouchableOpacity
-                                style={styles.moveArrowBtn}
-                                onPress={() => handleMoveImage(slotIndex, 'left')}
-                              >
-                                <IconButton icon="chevron-left" size={14} iconColor="#FFFFFF" style={{ margin: 0 }} />
-                              </TouchableOpacity>
-                            )}
-                            {slotIndex < uploadedImages.length - 1 && (
-                              <TouchableOpacity
-                                style={styles.moveArrowBtn}
-                                onPress={() => handleMoveImage(slotIndex, 'right')}
-                              >
-                                <IconButton icon="chevron-right" size={14} iconColor="#FFFFFF" style={{ margin: 0 }} />
-                              </TouchableOpacity>
-                            )}
-                          </View>
-                        </View>
+          ) : (
+            <View>
+              <View style={styles.photoGrid}>
+                {uploadedImages.map((uri, index) => (
+                  <View key={`${uri}-${index}`} style={styles.photoTile}>
+                    <Image source={{ uri }} style={styles.photoImage} />
+                    {index === 0 && (
+                      <View style={styles.coverPill}>
+                        <Text style={styles.coverPillText}>COVER</Text>
                       </View>
-                    );
-                  }
+                    )}
+                    <TouchableOpacity
+                      style={styles.photoDelete}
+                      onPress={() =>
+                        setUploadedImages((prev) => prev.filter((_, i) => i !== index))
+                      }
+                    >
+                      <IconButton icon="close" size={15} iconColor="#FFFFFF" style={{ margin: 0 }} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
 
-                  // Next available slot picker
-                  if (slotIndex === uploadedImages.length && uploadedImages.length < 6) {
-                    return (
-                      <View key={slotIndex} style={styles.nextSlotPicker}>
-                        <TouchableOpacity style={styles.nextSlotCamBtn} onPress={handlePickCamera}>
-                          <IconButton icon="camera" size={16} iconColor="#0066FF" style={{ margin: 0 }} />
-                          <Text style={styles.nextSlotTextBlue}>Camera</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.nextSlotGalBtn} onPress={handlePickGallery}>
-                          <IconButton icon="image" size={16} iconColor="#334155" style={{ margin: 0 }} />
-                          <Text style={styles.nextSlotTextGray}>Gallery</Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  }
-
-                  // Empty placeholder slot
-                  return (
-                    <View key={slotIndex} style={styles.emptySlotPlaceholder}>
-                      <Text style={styles.emptySlotNumber}>{slotIndex + 1}</Text>
-                    </View>
-                  );
-                })}
+                {uploadedImages.length < 6 && (
+                  <TouchableOpacity
+                    style={styles.photoAddTile}
+                    onPress={handlePickGallery}
+                    activeOpacity={0.8}
+                  >
+                    <IconButton icon="plus" size={24} iconColor="#2563EB" style={{ margin: 0 }} />
+                    <Text style={styles.photoAddText}>Add</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-            </View>
-          )}
 
-          {/* Direct URL Input Toggle */}
-          <View style={styles.urlToggleRow}>
-            <TouchableOpacity onPress={() => setShowDirectUrlInput((prev) => !prev)}>
-              <Text style={styles.urlToggleText}>
-                {showDirectUrlInput ? '− Hide Image URL Input' : '+ Or Add Image by Direct URL'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {showDirectUrlInput && (
-            <View style={styles.urlInputRow}>
-              <RNTextInput
-                value={directUrlInput}
-                onChangeText={setDirectUrlInput}
-                placeholder="https://example.com/part-photo.jpg"
-                placeholderTextColor="#94A3B8"
-                style={styles.urlTextInput}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity
-                style={styles.urlAddBtn}
-                onPress={handleAddDirectUrl}
-                disabled={!directUrlInput.trim() || uploadedImages.length >= 6}
-              >
-                <Text style={styles.urlAddBtnText}>Add URL</Text>
+              <TouchableOpacity style={styles.quickCamera} onPress={handlePickCamera}>
+                <IconButton icon="camera-outline" size={18} iconColor="#2563EB" style={{ margin: 0 }} />
+                <Text style={styles.quickCameraText}>Take another photo</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* Smart AI Auto-Fill Button */}
           <TouchableOpacity
-            style={[styles.aiAutofillBtn, isAutoFilling && { opacity: 0.7 }]}
+            style={styles.aiButton}
             onPress={handleAutoFillAI}
             disabled={isAutoFilling}
-            activeOpacity={0.85}
+            activeOpacity={0.8}
           >
             {isAutoFilling ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.aiAutofillBtnText}>AI Analyzing Photo & Auto-Filling...</Text>
-              </View>
+              <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 7 }} />
             ) : (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ fontSize: 16, marginRight: 6 }}>✨</Text>
-                <Text style={styles.aiAutofillBtnText}>Auto-Fill Details with AI</Text>
-              </View>
+              <Text style={styles.aiIcon}>✦</Text>
             )}
+            <Text style={styles.aiButtonText}>
+              {isAutoFilling ? 'Analyzing photo...' : 'Auto-fill details with AI'}
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.aiAutofillHint}>
-            Automatically populates title, brand, model & specs to save you time
-          </Text>
-        </Surface>
+        </View>
 
-        {/* 2. Vehicle & Part Fitment (Cascading Selectors) */}
-        <Surface style={styles.cardSection} elevation={1}>
-          <Text style={styles.sectionTitle}>🚗 VEHICLE & PART FITMENT *</Text>
+        {/* PART */}
+        <View style={styles.nativeSection}>
+          <Text style={styles.nativeSectionTitle}>Part details</Text>
+          <Text style={styles.nativeSectionHint}>Tell buyers exactly what you are selling</Text>
 
-          {/* Brand Picker Trigger */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>CAR BRAND *</Text>
+          <View style={styles.segmentRow}>
+            {CONDITION_OPTIONS.slice(0, 2).map((opt) => (
+              <TouchableOpacity
+                key={opt.id}
+                style={[
+                  styles.segmentButton,
+                  condition === opt.id && styles.segmentButtonActive,
+                ]}
+                onPress={() => setCondition(opt.id as any)}
+              >
+                <Text
+                  style={[
+                    styles.segmentText,
+                    condition === opt.id && styles.segmentTextActive,
+                  ]}
+                >
+                  {opt.id === 'Brand New' ? 'New' : 'Used'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>PART NAME *</Text>
             <TouchableOpacity
               style={[
-                styles.selectTrigger,
-                submittedAttempt && !carBrand && styles.errorInputBox,
+                styles.nativePicker,
+                submittedAttempt && !partName && styles.fieldError,
+              ]}
+              onPress={() => {
+                setPickerSearchQuery('');
+                setPickerModalType('partName');
+              }}
+              disabled={!category}
+            >
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="cog-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text
+                style={[
+                  styles.pickerValue,
+                  !partName && styles.pickerPlaceholder,
+                ]}
+                numberOfLines={1}
+              >
+                {partName || (category ? 'Select spare part' : 'Select category first')}
+              </Text>
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>CATEGORY *</Text>
+            <TouchableOpacity
+              style={[
+                styles.nativePicker,
+                submittedAttempt && !category && styles.fieldError,
+              ]}
+              onPress={() => {
+                setPickerSearchQuery('');
+                setPickerModalType('category');
+              }}
+            >
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="shape-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text
+                style={[
+                  styles.pickerValue,
+                  !category && styles.pickerPlaceholder,
+                ]}
+                numberOfLines={1}
+              >
+                {category ? translateDynamic(category, language) : 'Select part category'}
+              </Text>
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>AD TITLE *</Text>
+            <RNTextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Example: Swift front bumper"
+              placeholderTextColor="#94A3B8"
+              style={[
+                styles.nativeTextInput,
+                submittedAttempt && !title.trim() && styles.fieldError,
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* VEHICLE */}
+        <View style={styles.nativeSection}>
+          <Text style={styles.nativeSectionTitle}>Vehicle compatibility</Text>
+          <Text style={styles.nativeSectionHint}>Help buyers find the right fit</Text>
+
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>CAR BRAND *</Text>
+            <TouchableOpacity
+              style={[
+                styles.nativePicker,
+                submittedAttempt && !carBrand && styles.fieldError,
               ]}
               onPress={() => {
                 setPickerSearchQuery('');
                 setPickerModalType('brand');
               }}
             >
-              <Text style={carBrand ? styles.selectTriggerValue : styles.selectTriggerPlaceholder}>
-                {carBrand || 'Select Car Brand'}
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="car-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text style={[styles.pickerValue, !carBrand && styles.pickerPlaceholder]}>
+                {carBrand || 'Select car brand'}
               </Text>
-              <IconButton icon="chevron-down" size={20} iconColor="#64748B" style={{ margin: 0 }} />
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
             </TouchableOpacity>
           </View>
 
-          {/* Model Picker Trigger */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>CAR MODEL *</Text>
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>CAR MODEL *</Text>
             <TouchableOpacity
               style={[
-                styles.selectTrigger,
-                !carBrand && styles.selectTriggerDisabled,
-                submittedAttempt && !carModel && styles.errorInputBox,
+                styles.nativePicker,
+                !carBrand && styles.nativePickerDisabled,
+                submittedAttempt && !carModel && styles.fieldError,
               ]}
               disabled={!carBrand}
               onPress={() => {
@@ -1079,215 +1054,148 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
                 setPickerModalType('model');
               }}
             >
-              <Text style={carModel ? styles.selectTriggerValue : styles.selectTriggerPlaceholder}>
-                {carModel || (carBrand ? 'Select Car Model' : 'Select Car Brand First')}
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="car-side" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text style={[styles.pickerValue, !carModel && styles.pickerPlaceholder]}>
+                {carModel || (carBrand ? 'Select car model' : 'Select brand first')}
               </Text>
-              <IconButton icon="chevron-down" size={20} iconColor="#64748B" style={{ margin: 0 }} />
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
             </TouchableOpacity>
           </View>
 
-          {/* Optional Car Variant */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>CAR VARIANT / TRIM (OPTIONAL)</Text>
-            <TextInput
-              value={carVariant}
-              onChangeText={(val) => {
-                setCarVariant(val);
-                updateAutoTitle(carBrand, carModel, val, partName);
-              }}
-              mode="outlined"
-              placeholder="e.g. VXI, ZXI+, Diesel, Petrol, AT"
-              placeholderTextColor="#94A3B8"
-              outlineColor="#E2E8F0"
-              activeOutlineColor="#0F172A"
-              style={styles.textInputPaper}
-            />
+          <View style={styles.twoFieldRow}>
+            <View style={styles.halfField}>
+              <Text style={styles.fieldLabel}>VARIANT</Text>
+              <RNTextInput
+                value={carVariant}
+                onChangeText={(val) => {
+                  setCarVariant(val);
+                  updateAutoTitle(carBrand, carModel, val, partName);
+                }}
+                placeholder="Optional"
+                placeholderTextColor="#94A3B8"
+                style={styles.nativeTextInput}
+              />
+            </View>
+
+            <View style={styles.halfField}>
+              <Text style={styles.fieldLabel}>YEAR</Text>
+              <RNTextInput
+                placeholder="e.g. 2022"
+                placeholderTextColor="#94A3B8"
+                style={styles.nativeTextInput}
+              />
+            </View>
           </View>
+        </View>
 
-          {/* Part Category Picker Trigger */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>PART CATEGORY *</Text>
-            <TouchableOpacity
-              style={[
-                styles.selectTrigger,
-                submittedAttempt && !category && styles.errorInputBox,
-              ]}
-              onPress={() => {
-                setPickerSearchQuery('');
-                setPickerModalType('category');
-              }}
-            >
-              <Text style={category ? styles.selectTriggerValue : styles.selectTriggerPlaceholder}>
-                {category ? translateDynamic(category, language) : 'Select Category'}
-              </Text>
-              <IconButton icon="chevron-down" size={20} iconColor="#64748B" style={{ margin: 0 }} />
-            </TouchableOpacity>
-          </View>
+        {/* PRICE + CONDITION */}
+        <View style={styles.nativeSection}>
+          <Text style={styles.nativeSectionTitle}>Price & condition</Text>
 
-          {/* Specific Part Name Trigger */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>SPECIFIC SPARE PART *</Text>
-            <TouchableOpacity
-              style={[
-                styles.selectTrigger,
-                !category && styles.selectTriggerDisabled,
-                submittedAttempt && !partName && styles.errorInputBox,
-              ]}
-              disabled={!category}
-              onPress={() => {
-                setPickerSearchQuery('');
-                setPickerModalType('partName');
-              }}
-            >
-              <Text style={partName ? styles.selectTriggerValue : styles.selectTriggerPlaceholder}>
-                {partName || (category ? 'Select Specific Spare Part' : 'Select Category First')}
-              </Text>
-              <IconButton icon="chevron-down" size={20} iconColor="#64748B" style={{ margin: 0 }} />
-            </TouchableOpacity>
-          </View>
-        </Surface>
-
-        {/* 3. Details, Condition & Price */}
-        <Surface style={styles.cardSection} elevation={1}>
-          <Text style={styles.sectionTitle}>🏷️ DETAILS, CONDITION & PRICE *</Text>
-
-          {/* Ad Title */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>AD TITLE *</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              mode="outlined"
-              placeholder="e.g. Mahindra XUV700 Front Bumper Assembly"
-              placeholderTextColor="#94A3B8"
-              outlineColor={submittedAttempt && !title.trim() ? '#EF4444' : '#E2E8F0'}
-              activeOutlineColor="#0F172A"
-              style={styles.textInputPaper}
-            />
-          </View>
-
-          {/* Price */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>PRICE (₹ INR) *</Text>
-            <TextInput
+          <View style={styles.priceBox}>
+            <Text style={styles.priceSymbol}>₹</Text>
+            <RNTextInput
               value={price ? formatIndianCurrency(price) : ''}
-              onChangeText={(val) => {
-                const rawDigits = val.replace(/[^0-9]/g, '');
-                setPrice(rawDigits);
-              }}
+              onChangeText={(val) => setPrice(val.replace(/[^0-9]/g, ''))}
               keyboardType="numeric"
-              mode="outlined"
-              placeholder="e.g. 2,500"
+              placeholder="Enter your price"
               placeholderTextColor="#94A3B8"
-              left={<TextInput.Affix text="₹ " textStyle={{ fontWeight: 'bold', color: '#0F172A' }} />}
-              outlineColor={
-                submittedAttempt && (!price || parseFloat(price) <= 0) ? '#EF4444' : '#E2E8F0'
-              }
-              activeOutlineColor="#0F172A"
-              style={styles.textInputPaper}
+              style={styles.priceInput}
             />
           </View>
 
-          {/* Condition Selector */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>CONDITION *</Text>
-            <View style={styles.conditionGrid}>
-              {CONDITION_OPTIONS.map((opt) => {
-                const isSelected = condition === opt.id;
-                return (
-                  <TouchableOpacity
-                    key={opt.id}
-                    style={[
-                      styles.conditionBtn,
-                      isSelected ? styles.conditionBtnActive : styles.conditionBtnInactive,
-                    ]}
-                    onPress={() => setCondition(opt.id as any)}
-                  >
-                    <Text style={{ fontSize: 13, marginRight: 4 }}>{opt.icon}</Text>
-                    <Text
-                      style={[
-                        styles.conditionBtnText,
-                        isSelected && styles.conditionBtnTextActive,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+          <Text style={[styles.fieldLabel, { marginTop: 14 }]}>CONDITION *</Text>
+          <View style={styles.conditionCompactRow}>
+            {CONDITION_OPTIONS.map((opt) => {
+              const active = condition === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  style={[styles.conditionChip, active && styles.conditionChipActive]}
+                  onPress={() => setCondition(opt.id as any)}
+                >
+                  <Text style={[styles.conditionChipText, active && styles.conditionChipTextActive]}>
+                    {opt.icon} {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* DESCRIPTION */}
+        <View style={styles.nativeSection}>
+          <View style={styles.sectionTopRow}>
+            <View>
+              <Text style={styles.nativeSectionTitle}>Description</Text>
+              <Text style={styles.nativeSectionHint}>Mention condition, OEM number and fitment</Text>
             </View>
+            <Text style={styles.charCount}>{description.length}/1000</Text>
           </View>
 
-          {/* Description */}
-          <View style={styles.inputGroup}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={styles.inputLabel}>DESCRIPTION & FITMENT NOTES *</Text>
-              <Text style={styles.charCountText}>{description.length}/1000</Text>
-            </View>
-            <TextInput
-              value={description}
-              onChangeText={(val) => setDescription(val.slice(0, 1000))}
-              multiline
-              numberOfLines={3}
-              mode="outlined"
-              placeholder="Mention condition, OEM part number, compatibility details, or warranty."
-              placeholderTextColor="#94A3B8"
-              outlineColor={submittedAttempt && !description.trim() ? '#EF4444' : '#E2E8F0'}
-              activeOutlineColor="#0F172A"
-              style={[styles.textInputPaper, { minHeight: 70 }]}
-            />
-          </View>
-        </Surface>
+          <RNTextInput
+            value={description}
+            onChangeText={(val) => setDescription(val.slice(0, 1000))}
+            multiline
+            textAlignVertical="top"
+            placeholder="Describe the part, condition, compatibility, warranty..."
+            placeholderTextColor="#94A3B8"
+            style={[
+              styles.descriptionInput,
+              submittedAttempt && !description.trim() && styles.fieldError,
+            ]}
+          />
+        </View>
 
-        {/* 4. Location Section with Interactive Map */}
-        <Surface style={styles.cardSection} elevation={1}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>📍 ITEM LOCATION *</Text>
+        {/* LOCATION */}
+        <View style={styles.nativeSection}>
+          <View style={styles.sectionTopRow}>
+            <View>
+              <Text style={styles.nativeSectionTitle}>Location</Text>
+              <Text style={styles.nativeSectionHint}>Where is the part available?</Text>
+            </View>
             <TouchableOpacity
-              style={styles.gpsTriggerBtn}
+              style={styles.gpsButton}
               onPress={handleDetectLocation}
               disabled={isDetectingLocation}
             >
               {isDetectingLocation ? (
-                <ActivityIndicator size={12} color="#0066FF" style={{ marginRight: 4 }} />
+                <ActivityIndicator size={12} color="#2563EB" />
               ) : (
-                <IconButton icon="crosshairs-gps" size={14} iconColor="#0066FF" style={{ margin: 0 }} />
+                <IconButton icon="crosshairs-gps" size={16} iconColor="#2563EB" style={{ margin: 0 }} />
               )}
-              <Text style={styles.gpsTriggerText}>
-                {isDetectingLocation ? 'Detecting...' : 'Use GPS'}
-              </Text>
+              <Text style={styles.gpsText}>{isDetectingLocation ? 'Detecting' : 'Use GPS'}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* State Picker Trigger */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>STATE *</Text>
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>STATE *</Text>
             <TouchableOpacity
-              style={[
-                styles.selectTrigger,
-                submittedAttempt && !selectedState && styles.errorInputBox,
-              ]}
+              style={[styles.nativePicker, submittedAttempt && !selectedState && styles.fieldError]}
               onPress={() => {
                 setPickerSearchQuery('');
                 setPickerModalType('state');
               }}
             >
-              <Text style={selectedState ? styles.selectTriggerValue : styles.selectTriggerPlaceholder}>
-                {selectedState || 'Select State'}
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="map-marker-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text style={[styles.pickerValue, !selectedState && styles.pickerPlaceholder]}>
+                {selectedState || 'Select state'}
               </Text>
-              <IconButton icon="chevron-down" size={20} iconColor="#64748B" style={{ margin: 0 }} />
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
             </TouchableOpacity>
           </View>
 
-          {/* District Picker Trigger */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>DISTRICT / CITY *</Text>
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>DISTRICT / CITY *</Text>
             <TouchableOpacity
               style={[
-                styles.selectTrigger,
-                !selectedState && styles.selectTriggerDisabled,
-                submittedAttempt && !selectedDistrict && styles.errorInputBox,
+                styles.nativePicker,
+                !selectedState && styles.nativePickerDisabled,
+                submittedAttempt && !selectedDistrict && styles.fieldError,
               ]}
               disabled={!selectedState}
               onPress={() => {
@@ -1295,104 +1203,111 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
                 setPickerModalType('district');
               }}
             >
-              <Text style={selectedDistrict ? styles.selectTriggerValue : styles.selectTriggerPlaceholder}>
-                {selectedDistrict || (selectedState ? 'Select District / City' : 'Select State First')}
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="city-variant-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text style={[styles.pickerValue, !selectedDistrict && styles.pickerPlaceholder]}>
+                {selectedDistrict || (selectedState ? 'Select district / city' : 'Select state first')}
               </Text>
-              <IconButton icon="chevron-down" size={20} iconColor="#64748B" style={{ margin: 0 }} />
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
             </TouchableOpacity>
           </View>
 
-          {/* Sub-Area / Town */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>SUB-AREA / TOWN (OPTIONAL)</Text>
-            <TextInput
-              value={selectedArea}
-              onChangeText={setSelectedArea}
-              mode="outlined"
-              placeholder="e.g. Pallapatti, Sector 18, Town Hall"
-              placeholderTextColor="#94A3B8"
-              outlineColor="#E2E8F0"
-              activeOutlineColor="#0F172A"
-              style={styles.textInputPaper}
-            />
-          </View>
+          <RNTextInput
+            value={selectedArea}
+            onChangeText={setSelectedArea}
+            placeholder="Area / Town (optional)"
+            placeholderTextColor="#94A3B8"
+            style={styles.nativeTextInput}
+          />
 
-          {/* Interactive Map Pin Card Trigger */}
           <TouchableOpacity
-            style={styles.mapCardTrigger}
+            style={styles.mapButton}
             onPress={() => setShowMapModal(true)}
-            activeOpacity={0.85}
+            activeOpacity={0.8}
           >
-            <View style={styles.mapCardIconBox}>
-              <IconButton icon="map-marker-radius" size={22} iconColor="#15803D" style={{ margin: 0 }} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 8 }}>
-              <Text style={styles.mapCardTitle}>Map Pin Location</Text>
-              <Text style={styles.mapCardSub} numberOfLines={1}>
+            <IconButton icon="map-marker-radius-outline" size={21} iconColor="#2563EB" style={{ margin: 0 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.mapButtonTitle}>
+                {lat && lng ? 'Location pinned' : 'Choose on map'}
+              </Text>
+              <Text style={styles.mapButtonSub} numberOfLines={1}>
                 {selectedDistrict
-                  ? `Pinned: ${selectedDistrict}, ${selectedState}`
-                  : 'Tap to select exact shop or garage pin'}
+                  ? `${selectedDistrict}, ${selectedState}`
+                  : 'Pin your shop or garage location'}
               </Text>
             </View>
-            <Text style={styles.mapCardAction}>Expand Map 📍</Text>
+            <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
           </TouchableOpacity>
-        </Surface>
+        </View>
 
-        {/* 5. Seller Contact Information */}
-        <Surface style={styles.cardSection} elevation={1}>
-          <Text style={styles.sectionTitle}>👤 SELLER CONTACT INFORMATION *</Text>
+        {/* CONTACT */}
+        <View style={styles.nativeSection}>
+          <Text style={styles.nativeSectionTitle}>Contact</Text>
+          <Text style={styles.nativeSectionHint}>Buyers will use this to reach you</Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>SELLER NAME *</Text>
-            <TextInput
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>NAME *</Text>
+            <RNTextInput
               value={contactName}
               onChangeText={setContactName}
-              mode="outlined"
-              placeholder="e.g. Rahul Sharma"
+              placeholder="Your name"
               placeholderTextColor="#94A3B8"
-              outlineColor={submittedAttempt && !contactName.trim() ? '#EF4444' : '#E2E8F0'}
-              activeOutlineColor="#0F172A"
-              style={styles.textInputPaper}
+              style={[
+                styles.nativeTextInput,
+                submittedAttempt && !contactName.trim() && styles.fieldError,
+              ]}
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>PHONE NUMBER *</Text>
-            <TextInput
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>PHONE *</Text>
+            <RNTextInput
               value={contactPhone}
               onChangeText={setContactPhone}
               keyboardType="phone-pad"
-              mode="outlined"
-              placeholder="e.g. 9876543210"
+              placeholder="10 digit phone number"
               placeholderTextColor="#94A3B8"
-              outlineColor={
-                submittedAttempt && (!contactPhone.trim() || contactPhone.trim().length < 8)
-                  ? '#EF4444'
-                  : '#E2E8F0'
-              }
-              activeOutlineColor="#0F172A"
-              style={styles.textInputPaper}
+              style={[
+                styles.nativeTextInput,
+                submittedAttempt && (!contactPhone.trim() || contactPhone.trim().length < 8) && styles.fieldError,
+              ]}
             />
           </View>
-        </Surface>
+        </View>
 
-        {/* Big Submit Button */}
+        {/* Bottom safety note */}
+        <View style={styles.safetyRow}>
+          <IconButton icon="shield-check-outline" size={21} iconColor="#059669" style={{ margin: 0 }} />
+          <Text style={styles.safetyText}>
+            Never share OTP, passwords or payment details with buyers.
+          </Text>
+        </View>
+      </ScrollView>
+
+      {/* Sticky native CTA */}
+      <View style={styles.bottomBar}>
+        <View style={styles.bottomHint}>
+          <Text style={styles.bottomHintTitle}>Ready to sell?</Text>
+          <Text style={styles.bottomHintSub}>Review your details before publishing</Text>
+        </View>
+
         <TouchableOpacity
-          style={[styles.publishMainBtn, isSubmitting && { opacity: 0.6 }]}
+          style={[styles.publishButton, isSubmitting && { opacity: 0.65 }]}
           onPress={handlePublish}
           disabled={isSubmitting}
-          activeOpacity={0.88}
+          activeOpacity={0.86}
         >
           {isSubmitting ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
-              <Text style={styles.publishMainBtnText}>POSTING AD...</Text>
-            </View>
+            <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.publishMainBtnText}>🚀 POST YOUR AD NOW</Text>
+            <>
+              <Text style={styles.publishButtonText}>Post Ad</Text>
+              <IconButton icon="arrow-right" size={19} iconColor="#FFFFFF" style={{ margin: 0 }} />
+            </>
           )}
         </TouchableOpacity>
-      </ScrollView>
+      </View>
 
       {/* Interactive Map Modal */}
       <MapLocationModal
@@ -1412,7 +1327,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         }}
       />
 
-      {/* Universal Searchable Selection Modal */}
+      {/* Searchable picker */}
       <Modal
         visible={pickerModalType !== null}
         animationType="slide"
@@ -1421,6 +1336,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContainer}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>
                 {pickerModalType === 'brand' && 'Select Car Brand'}
@@ -1435,9 +1351,8 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
               </TouchableOpacity>
             </View>
 
-            {/* Search Input in Modal */}
             <View style={styles.modalSearchBox}>
-              <IconButton icon="magnify" size={18} iconColor="#64748B" style={{ margin: 0 }} />
+              <IconButton icon="magnify" size={19} iconColor="#64748B" style={{ margin: 0 }} />
               <RNTextInput
                 value={pickerSearchQuery}
                 onChangeText={setPickerSearchQuery}
@@ -1448,17 +1363,16 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
               />
               {pickerSearchQuery ? (
                 <TouchableOpacity onPress={() => setPickerSearchQuery('')}>
-                  <IconButton icon="close-circle" size={16} iconColor="#94A3B8" style={{ margin: 0 }} />
+                  <IconButton icon="close-circle" size={17} iconColor="#94A3B8" style={{ margin: 0 }} />
                 </TouchableOpacity>
               ) : null}
             </View>
 
-            {/* List */}
             <FlatList
               data={getModalItems()}
               keyExtractor={(item) => item}
               keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ paddingVertical: 6 }}
+              contentContainerStyle={{ paddingBottom: 18 }}
               renderItem={({ item }) => {
                 const isSelected =
                   (pickerModalType === 'brand' && carBrand === item) ||
@@ -1480,22 +1394,17 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
                       else if (pickerModalType === 'district') handleDistrictSelect(item);
                     }}
                   >
-                    <Text
-                      style={[
-                        styles.modalItemText,
-                        isSelected && styles.modalItemTextSelected,
-                      ]}
-                    >
+                    <Text style={[styles.modalItemText, isSelected && styles.modalItemTextSelected]}>
                       {pickerModalType === 'category' ? translateDynamic(item, language) : item}
                     </Text>
                     {isSelected && (
-                      <IconButton icon="check" size={18} iconColor="#0066FF" style={{ margin: 0 }} />
+                      <IconButton icon="check" size={19} iconColor="#2563EB" style={{ margin: 0 }} />
                     )}
                   </TouchableOpacity>
                 );
               }}
               ListEmptyComponent={() => (
-                <View style={{ padding: 24, alignItems: 'center' }}>
+                <View style={{ padding: 28, alignItems: 'center' }}>
                   <Text style={{ color: '#94A3B8', fontSize: 13 }}>No matching results found</Text>
                 </View>
               )}
@@ -1508,559 +1417,535 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
 }
 
 const styles = StyleSheet.create({
-  topHeader: {
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-  },
-  headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 0.2,
-  },
-  headerSub: {
-    color: '#94A3B8',
-    fontSize: 10,
-    marginTop: 1,
-  },
-  syncBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    marginRight: 6,
-  },
-  syncText: {
-    color: '#94A3B8',
-    fontSize: 9,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
-  freeBadge: {
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  freeBadgeText: {
-    color: '#E2E8F0',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  scrollArea: {
+  root: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F7F8FA',
   },
-  cardSection: {
+  nativeHeader: {
+    height: 68,
+    backgroundColor: '#0B1220',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  headerBack: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    flex: 1,
+    paddingLeft: 4,
+  },
+  nativeHeaderTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  nativeHeaderSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  saveDraftButton: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressWrap: {
+    backgroundColor: '#0B1220',
+    paddingHorizontal: 18,
+    paddingBottom: 12,
+  },
+  progressTrack: {
+    height: 3,
+    backgroundColor: '#263244',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    width: '24%',
+    height: '100%',
+    backgroundColor: '#FF7A00',
+    borderRadius: 3,
+  },
+  progressLabel: {
+    color: '#94A3B8',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  nativeScroll: {
+    flex: 1,
+  },
+  nativeContent: {
+    padding: 16,
+    paddingBottom: 130,
+  },
+  nativeSection: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 18,
+    padding: 15,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E8EBF0',
   },
-  sectionHeaderRow: {
+  sectionTopRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
   },
-  sectionTitle: {
+  nativeSectionTitle: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.15,
+  },
+  nativeSectionHint: {
+    color: '#7A8494',
     fontSize: 11,
-    fontWeight: '900',
-    color: '#0F172A',
-    letterSpacing: 0.5,
-    marginBottom: 2,
+    marginTop: 3,
+    lineHeight: 16,
   },
-  sectionSubtitle: {
-    fontSize: 10,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  photoCountBadge: {
+  countPill: {
     backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderRadius: 20,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
   },
-  photoCountText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#334155',
-  },
-  progressBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EFF6FF',
-    padding: 8,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  progressText: {
-    color: '#1E40AF',
-    fontSize: 11,
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  emptyUploadBox: {
-    borderWidth: 2,
-    borderColor: '#CBD5E1',
-    borderStyle: 'dashed',
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    marginTop: 4,
-  },
-  emptyUploadTitle: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#0F172A',
-  },
-  emptyUploadSub: {
-    fontSize: 10,
-    color: '#64748B',
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  emptyBtnRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-    width: '100%',
-  },
-  cameraActionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0066FF',
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  cameraActionText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
-    marginLeft: 2,
-  },
-  galleryActionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0F172A',
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  galleryActionText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
-    marginLeft: 2,
-  },
-  quickAddBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    padding: 6,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  quickAddLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+  countPillText: {
     color: '#475569',
-    marginLeft: 4,
-    marginRight: 8,
+    fontSize: 10,
+    fontWeight: '800',
   },
-  quickAddCameraBtn: {
+  photoEmpty: {
+    marginTop: 14,
+    borderRadius: 16,
+    borderWidth: 1.2,
+    borderStyle: 'dashed',
+    borderColor: '#BFD0E8',
+    backgroundColor: '#F8FBFF',
+    padding: 18,
+    alignItems: 'center',
+  },
+  photoEmptyIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 18,
+    backgroundColor: '#EAF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoEmptyTitle: {
+    color: '#172033',
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 9,
+  },
+  photoEmptyHint: {
+    color: '#7A8494',
+    fontSize: 10.5,
+    marginTop: 3,
+  },
+  photoActionRow: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: 9,
+    marginTop: 14,
+  },
+  photoPrimary: {
     flex: 1,
+    height: 43,
+    borderRadius: 12,
+    backgroundColor: '#2563EB',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0066FF',
-    paddingVertical: 5,
-    borderRadius: 8,
-    marginRight: 6,
   },
-  quickAddGalleryBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0F172A',
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  quickAddBtnText: {
+  photoPrimaryText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-    marginLeft: 2,
+    fontSize: 12,
+    fontWeight: '800',
+    marginLeft: 4,
   },
-  gridContainer: {
+  photoSecondary: {
+    flex: 1,
+    height: 43,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D7DDE6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoSecondaryText: {
+    color: '#0F172A',
+    fontSize: 12,
+    fontWeight: '800',
+    marginLeft: 4,
+  },
+  photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    justifyContent: 'space-between',
+    marginTop: 14,
   },
-  imageSlotBox: {
-    width: (width - 64) / 3,
-    height: (width - 64) / 3,
-    borderRadius: 12,
-    backgroundColor: '#0F172A',
+  photoTile: {
+    width: (width - 62) / 3,
+    height: (width - 62) / 3,
+    borderRadius: 13,
     overflow: 'hidden',
+    backgroundColor: '#E5E7EB',
     position: 'relative',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
   },
-  coverImageSlot: {
-    borderColor: '#0F172A',
-    borderWidth: 2,
-  },
-  slotImage: {
+  photoImage: {
     width: '100%',
     height: '100%',
   },
-  coverBadge: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  coverBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  deletePhotoBtn: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: 'rgba(239, 68, 68, 0.95)',
-    borderRadius: 12,
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  slotActionsOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  makeCoverBtn: {
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  makeCoverText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '700',
-  },
-  moveArrowBtn: {
-    padding: 2,
-  },
-  nextSlotPicker: {
-    width: (width - 64) / 3,
-    height: (width - 64) / 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden',
-  },
-  nextSlotCamBtn: {
-    flex: 1,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#BFDBFE',
-  },
-  nextSlotGalBtn: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nextSlotTextBlue: {
-    color: '#0066FF',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  nextSlotTextGray: {
-    color: '#334155',
-    fontSize: 9,
-    fontWeight: '800',
-  },
-  emptySlotPlaceholder: {
-    width: (width - 64) / 3,
-    height: (width - 64) / 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  photoAddTile: {
+    width: (width - 62) / 3,
+    height: (width - 62) / 3,
+    borderRadius: 13,
+    borderWidth: 1.2,
     borderStyle: 'dashed',
+    borderColor: '#B8C5D8',
     backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptySlotNumber: {
-    color: '#CBD5E1',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  urlToggleRow: {
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  urlToggleText: {
-    color: '#0066FF',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  urlInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    gap: 8,
-  },
-  urlTextInput: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 11,
-    color: '#0F172A',
-  },
-  urlAddBtn: {
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  urlAddBtnText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  aiAutofillBtn: {
-    marginTop: 12,
-    backgroundColor: '#0066FF',
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0066FF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  aiAutofillBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.3,
-  },
-  aiAutofillHint: {
-    fontSize: 9.5,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  inputGroup: {
-    marginTop: 10,
-  },
-  inputLabel: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    color: '#475569',
-    marginBottom: 4,
-    letterSpacing: 0.3,
-  },
-  selectTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  selectTriggerDisabled: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
-  },
-  selectTriggerValue: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#0F172A',
-    flex: 1,
-  },
-  selectTriggerPlaceholder: {
-    fontSize: 12,
-    color: '#94A3B8',
-    flex: 1,
-  },
-  textInputPaper: {
-    backgroundColor: '#F8FAFC',
-    fontSize: 12,
-  },
-  conditionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  conditionBtn: {
-    flex: 1,
-    minWidth: (width - 76) / 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  conditionBtnActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
-  },
-  conditionBtnInactive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-  },
-  conditionBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#475569',
-  },
-  conditionBtnTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '900',
-  },
-  charCountText: {
-    fontSize: 9.5,
-    color: '#94A3B8',
-    fontWeight: '600',
-  },
-  gpsTriggerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  gpsTriggerText: {
-    color: '#0066FF',
-    fontSize: 10.5,
-    fontWeight: '800',
-  },
-  mapCardTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    borderRadius: 12,
-    padding: 10,
-    marginTop: 10,
-  },
-  mapCardIconBox: {
-    backgroundColor: '#DCFCE7',
-    borderRadius: 8,
-    padding: 2,
-  },
-  mapCardTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#166534',
-  },
-  mapCardSub: {
+  photoAddText: {
+    color: '#2563EB',
     fontSize: 10,
-    color: '#15803D',
-    marginTop: 1,
-  },
-  mapCardAction: {
-    fontSize: 11,
     fontWeight: '800',
-    color: '#15803D',
+    marginTop: -3,
   },
-  publishMainBtn: {
-    backgroundColor: '#0F172A',
-    paddingVertical: 14,
-    borderRadius: 14,
+  coverPill: {
+    position: 'absolute',
+    left: 6,
+    bottom: 6,
+    backgroundColor: '#0B1220',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  coverPillText: {
+    color: '#FFFFFF',
+    fontSize: 7,
+    fontWeight: '900',
+  },
+  photoDelete: {
+    position: 'absolute',
+    right: 4,
+    top: 4,
+    width: 25,
+    height: 25,
+    borderRadius: 13,
+    backgroundColor: 'rgba(15,23,42,0.82)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
   },
-  publishMainBtnText: {
+  quickCamera: {
+    marginTop: 9,
+    height: 37,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickCameraText: {
+    color: '#2563EB',
+    fontSize: 11,
+    fontWeight: '800',
+    marginLeft: 2,
+  },
+  aiButton: {
+    height: 43,
+    borderRadius: 12,
+    backgroundColor: '#FF7A00',
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiIcon: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '900',
+    marginRight: 6,
+  },
+  aiButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '900',
+  },
+  segmentRow: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    padding: 3,
+    marginTop: 14,
+  },
+  segmentButton: {
+    flex: 1,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 9,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#0B1220',
+  },
+  segmentText: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  segmentTextActive: {
+    color: '#FFFFFF',
+  },
+  nativeField: {
+    marginTop: 13,
+  },
+  fieldLabel: {
+    color: '#667085',
+    fontSize: 9.5,
+    fontWeight: '900',
+    letterSpacing: 0.45,
+    marginBottom: 6,
+  },
+  nativePicker: {
+    minHeight: 50,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#DDE2EA',
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
+  },
+  nativePickerDisabled: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+  },
+  fieldIconCircle: {
+    width: 33,
+    height: 33,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pickerValue: {
+    flex: 1,
+    color: '#172033',
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  pickerPlaceholder: {
+    color: '#9AA3B2',
+    fontWeight: '500',
+  },
+  nativeTextInput: {
+    minHeight: 50,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#DDE2EA',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    color: '#172033',
+    fontSize: 12,
+  },
+  fieldError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FFF7F7',
+  },
+  twoFieldRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 13,
+  },
+  halfField: {
+    flex: 1,
+  },
+  priceBox: {
+    height: 62,
+    borderRadius: 15,
+    borderWidth: 1.2,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FAFBFC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginTop: 14,
+  },
+  priceSymbol: {
+    color: '#0F172A',
+    fontSize: 25,
+    fontWeight: '900',
+  },
+  priceInput: {
+    flex: 1,
+    color: '#0F172A',
+    fontSize: 21,
+    fontWeight: '800',
+    marginLeft: 9,
+    paddingVertical: 0,
+  },
+  conditionCompactRow: {
+    gap: 7,
+  },
+  conditionChip: {
+    minHeight: 39,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: '#DDE2EA',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 1,
+  },
+  conditionChipActive: {
+    backgroundColor: '#0B1220',
+    borderColor: '#0B1220',
+  },
+  conditionChipText: {
+    color: '#475569',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  conditionChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  descriptionInput: {
+    minHeight: 120,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#DDE2EA',
+    backgroundColor: '#FFFFFF',
+    color: '#172033',
+    fontSize: 12,
+    lineHeight: 18,
+    paddingHorizontal: 13,
+    paddingTop: 12,
+    marginTop: 13,
+  },
+  charCount: {
+    color: '#98A2B3',
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  gpsButton: {
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 9,
+    backgroundColor: '#EFF6FF',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  gpsText: {
+    color: '#2563EB',
+    fontSize: 9.5,
+    fontWeight: '900',
+    marginLeft: 1,
+  },
+  mapButton: {
+    minHeight: 60,
+    marginTop: 12,
+    borderRadius: 13,
+    backgroundColor: '#F5F9FF',
+    borderWidth: 1,
+    borderColor: '#D7E5FF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  mapButtonTitle: {
+    color: '#1E40AF',
+    fontSize: 11.5,
+    fontWeight: '800',
+  },
+  mapButtonSub: {
+    color: '#64748B',
+    fontSize: 9.5,
+    marginTop: 2,
+  },
+  safetyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 5,
+    marginBottom: 8,
+  },
+  safetyText: {
+    flex: 1,
+    color: '#64748B',
+    fontSize: 10,
+    lineHeight: 15,
+    marginLeft: 3,
+  },
+  bottomBar: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 22 : 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  bottomHint: {
+    flex: 1,
+  },
+  bottomHintTitle: {
+    color: '#111827',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  bottomHintSub: {
+    color: '#8A94A3',
+    fontSize: 8.5,
+    marginTop: 2,
+  },
+  publishButton: {
+    minWidth: 124,
+    height: 48,
+    borderRadius: 13,
+    backgroundColor: '#FF7A00',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  publishButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  errorInputBox: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#FFF1F2',
     borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: 12,
-    padding: 8,
+    borderColor: '#FECDD3',
+    borderRadius: 13,
+    padding: 9,
     marginBottom: 12,
   },
   errorText: {
-    color: '#B91C1C',
-    fontSize: 11,
-    fontWeight: '700',
     flex: 1,
+    color: '#B91C1C',
+    fontSize: 10.5,
+    fontWeight: '700',
   },
   aiSuccessBanner: {
     flexDirection: 'row',
@@ -2068,19 +1953,93 @@ const styles = StyleSheet.create({
     backgroundColor: '#ECFDF5',
     borderWidth: 1,
     borderColor: '#A7F3D0',
-    borderRadius: 12,
-    padding: 10,
+    borderRadius: 13,
+    padding: 9,
     marginBottom: 12,
   },
   aiSuccessText: {
-    color: '#065F46',
-    fontSize: 11,
-    fontWeight: '800',
     flex: 1,
+    color: '#047857',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '82%',
+    minHeight: '45%',
+    paddingBottom: 10,
+  },
+  modalHandle: {
+    width: 38,
+    height: 4,
+    borderRadius: 3,
+    backgroundColor: '#D1D5DB',
+    alignSelf: 'center',
+    marginTop: 9,
+    marginBottom: 3,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 9,
+    paddingBottom: 8,
+  },
+  modalTitle: {
+    flex: 1,
+    color: '#111827',
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  modalSearchBox: {
+    height: 44,
+    marginHorizontal: 14,
+    marginBottom: 8,
+    borderRadius: 11,
+    backgroundColor: '#F1F5F9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+  },
+  modalSearchInput: {
+    flex: 1,
+    color: '#172033',
+    fontSize: 12,
+    paddingVertical: 5,
+  },
+  modalItemRow: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  modalItemRowSelected: {
+    backgroundColor: '#EFF6FF',
+  },
+  modalItemText: {
+    flex: 1,
+    color: '#334155',
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+  modalItemTextSelected: {
+    color: '#2563EB',
+    fontWeight: '800',
   },
   successContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B1220',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -2088,10 +2047,10 @@ const styles = StyleSheet.create({
   successBadge: {
     width: 72,
     height: 72,
-    borderRadius: 20,
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderRadius: 22,
+    backgroundColor: 'rgba(16,185,129,0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.4)',
+    borderColor: 'rgba(16,185,129,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -2186,70 +2145,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#0066FF',
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
-    minHeight: '45%',
-    paddingBottom: 20,
-  },
-  modalHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  modalTitle: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: '#0F172A',
-    flex: 1,
-  },
-  modalSearchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    marginHorizontal: 14,
-    marginVertical: 10,
-    borderRadius: 10,
-    paddingHorizontal: 6,
-  },
-  modalSearchInput: {
-    flex: 1,
-    fontSize: 12,
-    color: '#0F172A',
-    paddingVertical: 6,
-  },
-  modalItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F8FAFC',
-  },
-  modalItemRowSelected: {
-    backgroundColor: '#EFF6FF',
-  },
-  modalItemText: {
-    fontSize: 13,
-    color: '#334155',
-    fontWeight: '600',
-  },
-  modalItemTextSelected: {
-    color: '#0066FF',
-    fontWeight: '800',
   },
 });

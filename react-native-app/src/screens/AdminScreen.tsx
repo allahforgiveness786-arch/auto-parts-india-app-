@@ -11,19 +11,21 @@ import {
   Modal,
   TextInput as RNTextInput,
   Switch,
-  Share,
   Platform,
+  Dimensions,
 } from 'react-native';
-import { Text, SegmentedButtons, Icon, Button, TextInput, Chip, Surface, IconButton } from 'react-native-paper';
+import { Text, Icon, Button, TextInput, Chip, Surface, IconButton } from 'react-native-paper';
 import { launchImageLibrary } from 'react-native-image-picker';
 import EditListingModal from '../components/EditListingModal';
 import { AdminTaxonomyCMS } from '../components/AdminTaxonomyCMS';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { uploadImageToCloudinary } from '../services/cloudinary';
 
+const { width } = Dimensions.get('window');
+
 export default function AdminScreen({ navigation }: any) {
   // Navigation tabs
-  const [tab, setTab] = useState<'users' | 'listings' | 'banners' | 'taxonomy' | 'announcements' | 'version'>('listings');
+  const [tab, setTab] = useState<'overview' | 'listings' | 'users' | 'banners' | 'taxonomy' | 'announcements' | 'version'>('overview');
 
   // Core Data States
   const [listings, setListings] = useState<any[]>([]);
@@ -78,12 +80,43 @@ export default function AdminScreen({ navigation }: any) {
   const [savingVersion, setSavingVersion] = useState(false);
   const [loadingVersion, setLoadingVersion] = useState(false);
 
-  // Super Admin Immunity List
+  // Super Admin Email - Strictly restricted to wwwautoparts2@gmail.com
   const SUPER_ADMIN_EMAILS = [
     'wwwautoparts2@gmail.com',
-    'ym1950394@gmail.com',
-    'www.allahforgiveness877@gmail.com',
   ];
+
+  const currentUser = getCurrentUser();
+  const userEmail = (currentUser?.email || '').trim().toLowerCase();
+  const isAuthorizedAdmin = userEmail === 'wwwautoparts2@gmail.com';
+
+  if (!isAuthorizedAdmin) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#002F34', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(239, 68, 68, 0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+          <Icon source="shield-alert" size={40} color="#EF4444" />
+        </View>
+        <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 8 }}>
+          Restricted Admin Access
+        </Text>
+        <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 24, maxWidth: 320 }}>
+          This Admin Console is strictly restricted to authorized administrator (<Text style={{ color: '#38BDF8', fontWeight: 'bold' }}>wwwautoparts2@gmail.com</Text>). Current account: <Text style={{ color: '#F87171' }}>{currentUser?.email || 'Guest / Not logged in'}</Text>.
+        </Text>
+        <TouchableOpacity
+          style={{ backgroundColor: '#FF7A00', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('HomeTab');
+            }
+          }}
+        >
+          <Icon source="arrow-left" size={18} color="#FFFFFF" />
+          <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>Go Back to Marketplace</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   // -------------------------------------------------------------
   // Real-time Firestore Listeners
@@ -101,7 +134,7 @@ export default function AdminScreen({ navigation }: any) {
         return;
       }
 
-      // 1. Listen to Spare Parts Listings
+      // 1. Listen to Listings
       const qListings = db.collection('spareParts').orderBy('createdAt', 'desc');
       unsubListings = qListings.onSnapshot(
         (snap: any) => {
@@ -116,7 +149,7 @@ export default function AdminScreen({ navigation }: any) {
         }
       );
 
-      // 2. Listen to Promotional Banners
+      // 2. Listen to Banners
       const qBanners = db.collection('banners').orderBy('order', 'asc');
       unsubBanners = qBanners.onSnapshot(
         (snap: any) => {
@@ -130,7 +163,7 @@ export default function AdminScreen({ navigation }: any) {
         }
       );
 
-      // 3. Listen to Registered Users
+      // 3. Listen to Users
       const qUsers = db.collection('users');
       unsubUsers = qUsers.onSnapshot(
         (snap: any) => {
@@ -156,7 +189,6 @@ export default function AdminScreen({ navigation }: any) {
         }
       );
 
-      // Load Version Config
       loadVersionConfig();
     } catch (e) {
       console.warn('[Admin] Listeners init error:', e);
@@ -225,21 +257,6 @@ export default function AdminScreen({ navigation }: any) {
       Alert.alert('Featured Status', `Listing is ${newFeatured ? 'marked as Featured ⭐' : 'removed from Featured'}`);
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to update featured status');
-    }
-  };
-
-  const handleToggleVerified = async (item: any) => {
-    try {
-      const db = getFirebaseFirestore();
-      if (!db) return;
-      const newVerified = !item.verified;
-      await db.collection('spareParts').doc(item.id).update({
-        verified: newVerified,
-        updatedAt: Date.now(),
-      });
-      Alert.alert('Verification Status', `Listing is ${newVerified ? 'marked as Verified ✓' : 'unverified'}`);
-    } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to update verified status');
     }
   };
 
@@ -423,7 +440,7 @@ export default function AdminScreen({ navigation }: any) {
   };
 
   // -------------------------------------------------------------
-  // Promotional Banner Actions
+  // Banner Actions
   // -------------------------------------------------------------
   const handleOpenAddBanner = () => {
     setEditingBanner(null);
@@ -524,25 +541,6 @@ export default function AdminScreen({ navigation }: any) {
     }
   };
 
-  const handleMoveBannerOrder = async (banner: any, direction: 'up' | 'down') => {
-    const idx = banners.findIndex((b) => b.id === banner.id);
-    if (idx === -1) return;
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= banners.length) return;
-
-    try {
-      const db = getFirebaseFirestore();
-      if (!db) return;
-      const currentOrder = banners[idx].order || idx;
-      const targetOrder = banners[targetIdx].order || targetIdx;
-
-      await db.collection('banners').doc(banners[idx].id).update({ order: targetOrder });
-      await db.collection('banners').doc(banners[targetIdx].id).update({ order: currentOrder });
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to reorder banners.');
-    }
-  };
-
   const handleDeleteBanner = (banner: any) => {
     Alert.alert('Delete Banner', `Permanently delete "${banner.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
@@ -586,10 +584,8 @@ export default function AdminScreen({ navigation }: any) {
         author: 'Super Admin',
       };
 
-      // Add to announcements collection
       await db.collection('announcements').add(annDoc);
 
-      // Broadcast to in-app notifications
       await db.collection('notifications').add({
         title: `📢 ${annTitle.trim()}`,
         message: annText.trim(),
@@ -660,7 +656,7 @@ export default function AdminScreen({ navigation }: any) {
       };
 
       await db.collection('app_version').doc('config').set(payload);
-      Alert.alert('Success', 'App update configuration saved to Cloud Firestore! All devices will now be prompted.');
+      Alert.alert('Success', 'App update configuration saved! All mobile devices will receive OTA prompts.');
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to save version configuration.');
     } finally {
@@ -679,25 +675,27 @@ export default function AdminScreen({ navigation }: any) {
       featured: listings.filter((p) => !p.isDeleted && p.featured).length,
       verified: listings.filter((p) => !p.isDeleted && p.verified).length,
       sold: listings.filter((p) => !p.isDeleted && p.sold).length,
-      reported: listings.filter((p) => !p.isDeleted && p.reported).length,
       trash: listings.filter((p) => p.isDeleted).length,
     };
+  }, [listings]);
+
+  const totalMarketplaceValue = useMemo(() => {
+    return listings
+      .filter((p) => !p.isDeleted)
+      .reduce((acc, curr) => acc + (Number(curr.price) || 0), 0);
   }, [listings]);
 
   const filteredListings = useMemo(() => {
     const query = searchTerm.toLowerCase().trim();
     return listings.filter((p) => {
-      // 1. Status Filter
       if (listingFilter === 'all' && p.isDeleted) return false;
       if (listingFilter === 'active' && (p.isDeleted || p.sold || p.approved === false)) return false;
       if (listingFilter === 'sold' && (p.isDeleted || !p.sold)) return false;
       if (listingFilter === 'pending' && (p.isDeleted || (p.approved !== false && p.status !== 'pending'))) return false;
       if (listingFilter === 'featured' && (p.isDeleted || !p.featured)) return false;
       if (listingFilter === 'verified' && (p.isDeleted || !p.verified)) return false;
-      if (listingFilter === 'reported' && (p.isDeleted || !p.reported)) return false;
       if (listingFilter === 'trash' && !p.isDeleted) return false;
 
-      // 2. Search Query
       if (!query) return true;
       return (
         (p.title || '').toLowerCase().includes(query) ||
@@ -708,8 +706,7 @@ export default function AdminScreen({ navigation }: any) {
         (p.sellerEmail || '').toLowerCase().includes(query) ||
         (p.location || '').toLowerCase().includes(query) ||
         (p.district || '').toLowerCase().includes(query) ||
-        (p.state || '').toLowerCase().includes(query) ||
-        (p.id || '').toLowerCase().includes(query)
+        (p.state || '').toLowerCase().includes(query)
       );
     });
   }, [listings, listingFilter, searchTerm]);
@@ -749,7 +746,7 @@ export default function AdminScreen({ navigation }: any) {
   };
 
   // -------------------------------------------------------------
-  // Render Listing Card Item
+  // Render Listing Card (Native Marketplace Admin Card)
   // -------------------------------------------------------------
   const renderListingCard = ({ item }: { item: any }) => {
     const isSelected = selectedPartIds.includes(item.id);
@@ -759,295 +756,408 @@ export default function AdminScreen({ navigation }: any) {
       'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=300';
 
     return (
-      <Surface
+      <View
         style={[
-          styles.listingCard,
-          isSelected && { borderColor: '#1565FF', backgroundColor: '#F0F7FF' },
-          item.isDeleted && { opacity: 0.75, backgroundColor: '#FFF1F2' },
+          styles.nativeListingCard,
+          isSelected && styles.selectedListingCard,
+          item.isDeleted && styles.trashListingCard,
         ]}
-        elevation={1}
       >
-        {/* Top Header: Checkbox + Thumbnail + Info */}
-        <View style={styles.cardTopRow}>
+        {/* Top Header Row */}
+        <View style={styles.cardHeaderRow}>
           <TouchableOpacity
             style={styles.checkboxTouch}
             onPress={() => toggleSelectPart(item.id)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Icon
-              source={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+              source={isSelected ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
               size={22}
-              color={isSelected ? '#1565FF' : '#94A3B8'}
+              color={isSelected ? '#002F34' : '#94A3B8'}
             />
           </TouchableOpacity>
 
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: imgUri }} style={styles.listingImage} />
+          <View style={styles.thumbWrap}>
+            <Image source={{ uri: imgUri }} style={styles.thumbImage} resizeMode="cover" />
             {item.sold && (
-              <View style={styles.soldOverlay}>
-                <Text style={styles.soldOverlayText}>SOLD</Text>
+              <View style={styles.soldBadgeOverlay}>
+                <Text style={styles.soldBadgeText}>SOLD</Text>
+              </View>
+            )}
+            {item.featured && (
+              <View style={styles.featuredBadgeOverlay}>
+                <Text style={styles.featuredBadgeText}>★ FEATURED</Text>
               </View>
             )}
           </View>
 
-          <View style={styles.listingInfo}>
-            <View style={styles.cardTitleRow}>
-              <Text style={styles.listingTitle} numberOfLines={1}>
-                {item.title}
-              </Text>
-              <Text style={styles.priceTag}>
-                ₹{Number(item.price || 0).toLocaleString('en-IN')}
-              </Text>
-            </View>
-
-            <Text style={styles.listingMeta} numberOfLines={1}>
-              {item.carBrand} {item.carModel} • {item.category}
-            </Text>
-
-            <Text style={styles.listingSeller} numberOfLines={1}>
-              Seller: {item.contactName || item.sellerEmail || 'Unknown'}
-              {item.contactPhone ? ` • 📞 ${item.contactPhone}` : ''}
-            </Text>
-
-            <Text style={styles.listingLoc} numberOfLines={1}>
-              📍 {[item.district, item.state || item.location].filter(Boolean).join(', ') || 'India'}
-            </Text>
-
-            {/* Badges Row */}
-            <View style={styles.badgesRow}>
+          <View style={styles.cardInfoCol}>
+            <View style={styles.priceRow}>
+              <Text style={styles.cardPrice}>₹{Number(item.price || 0).toLocaleString('en-IN')}</Text>
               <View
                 style={[
-                  styles.statusBadge,
-                  { backgroundColor: item.approved !== false ? '#DCFCE7' : '#FEF3C7' },
+                  styles.statusTagPill,
+                  {
+                    backgroundColor:
+                      item.approved !== false ? '#E6F4EA' : '#FEF3C7',
+                  },
                 ]}
               >
                 <Text
                   style={[
-                    styles.statusText,
-                    { color: item.approved !== false ? '#15803D' : '#B45309' },
+                    styles.statusTagText,
+                    {
+                      color: item.approved !== false ? '#137333' : '#B45309',
+                    },
                   ]}
                 >
                   {item.approved !== false ? 'Approved' : 'Pending'}
                 </Text>
               </View>
+            </View>
 
-              {item.featured && (
-                <View style={[styles.statusBadge, { backgroundColor: '#FEF9C3' }]}>
-                  <Text style={[styles.statusText, { color: '#A16207' }]}>Featured ⭐</Text>
-                </View>
-              )}
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
 
-              {item.verified && (
-                <View style={[styles.statusBadge, { backgroundColor: '#E0F2FE' }]}>
-                  <Text style={[styles.statusText, { color: '#0369A1' }]}>Verified ✓</Text>
-                </View>
-              )}
+            <View style={styles.vehiclePillRow}>
+              <Text style={styles.vehiclePillText}>
+                {item.carBrand} {item.carModel} • {item.category}
+              </Text>
+            </View>
 
-              {item.sold && (
-                <View style={[styles.statusBadge, { backgroundColor: '#FEE2E2' }]}>
-                  <Text style={[styles.statusText, { color: '#B91C1C' }]}>Sold</Text>
-                </View>
-              )}
+            <View style={styles.metaRow}>
+              <Icon source="map-marker" size={13} color="#64748B" />
+              <Text style={styles.metaLocationText} numberOfLines={1}>
+                {[item.district, item.state].filter(Boolean).join(', ') || item.location || 'India'}
+              </Text>
+            </View>
 
-              {item.isDeleted && (
-                <View style={[styles.statusBadge, { backgroundColor: '#F3F4F6' }]}>
-                  <Text style={[styles.statusText, { color: '#6B7280' }]}>Trash</Text>
-                </View>
-              )}
+            <View style={styles.metaRow}>
+              <Icon source="account" size={13} color="#64748B" />
+              <Text style={styles.metaSellerText} numberOfLines={1}>
+                {item.contactName || item.sellerName || 'Seller'}
+                {item.contactPhone ? ` • 📞 ${item.contactPhone}` : ''}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Action Buttons Row */}
-        <View style={styles.actionsBar}>
-          {/* Approve / Reject Toggle */}
+        {/* Action Controls Toolbar */}
+        <View style={styles.cardActionToolbar}>
           <TouchableOpacity
             style={[
-              styles.actionBtn,
-              { backgroundColor: item.approved !== false ? '#FEF3C7' : '#DCFCE7' },
+              styles.toolBtn,
+              { backgroundColor: item.approved !== false ? '#F1F5F9' : '#DCFCE7' },
             ]}
             onPress={() => handleToggleApprove(item)}
           >
             <Icon
-              source={item.approved !== false ? 'close-circle-outline' : 'check-circle-outline'}
-              size={14}
-              color={item.approved !== false ? '#B45309' : '#15803D'}
+              source={item.approved !== false ? 'close-circle-outline' : 'check-decagram'}
+              size={15}
+              color={item.approved !== false ? '#64748B' : '#15803D'}
             />
             <Text
               style={[
-                styles.actionBtnText,
-                { color: item.approved !== false ? '#B45309' : '#15803D' },
+                styles.toolBtnText,
+                { color: item.approved !== false ? '#475569' : '#15803D' },
               ]}
             >
               {item.approved !== false ? 'Unapprove' : 'Approve'}
             </Text>
           </TouchableOpacity>
 
-          {/* Featured Toggle */}
           <TouchableOpacity
             style={[
-              styles.actionBtn,
+              styles.toolBtn,
               { backgroundColor: item.featured ? '#FEF9C3' : '#F1F5F9' },
             ]}
             onPress={() => handleToggleFeatured(item)}
           >
             <Icon
               source={item.featured ? 'star' : 'star-outline'}
-              size={14}
+              size={15}
               color={item.featured ? '#A16207' : '#64748B'}
             />
             <Text
               style={[
-                styles.actionBtnText,
-                { color: item.featured ? '#A16207' : '#64748B' },
+                styles.toolBtnText,
+                { color: item.featured ? '#A16207' : '#475569' },
               ]}
             >
               {item.featured ? 'Featured' : 'Feature'}
             </Text>
           </TouchableOpacity>
 
-          {/* Sold Toggle */}
           <TouchableOpacity
             style={[
-              styles.actionBtn,
-              { backgroundColor: item.sold ? '#E2E8F0' : '#DCFCE7' },
+              styles.toolBtn,
+              { backgroundColor: item.sold ? '#E2E8F0' : '#E0F2FE' },
             ]}
             onPress={() => handleToggleSold(item)}
           >
             <Icon
               source={item.sold ? 'cart-arrow-up' : 'cart-check'}
-              size={14}
-              color={item.sold ? '#475569' : '#15803D'}
+              size={15}
+              color={item.sold ? '#475569' : '#0369A1'}
             />
             <Text
               style={[
-                styles.actionBtnText,
-                { color: item.sold ? '#475569' : '#15803D' },
+                styles.toolBtnText,
+                { color: item.sold ? '#475569' : '#0369A1' },
               ]}
             >
               {item.sold ? 'Available' : 'Sold'}
             </Text>
           </TouchableOpacity>
 
-          {/* Trash / Restore */}
           <TouchableOpacity
-            style={[
-              styles.actionBtn,
-              { backgroundColor: item.isDeleted ? '#DCFCE7' : '#F1F5F9' },
-            ]}
-            onPress={() => handleToggleSoftDelete(item)}
-          >
-            <Icon
-              source={item.isDeleted ? 'restore' : 'trash-can-outline'}
-              size={14}
-              color={item.isDeleted ? '#15803D' : '#64748B'}
-            />
-            <Text
-              style={[
-                styles.actionBtnText,
-                { color: item.isDeleted ? '#15803D' : '#64748B' },
-              ]}
-            >
-              {item.isDeleted ? 'Restore' : 'Trash'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Edit */}
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#EFF6FF' }]}
+            style={[styles.toolBtn, { backgroundColor: '#F1F5F9' }]}
             onPress={() => {
               setSelectedListing(item);
               setEditModalVisible(true);
             }}
           >
-            <Icon source="pencil-outline" size={14} color="#1565FF" />
-            <Text style={[styles.actionBtnText, { color: '#1565FF' }]}>Edit</Text>
+            <Icon source="pencil-outline" size={15} color="#002F34" />
+            <Text style={[styles.toolBtnText, { color: '#002F34' }]}>Edit</Text>
           </TouchableOpacity>
 
-          {/* Delete Permanently */}
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#FEE2E2' }]}
+            style={[styles.toolBtn, { backgroundColor: '#FEE2E2' }]}
             onPress={() => handleDeleteListing(item.id, item.title)}
           >
-            <Icon source="delete-forever" size={14} color="#EF4444" />
-            <Text style={[styles.actionBtnText, { color: '#EF4444' }]}>Delete</Text>
+            <Icon source="trash-can-outline" size={15} color="#DC2626" />
+            <Text style={[styles.toolBtnText, { color: '#DC2626' }]}>Delete</Text>
           </TouchableOpacity>
         </View>
-      </Surface>
+      </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      {/* Top Super Admin Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTitleRow}>
-          <Icon source="shield-check" size={26} color="#FDE047" />
-          <View style={{ marginLeft: 8 }}>
-            <Text style={styles.title}>Super Admin Panel</Text>
-            <Text style={styles.subtitle}>Auto Parts Live Control & Management Engine</Text>
+      {/* 1. OLX-Style Admin Top Header */}
+      <View style={styles.adminTopHeader}>
+        <View style={styles.headerLeftCol}>
+          <View style={styles.adminBadgeRow}>
+            <View style={styles.crownCircle}>
+              <Icon source="shield-crown" size={18} color="#FFFFFF" />
+            </View>
+            <Text style={styles.adminMainTitle}>ADMIN CONSOLE</Text>
+            <View style={styles.livePulsePill}>
+              <View style={styles.pulseDot} />
+              <Text style={styles.pulseText}>LIVE CLOUD</Text>
+            </View>
           </View>
+          <Text style={styles.adminSubTitle}>Auto Parts Marketplace Management System</Text>
         </View>
 
         <TouchableOpacity
           style={styles.exitBtn}
           onPress={() => (navigation ? navigation.goBack() : null)}
+          activeOpacity={0.7}
         >
-          <Icon source="close" size={16} color="#FFFFFF" />
+          <Icon source="arrow-left" size={16} color="#002F34" />
           <Text style={styles.exitBtnText}>Exit</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Main Tab Bar */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabScrollContainer}
-      >
-        {[
-          { id: 'listings', label: `Ads (${listings.length})`, icon: 'tag-multiple' },
-          { id: 'users', label: `Users (${users.length})`, icon: 'account-group' },
-          { id: 'banners', label: `Banners (${banners.length})`, icon: 'image-multiple' },
-          { id: 'taxonomy', label: 'Taxonomy CMS', icon: 'shape' },
-          { id: 'announcements', label: `Broadcast (${announcements.length})`, icon: 'bullhorn' },
-          { id: 'version', label: 'App Update', icon: 'cellphone-arrow-down' },
-        ].map((t) => (
-          <TouchableOpacity
-            key={t.id}
-            style={[styles.tabButton, tab === t.id && styles.tabButtonActive]}
-            onPress={() => {
-              setTab(t.id as any);
-              setSearchTerm('');
-            }}
-          >
-            <Icon
-              source={t.icon}
-              size={16}
-              color={tab === t.id ? '#FFFFFF' : '#64748B'}
-            />
-            <Text style={[styles.tabButtonText, tab === t.id && styles.tabButtonTextActive]}>
-              {t.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* 2. Top Navigation Tabs (OLX Style Horizontal Pills) */}
+      <View style={styles.tabBarContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabScrollContent}
+        >
+          {[
+            { id: 'overview', label: 'Dashboard', icon: 'view-dashboard-outline' },
+            { id: 'listings', label: `Listings (${listings.length})`, icon: 'car-multiple' },
+            { id: 'users', label: `Users (${users.length})`, icon: 'account-group-outline' },
+            { id: 'banners', label: `Banners (${banners.length})`, icon: 'image-multiple-outline' },
+            { id: 'taxonomy', label: 'Taxonomy CMS', icon: 'shape-outline' },
+            { id: 'announcements', label: `Broadcast (${announcements.length})`, icon: 'bullhorn-outline' },
+            { id: 'version', label: 'App Update', icon: 'cellphone-arrow-down' },
+          ].map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <TouchableOpacity
+                key={t.id}
+                style={[styles.nativeTabPill, isActive && styles.nativeTabPillActive]}
+                onPress={() => {
+                  setTab(t.id as any);
+                  setSearchTerm('');
+                }}
+                activeOpacity={0.75}
+              >
+                <Icon
+                  source={t.icon}
+                  size={16}
+                  color={isActive ? '#FFFFFF' : '#475569'}
+                />
+                <Text style={[styles.nativeTabPillText, isActive && styles.nativeTabPillTextActive]}>
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
-      {/* TAB CONTENTS */}
+      {/* 3. Main Dynamic Content */}
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#1565FF" />
-          <Text style={{ marginTop: 10, color: '#64748B', fontWeight: '600' }}>
-            Syncing Cloud Firestore...
-          </Text>
+          <ActivityIndicator size="large" color="#002F34" />
+          <Text style={styles.loadingText}>Syncing Marketplace Cloud Database...</Text>
         </View>
+      ) : tab === 'overview' ? (
+        /* TAB 0: DASHBOARD OVERVIEW METRICS */
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.overviewScroll}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Quick Metrics Bento Grid */}
+          <Text style={styles.sectionHeaderTitle}>MARKETPLACE METRICS</Text>
+
+          <View style={styles.metricsGrid}>
+            <View style={[styles.metricCard, { borderLeftColor: '#002F34' }]}>
+              <View style={styles.metricIconWrap}>
+                <Icon source="tag-multiple" size={22} color="#002F34" />
+              </View>
+              <Text style={styles.metricValue}>{listings.length}</Text>
+              <Text style={styles.metricLabel}>Total Ad Listings</Text>
+            </View>
+
+            <View style={[styles.metricCard, { borderLeftColor: '#10B981' }]}>
+              <View style={styles.metricIconWrap}>
+                <Icon source="check-decagram" size={22} color="#10B981" />
+              </View>
+              <Text style={styles.metricValue}>{listingCounts.active}</Text>
+              <Text style={styles.metricLabel}>Active on Live Store</Text>
+            </View>
+
+            <View style={[styles.metricCard, { borderLeftColor: '#3B82F6' }]}>
+              <View style={styles.metricIconWrap}>
+                <Icon source="account-multiple" size={22} color="#3B82F6" />
+              </View>
+              <Text style={styles.metricValue}>{users.length}</Text>
+              <Text style={styles.metricLabel}>Registered Sellers/Users</Text>
+            </View>
+
+            <View style={[styles.metricCard, { borderLeftColor: '#F59E0B' }]}>
+              <View style={styles.metricIconWrap}>
+                <Icon source="currency-inr" size={22} color="#F59E0B" />
+              </View>
+              <Text style={styles.metricValue}>
+                ₹{(totalMarketplaceValue / 100000).toFixed(1)}L
+              </Text>
+              <Text style={styles.metricLabel}>Total Catalog Value</Text>
+            </View>
+          </View>
+
+          {/* Quick Actions Panel */}
+          <Text style={[styles.sectionHeaderTitle, { marginTop: 24 }]}>QUICK SHORTCUTS</Text>
+          <View style={styles.shortcutsGrid}>
+            <TouchableOpacity
+              style={styles.shortcutBtn}
+              onPress={() => setTab('listings')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.shortcutIconCircle, { backgroundColor: '#E0F2FE' }]}>
+                <Icon source="car-cog" size={22} color="#0369A1" />
+              </View>
+              <Text style={styles.shortcutTitle}>Moderate Listings</Text>
+              <Text style={styles.shortcutSub}>{listingCounts.pending} pending approval</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.shortcutBtn}
+              onPress={() => setTab('banners')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.shortcutIconCircle, { backgroundColor: '#FEF3C7' }]}>
+                <Icon source="bullhorn" size={22} color="#B45309" />
+              </View>
+              <Text style={styles.shortcutTitle}>Promo Banners</Text>
+              <Text style={styles.shortcutSub}>{banners.length} carousel slides</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.shortcutBtn}
+              onPress={() => setTab('taxonomy')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.shortcutIconCircle, { backgroundColor: '#DCFCE7' }]}>
+                <Icon source="shape" size={22} color="#15803D" />
+              </View>
+              <Text style={styles.shortcutTitle}>Car Brands & Parts</Text>
+              <Text style={styles.shortcutSub}>Manage taxonomy CMS</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.shortcutBtn}
+              onPress={() => setTab('version')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.shortcutIconCircle, { backgroundColor: '#F3E8FF' }]}>
+                <Icon source="cellphone-arrow-down" size={22} color="#7E22CE" />
+              </View>
+              <Text style={styles.shortcutTitle}>App Version v{latestVersion}</Text>
+              <Text style={styles.shortcutSub}>OTA update control</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Recent Listings Snapshot */}
+          <View style={styles.recentSnapshotCard}>
+            <View style={styles.snapshotHeader}>
+              <Text style={styles.snapshotTitle}>Recent Listings</Text>
+              <TouchableOpacity onPress={() => setTab('listings')}>
+                <Text style={styles.viewAllText}>View All ({listings.length}) →</Text>
+              </TouchableOpacity>
+            </View>
+
+            {listings.slice(0, 4).map((item) => (
+              <View key={item.id} style={styles.snapshotItemRow}>
+                <Image
+                  source={{ uri: item.imageUrl || (item.imageUrls && item.imageUrls[0]) || 'https://via.placeholder.com/60' }}
+                  style={styles.snapshotThumb}
+                />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.snapshotItemTitle} numberOfLines={1}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.snapshotItemSub}>
+                    {item.carBrand} • ₹{Number(item.price || 0).toLocaleString('en-IN')}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.snapshotStatusPill,
+                    { backgroundColor: item.sold ? '#FEE2E2' : '#DCFCE7' },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.snapshotStatusText,
+                      { color: item.sold ? '#B91C1C' : '#15803D' },
+                    ]}
+                  >
+                    {item.sold ? 'Sold' : 'Active'}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       ) : tab === 'listings' ? (
         /* TAB 1: LISTINGS MODERATION */
         <View style={{ flex: 1 }}>
-          {/* Status Filter Scroll */}
+          {/* Sub Filters Row */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.filterScroll}
-            contentContainerStyle={{ paddingHorizontal: 12, gap: 6 }}
+            contentContainerStyle={styles.filterScrollContent}
           >
             {[
               { id: 'all', label: 'All', count: listingCounts.all },
@@ -1057,56 +1167,57 @@ export default function AdminScreen({ navigation }: any) {
               { id: 'verified', label: 'Verified', count: listingCounts.verified },
               { id: 'sold', label: 'Sold', count: listingCounts.sold },
               { id: 'trash', label: 'Trash', count: listingCounts.trash },
-            ].map((f) => (
-              <TouchableOpacity
-                key={f.id}
-                style={[
-                  styles.filterPill,
-                  listingFilter === f.id && styles.filterPillActive,
-                ]}
-                onPress={() => {
-                  setListingFilter(f.id as any);
-                  setSelectedPartIds([]);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.filterPillText,
-                    listingFilter === f.id && styles.filterPillTextActive,
-                  ]}
+            ].map((f) => {
+              const isSelected = listingFilter === f.id;
+              return (
+                <TouchableOpacity
+                  key={f.id}
+                  style={[styles.filterChip, isSelected && styles.filterChipActive]}
+                  onPress={() => {
+                    setListingFilter(f.id as any);
+                    setSelectedPartIds([]);
+                  }}
+                  activeOpacity={0.8}
                 >
-                  {f.label} ({f.count})
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}>
+                    {f.label} ({f.count})
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
 
-          {/* Search Bar & Bulk Actions */}
-          <View style={styles.searchBarRow}>
-            <TextInput
-              mode="outlined"
-              placeholder="Search title, brand, model, seller..."
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              style={styles.searchInput}
-              left={<TextInput.Icon icon="magnify" />}
-              right={
-                searchTerm ? (
-                  <TextInput.Icon icon="close" onPress={() => setSearchTerm('')} />
-                ) : null
-              }
-              dense
-            />
+          {/* Search Input Bar */}
+          <View style={styles.searchBarBox}>
+            <View style={styles.searchInnerWrap}>
+              <Icon source="magnify" size={20} color="#64748B" />
+              <RNTextInput
+                placeholder="Search title, brand, model, district, seller..."
+                placeholderTextColor="#94A3B8"
+                value={searchTerm}
+                onChangeText={setSearchTerm}
+                style={styles.searchInputField}
+              />
+              {searchTerm ? (
+                <TouchableOpacity onPress={() => setSearchTerm('')}>
+                  <Icon source="close-circle" size={18} color="#94A3B8" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
 
           {/* Bulk Selection Bar */}
           {filteredListings.length > 0 && (
             <View style={styles.bulkActionBar}>
-              <TouchableOpacity style={styles.bulkSelectBtn} onPress={toggleSelectAll}>
+              <TouchableOpacity
+                style={styles.bulkSelectBtn}
+                onPress={toggleSelectAll}
+                activeOpacity={0.7}
+              >
                 <Icon
-                  source={isAllSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                  source={isAllSelected ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
                   size={20}
-                  color="#1565FF"
+                  color="#002F34"
                 />
                 <Text style={styles.bulkSelectText}>
                   {isAllSelected ? 'Deselect All' : `Select All (${filteredListings.length})`}
@@ -1114,9 +1225,13 @@ export default function AdminScreen({ navigation }: any) {
               </TouchableOpacity>
 
               {selectedPartIds.length > 0 && (
-                <TouchableOpacity style={styles.bulkDeleteBtn} onPress={handleBulkDelete}>
-                  <Icon source="delete-sweep" size={16} color="#EF4444" />
-                  <Text style={styles.bulkDeleteText}>Delete ({selectedPartIds.length})</Text>
+                <TouchableOpacity
+                  style={styles.bulkDeleteBtn}
+                  onPress={handleBulkDelete}
+                  activeOpacity={0.8}
+                >
+                  <Icon source="delete-sweep" size={16} color="#FFFFFF" />
+                  <Text style={styles.bulkDeleteText}>Delete Selected ({selectedPartIds.length})</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1131,7 +1246,7 @@ export default function AdminScreen({ navigation }: any) {
             ListEmptyComponent={
               <View style={styles.centerContainer}>
                 <Icon source="tag-off-outline" size={48} color="#94A3B8" />
-                <Text style={styles.emptyText}>No listings found for current filter.</Text>
+                <Text style={styles.emptyText}>No listings found matching filter.</Text>
               </View>
             }
           />
@@ -1139,31 +1254,33 @@ export default function AdminScreen({ navigation }: any) {
       ) : tab === 'users' ? (
         /* TAB 2: USERS MANAGEMENT */
         <View style={{ flex: 1 }}>
-          {/* User Count Status Banner */}
-          <View style={styles.userBanner}>
-            <Icon source="account-group" size={20} color="#1565FF" />
+          {/* User Count Status Bar */}
+          <View style={styles.userBannerBar}>
+            <View style={styles.userBannerIconWrap}>
+              <Icon source="account-group" size={20} color="#002F34" />
+            </View>
             <Text style={styles.userBannerText}>
-              Total Registered Users:{' '}
-              <Text style={{ fontWeight: '800', color: '#1565FF' }}>{users.length}</Text>
+              Total Registered Users: <Text style={{ fontWeight: '800', color: '#002F34' }}>{users.length}</Text>
             </Text>
           </View>
 
-          {/* Search Bar */}
-          <View style={styles.searchBarRow}>
-            <TextInput
-              mode="outlined"
-              placeholder="Search user name, email, phone..."
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-              style={styles.searchInput}
-              left={<TextInput.Icon icon="magnify" />}
-              right={
-                searchTerm ? (
-                  <TextInput.Icon icon="close" onPress={() => setSearchTerm('')} />
-                ) : null
-              }
-              dense
-            />
+          {/* Search Input Bar */}
+          <View style={styles.searchBarBox}>
+            <View style={styles.searchInnerWrap}>
+              <Icon source="magnify" size={20} color="#64748B" />
+              <RNTextInput
+                placeholder="Search user name, email, phone, district..."
+                placeholderTextColor="#94A3B8"
+                value={searchTerm}
+                onChangeText={setSearchTerm}
+                style={styles.searchInputField}
+              />
+              {searchTerm ? (
+                <TouchableOpacity onPress={() => setSearchTerm('')}>
+                  <Icon source="close-circle" size={18} color="#94A3B8" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
 
           <FlatList
@@ -1175,95 +1292,81 @@ export default function AdminScreen({ navigation }: any) {
               const isBlocked = Boolean(item.isBlocked);
 
               return (
-                <Surface
-                  style={[
-                    styles.userCard,
-                    isBlocked && { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
-                  ]}
-                  elevation={1}
-                >
-                  <View style={styles.userAvatar}>
+                <View style={[styles.nativeUserCard, isBlocked && styles.blockedUserCard]}>
+                  <View style={styles.userAvatarWrap}>
                     <Icon
                       source={isSuper ? 'shield-crown' : 'account'}
-                      size={20}
-                      color={isSuper ? '#EAB308' : '#1565FF'}
+                      size={24}
+                      color={isSuper ? '#EAB308' : '#002F34'}
                     />
                   </View>
 
                   <View style={styles.userInfoCol}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text style={styles.userName} numberOfLines={1}>
-                        {item.name || item.displayName || 'Registered User'}
+                        {item.name || item.displayName || 'Marketplace User'}
                       </Text>
                       {isSuper && (
-                        <Chip style={styles.superChip} textStyle={{ fontSize: 9, color: '#854D0E', fontWeight: '800' }}>
-                          SUPER ADMIN
-                        </Chip>
+                        <View style={styles.superAdminPill}>
+                          <Text style={styles.superAdminPillText}>SUPER ADMIN</Text>
+                        </View>
                       )}
                       {isBlocked && (
-                        <Chip style={styles.blockedChip} textStyle={{ fontSize: 9, color: '#991B1B', fontWeight: '800' }}>
-                          SUSPENDED
-                        </Chip>
+                        <View style={styles.suspendedPill}>
+                          <Text style={styles.suspendedPillText}>SUSPENDED</Text>
+                        </View>
                       )}
                     </View>
 
-                    <Text style={styles.userMeta}>Email: {item.email || 'N/A'}</Text>
-                    {item.phone && <Text style={styles.userMeta}>Phone: 📞 {item.phone}</Text>}
+                    <Text style={styles.userMetaText}>✉️ {item.email || 'No email'}</Text>
+                    {item.phone && <Text style={styles.userMetaText}>📞 {item.phone}</Text>}
                     {(item.district || item.state) && (
-                      <Text style={styles.userMeta}>
-                        Location: 📍 {[item.district, item.state].filter(Boolean).join(', ')}
+                      <Text style={styles.userMetaText}>
+                        📍 {[item.district, item.state].filter(Boolean).join(', ')}
                       </Text>
                     )}
                   </View>
 
-                  <View style={styles.userActionBtns}>
+                  <View style={styles.userActionsCol}>
                     {!isSuper && (
                       <>
                         <TouchableOpacity
                           style={[
-                            styles.userBtn,
+                            styles.userActionIconBtn,
                             { backgroundColor: isBlocked ? '#DCFCE7' : '#FEE2E2' },
                           ]}
                           onPress={() => handleToggleBlockUser(item)}
                         >
                           <Icon
                             source={isBlocked ? 'check-circle' : 'cancel'}
-                            size={14}
+                            size={16}
                             color={isBlocked ? '#15803D' : '#DC2626'}
                           />
-                          <Text
-                            style={[
-                              styles.userBtnText,
-                              { color: isBlocked ? '#15803D' : '#DC2626' },
-                            ]}
-                          >
-                            {isBlocked ? 'Unblock' : 'Suspend'}
-                          </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          style={[styles.userBtn, { backgroundColor: '#EFF6FF' }]}
+                          style={[styles.userActionIconBtn, { backgroundColor: '#F1F5F9' }]}
                           onPress={() => handleOpenEditUser(item)}
                         >
-                          <Icon source="pencil-outline" size={14} color="#1565FF" />
+                          <Icon source="pencil-outline" size={16} color="#002F34" />
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          style={[styles.userBtn, { backgroundColor: '#FEE2E2' }]}
+                          style={[styles.userActionIconBtn, { backgroundColor: '#FEE2E2' }]}
                           onPress={() => handleDeleteUser(item)}
                         >
-                          <Icon source="trash-can-outline" size={14} color="#EF4444" />
+                          <Icon source="trash-can-outline" size={16} color="#DC2626" />
                         </TouchableOpacity>
                       </>
                     )}
                   </View>
-                </Surface>
+                </View>
               );
             }}
             ListEmptyComponent={
               <View style={styles.centerContainer}>
                 <Icon source="account-off" size={48} color="#94A3B8" />
-                <Text style={styles.emptyText}>No users matched your search.</Text>
+                <Text style={styles.emptyText}>No users matched your query.</Text>
               </View>
             }
           />
@@ -1275,127 +1378,102 @@ export default function AdminScreen({ navigation }: any) {
             <View>
               <Text style={styles.sectionHeaderTitle}>Hero Promotional Banners</Text>
               <Text style={styles.sectionHeaderSubtitle}>
-                Manage active carousel slides & promotions
+                Active marketplace slides shown on mobile home screen
               </Text>
             </View>
 
-            <Button
-              mode="contained"
-              icon="plus"
+            <TouchableOpacity
+              style={styles.addBannerNativeBtn}
               onPress={handleOpenAddBanner}
-              style={styles.addBannerBtn}
-              labelStyle={{ color: '#FFFFFF', fontWeight: '700', fontSize: 12 }}
+              activeOpacity={0.85}
             >
-              Add Banner
-            </Button>
+              <Icon source="plus" size={16} color="#FFFFFF" />
+              <Text style={styles.addBannerBtnText}>Add Banner</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={styles.listContent}>
             {banners.map((b, idx) => (
-              <Surface key={b.id || idx} style={styles.bannerCard} elevation={2}>
+              <View key={b.id || idx} style={styles.nativeBannerCard}>
                 <View style={styles.bannerImageWrap}>
                   {b.imageUrl ? (
-                    <Image source={{ uri: b.imageUrl }} style={styles.bannerCardImg} />
+                    <Image source={{ uri: b.imageUrl }} style={styles.bannerCardImg} resizeMode="cover" />
                   ) : (
-                    <View style={[styles.bannerCardImg, { backgroundColor: '#1E293B' }]} />
+                    <View style={[styles.bannerCardImg, { backgroundColor: '#002F34' }]} />
                   )}
 
-                  <View style={styles.bannerTagRow}>
-                    <Chip style={styles.orderChip} textStyle={{ fontSize: 10, color: '#FFFFFF', fontWeight: '800' }}>
-                      #{b.order || idx}
-                    </Chip>
-                    <Chip
-                      style={{
-                        backgroundColor: b.active !== false ? '#10B981' : '#64748B',
-                      }}
-                      textStyle={{ fontSize: 10, color: '#FFFFFF', fontWeight: '800' }}
+                  <View style={styles.bannerTagOverlay}>
+                    <View style={styles.bannerOrderBadge}>
+                      <Text style={styles.bannerOrderText}>#{b.order || idx + 1}</Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.bannerStatusBadge,
+                        { backgroundColor: b.active !== false ? '#10B981' : '#64748B' },
+                      ]}
                     >
-                      {b.active !== false ? 'ACTIVE' : 'DISABLED'}
-                    </Chip>
+                      <Text style={styles.bannerStatusText}>
+                        {b.active !== false ? 'ACTIVE' : 'DISABLED'}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
-                <View style={styles.bannerInfoBody}>
+                <View style={styles.bannerBodyContent}>
                   <Text style={styles.bannerTitleText}>{b.title}</Text>
                   {b.subtitle ? <Text style={styles.bannerSubText}>{b.subtitle}</Text> : null}
                   {b.targetLink ? (
-                    <Text style={styles.bannerTargetLink}>Target: {b.targetLink}</Text>
+                    <Text style={styles.bannerTargetLinkText}>Action: {b.targetLink}</Text>
                   ) : null}
 
-                  {/* Actions Row */}
-                  <View style={styles.bannerActionsRow}>
-                    {/* Order buttons */}
-                    <View style={styles.reorderGroup}>
-                      <TouchableOpacity
-                        disabled={idx === 0}
-                        style={[styles.reorderBtn, idx === 0 && { opacity: 0.3 }]}
-                        onPress={() => handleMoveBannerOrder(b, 'up')}
-                      >
-                        <Icon source="arrow-up" size={16} color="#1E293B" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        disabled={idx === banners.length - 1}
-                        style={[styles.reorderBtn, idx === banners.length - 1 && { opacity: 0.3 }]}
-                        onPress={() => handleMoveBannerOrder(b, 'down')}
-                      >
-                        <Icon source="arrow-down" size={16} color="#1E293B" />
-                      </TouchableOpacity>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
-                      {/* Active toggle */}
-                      <TouchableOpacity
+                  {/* Actions Bar */}
+                  <View style={styles.bannerActionsBar}>
+                    <TouchableOpacity
+                      style={[
+                        styles.bannerActionBtn,
+                        { backgroundColor: b.active !== false ? '#DCFCE7' : '#F1F5F9' },
+                      ]}
+                      onPress={() => handleToggleBannerActive(b)}
+                    >
+                      <Icon
+                        source={b.active !== false ? 'eye' : 'eye-off'}
+                        size={14}
+                        color={b.active !== false ? '#15803D' : '#64748B'}
+                      />
+                      <Text
                         style={[
-                          styles.actionBtn,
-                          { backgroundColor: b.active !== false ? '#DCFCE7' : '#F1F5F9' },
+                          styles.bannerActionBtnText,
+                          { color: b.active !== false ? '#15803D' : '#64748B' },
                         ]}
-                        onPress={() => handleToggleBannerActive(b)}
                       >
-                        <Icon
-                          source={b.active !== false ? 'eye' : 'eye-off'}
-                          size={14}
-                          color={b.active !== false ? '#15803D' : '#64748B'}
-                        />
-                        <Text
-                          style={[
-                            styles.actionBtnText,
-                            { color: b.active !== false ? '#15803D' : '#64748B' },
-                          ]}
-                        >
-                          {b.active !== false ? 'Disable' : 'Enable'}
-                        </Text>
-                      </TouchableOpacity>
+                        {b.active !== false ? 'Active' : 'Disabled'}
+                      </Text>
+                    </TouchableOpacity>
 
-                      {/* Edit */}
-                      <TouchableOpacity
-                        style={[styles.actionBtn, { backgroundColor: '#EFF6FF' }]}
-                        onPress={() => handleOpenEditBanner(b)}
-                      >
-                        <Icon source="pencil-outline" size={14} color="#1565FF" />
-                        <Text style={[styles.actionBtnText, { color: '#1565FF' }]}>Edit</Text>
-                      </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.bannerActionBtn, { backgroundColor: '#F1F5F9' }]}
+                      onPress={() => handleOpenEditBanner(b)}
+                    >
+                      <Icon source="pencil-outline" size={14} color="#002F34" />
+                      <Text style={[styles.bannerActionBtnText, { color: '#002F34' }]}>Edit</Text>
+                    </TouchableOpacity>
 
-                      {/* Delete */}
-                      <TouchableOpacity
-                        style={[styles.actionBtn, { backgroundColor: '#FEE2E2' }]}
-                        onPress={() => handleDeleteBanner(b)}
-                      >
-                        <Icon source="trash-can-outline" size={14} color="#EF4444" />
-                        <Text style={[styles.actionBtnText, { color: '#EF4444' }]}>Delete</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity
+                      style={[styles.bannerActionBtn, { backgroundColor: '#FEE2E2' }]}
+                      onPress={() => handleDeleteBanner(b)}
+                    >
+                      <Icon source="trash-can-outline" size={14} color="#DC2626" />
+                      <Text style={[styles.bannerActionBtnText, { color: '#DC2626' }]}>Delete</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-              </Surface>
+              </View>
             ))}
 
             {banners.length === 0 && (
               <View style={styles.centerContainer}>
                 <Icon source="image-broken-variant" size={48} color="#94A3B8" />
                 <Text style={styles.emptyText}>No banners configured yet.</Text>
-                <Button mode="contained" onPress={handleOpenAddBanner} style={{ marginTop: 12 }}>
-                  Add First Banner
-                </Button>
               </View>
             )}
           </ScrollView>
@@ -1406,52 +1484,66 @@ export default function AdminScreen({ navigation }: any) {
       ) : tab === 'announcements' ? (
         /* TAB 5: BROADCAST ANNOUNCEMENTS */
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.listContent}>
-          {/* New Broadcast Form */}
-          <Surface style={styles.formCard} elevation={2}>
-            <View style={styles.formCardHeader}>
-              <Icon source="bullhorn" size={22} color="#1565FF" />
-              <Text style={styles.formCardTitle}>Broadcast Notification</Text>
+          {/* New Broadcast Form Card */}
+          <View style={styles.nativeFormCard}>
+            <View style={styles.formHeaderRow}>
+              <View style={styles.formIconCircle}>
+                <Icon source="bullhorn" size={20} color="#002F34" />
+              </View>
+              <View style={{ marginLeft: 10, flex: 1 }}>
+                <Text style={styles.formTitle}>Broadcast Push Announcement</Text>
+                <Text style={styles.formSubtitle}>
+                  Instantly sends notification banner to all active app users
+                </Text>
+              </View>
             </View>
-            <Text style={styles.formCardSubtitle}>
-              Push real-time announcements to all registered app users simultaneously
-            </Text>
 
             <TextInput
-              label="Announcement Title (e.g. Festival Mega Clearance)"
+              label="Notification Title (e.g. Clearance Sale Today)"
               value={annTitle}
               onChangeText={setAnnTitle}
               mode="outlined"
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
               style={styles.formInput}
             />
 
             <TextInput
-              label="Announcement Message Content..."
+              label="Notification Message..."
               value={annText}
               onChangeText={setAnnText}
               mode="outlined"
               multiline
               numberOfLines={3}
-              style={[styles.formInput, { height: 80 }]}
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
+              style={[styles.formInput, { minHeight: 80, marginTop: 10 }]}
             />
 
-            <Button
-              mode="contained"
-              icon="send"
+            <TouchableOpacity
+              style={styles.nativePrimarySubmitBtn}
               onPress={handleSendAnnouncement}
-              loading={sendingAnn}
               disabled={sendingAnn}
-              style={styles.broadcastBtn}
-              labelStyle={{ color: '#FFFFFF', fontWeight: '800' }}
+              activeOpacity={0.85}
             >
-              Broadcast To All Users
-            </Button>
-          </Surface>
+              {sendingAnn ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Icon source="send" size={16} color="#FFFFFF" />
+                  <Text style={styles.primarySubmitBtnText}>Broadcast To All App Users</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
 
           {/* Past Announcements History */}
-          <Text style={styles.sectionTitle}>Announcements History ({announcements.length})</Text>
+          <Text style={[styles.sectionHeaderTitle, { marginTop: 24, marginBottom: 12 }]}>
+            BROADCAST HISTORY ({announcements.length})
+          </Text>
 
           {announcements.map((ann) => (
-            <Surface key={ann.id} style={styles.annItemCard} elevation={1}>
+            <View key={ann.id} style={styles.annItemCard}>
               <View style={styles.annHeaderRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.annItemTitle}>{ann.title}</Text>
@@ -1467,7 +1559,7 @@ export default function AdminScreen({ navigation }: any) {
                 </TouchableOpacity>
               </View>
               <Text style={styles.annItemText}>{ann.text || ann.message}</Text>
-            </Surface>
+            </View>
           ))}
 
           {announcements.length === 0 && (
@@ -1478,16 +1570,20 @@ export default function AdminScreen({ navigation }: any) {
           )}
         </ScrollView>
       ) : (
-        /* TAB 6: APP UPDATE MANAGER */
+        /* TAB 6: APP UPDATE OTA MANAGER */
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.listContent}>
-          <Surface style={styles.formCard} elevation={2}>
-            <View style={styles.formCardHeader}>
-              <Icon source="cellphone-arrow-down" size={24} color="#1565FF" />
-              <Text style={styles.formCardTitle}>OTA & App Update Configuration</Text>
+          <View style={styles.nativeFormCard}>
+            <View style={styles.formHeaderRow}>
+              <View style={styles.formIconCircle}>
+                <Icon source="cellphone-arrow-down" size={20} color="#002F34" />
+              </View>
+              <View style={{ marginLeft: 10, flex: 1 }}>
+                <Text style={styles.formTitle}>OTA & App Update Configuration</Text>
+                <Text style={styles.formSubtitle}>
+                  Manage mandatory APK updates and prompt dialogue for all Android devices
+                </Text>
+              </View>
             </View>
-            <Text style={styles.formCardSubtitle}>
-              Configure latest version prompt, force critical updates, and APK distribution URL
-            </Text>
 
             <View style={styles.rowInputs}>
               <TextInput
@@ -1495,28 +1591,32 @@ export default function AdminScreen({ navigation }: any) {
                 value={latestVersion}
                 onChangeText={setLatestVersion}
                 mode="outlined"
-                style={[styles.formInput, { flex: 1 }]}
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#002F34"
+                style={[styles.formInput, { flex: 1, marginRight: 6 }]}
               />
               <TextInput
-                label="Min Supported Version"
+                label="Min Version"
                 value={minVersion}
                 onChangeText={setMinVersion}
                 mode="outlined"
-                style={[styles.formInput, { flex: 1 }]}
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#002F34"
+                style={[styles.formInput, { flex: 1, marginLeft: 6 }]}
               />
             </View>
 
-            <View style={styles.switchRow}>
+            <View style={styles.switchNativeRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.switchLabel}>Force Update (Block Older Versions)</Text>
                 <Text style={styles.switchSubLabel}>
-                  Users cannot dismiss the update modal until they install the latest APK
+                  Users cannot skip the update until they install the latest APK
                 </Text>
               </View>
               <Switch
                 value={forceUpdate}
                 onValueChange={setForceUpdate}
-                trackColor={{ false: '#CBD5E1', true: '#EF4444' }}
+                trackColor={{ false: '#CBD5E1', true: '#DC2626' }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -1526,7 +1626,9 @@ export default function AdminScreen({ navigation }: any) {
               value={apkUrl}
               onChangeText={setApkUrl}
               mode="outlined"
-              style={styles.formInput}
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
+              style={[styles.formInput, { marginTop: 10 }]}
             />
 
             <TextInput
@@ -1534,7 +1636,9 @@ export default function AdminScreen({ navigation }: any) {
               value={releaseDate}
               onChangeText={setReleaseDate}
               mode="outlined"
-              style={styles.formInput}
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
+              style={[styles.formInput, { marginTop: 10 }]}
             />
 
             <TextInput
@@ -1544,21 +1648,27 @@ export default function AdminScreen({ navigation }: any) {
               mode="outlined"
               multiline
               numberOfLines={4}
-              style={[styles.formInput, { height: 90 }]}
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
+              style={[styles.formInput, { minHeight: 80, marginTop: 10 }]}
             />
 
-            <Button
-              mode="contained"
-              icon="cloud-upload"
+            <TouchableOpacity
+              style={styles.nativePrimarySubmitBtn}
               onPress={handleSaveVersionConfig}
-              loading={savingVersion}
               disabled={savingVersion}
-              style={styles.broadcastBtn}
-              labelStyle={{ color: '#FFFFFF', fontWeight: '800' }}
+              activeOpacity={0.85}
             >
-              Save App Update Configuration
-            </Button>
-          </Surface>
+              {savingVersion ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Icon source="cloud-upload" size={16} color="#FFFFFF" />
+                  <Text style={styles.primarySubmitBtnText}>Save Update Configuration</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       )}
 
@@ -1586,9 +1696,9 @@ export default function AdminScreen({ navigation }: any) {
         onRequestClose={() => setEditingUser(null)}
       >
         <View style={styles.modalBackdrop}>
-          <Surface style={styles.modalCard} elevation={5}>
+          <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Edit User Profile</Text>
+              <Text style={styles.modalTitleText}>Edit User Profile</Text>
               <IconButton icon="close" size={20} onPress={() => setEditingUser(null)} />
             </View>
 
@@ -1597,6 +1707,8 @@ export default function AdminScreen({ navigation }: any) {
               value={editUserName}
               onChangeText={setEditUserName}
               mode="outlined"
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
               style={styles.modalInput}
             />
 
@@ -1606,6 +1718,8 @@ export default function AdminScreen({ navigation }: any) {
               onChangeText={setEditUserPhone}
               mode="outlined"
               keyboardType="phone-pad"
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
               style={styles.modalInput}
             />
 
@@ -1614,6 +1728,8 @@ export default function AdminScreen({ navigation }: any) {
               value={editUserDistrict}
               onChangeText={setEditUserDistrict}
               mode="outlined"
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
               style={styles.modalInput}
             />
 
@@ -1622,6 +1738,8 @@ export default function AdminScreen({ navigation }: any) {
               value={editUserState}
               onChangeText={setEditUserState}
               mode="outlined"
+              outlineColor="#E2E8F0"
+              activeOutlineColor="#002F34"
               style={styles.modalInput}
             />
 
@@ -1629,6 +1747,8 @@ export default function AdminScreen({ navigation }: any) {
               <Button onPress={() => setEditingUser(null)}>Cancel</Button>
               <Button
                 mode="contained"
+                buttonColor="#002F34"
+                textColor="#FFFFFF"
                 onPress={handleSaveUserEdit}
                 loading={savingUser}
                 disabled={savingUser}
@@ -1636,7 +1756,7 @@ export default function AdminScreen({ navigation }: any) {
                 Save Profile
               </Button>
             </View>
-          </Surface>
+          </View>
         </View>
       </Modal>
 
@@ -1650,9 +1770,9 @@ export default function AdminScreen({ navigation }: any) {
         onRequestClose={() => setBannerModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <Surface style={styles.modalCard} elevation={5}>
+          <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>
+              <Text style={styles.modalTitleText}>
                 {editingBanner ? 'Edit Promotional Banner' : 'Create New Banner'}
               </Text>
               <IconButton icon="close" size={20} onPress={() => setBannerModalVisible(false)} />
@@ -1664,6 +1784,8 @@ export default function AdminScreen({ navigation }: any) {
                 value={bannerTitle}
                 onChangeText={setBannerTitle}
                 mode="outlined"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#002F34"
                 style={styles.modalInput}
               />
 
@@ -1672,14 +1794,18 @@ export default function AdminScreen({ navigation }: any) {
                 value={bannerSubtitle}
                 onChangeText={setBannerSubtitle}
                 mode="outlined"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#002F34"
                 style={styles.modalInput}
               />
 
               <TextInput
-                label="Tag Badge (e.g. Special Offer, Hot Deal)"
+                label="Tag Badge (e.g. Special Offer, 20% Off)"
                 value={bannerTag}
                 onChangeText={setBannerTag}
                 mode="outlined"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#002F34"
                 style={styles.modalInput}
               />
 
@@ -1688,6 +1814,8 @@ export default function AdminScreen({ navigation }: any) {
                 value={bannerTargetLink}
                 onChangeText={setBannerTargetLink}
                 mode="outlined"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#002F34"
                 style={styles.modalInput}
               />
 
@@ -1697,14 +1825,16 @@ export default function AdminScreen({ navigation }: any) {
                 onChangeText={setBannerOrder}
                 mode="outlined"
                 keyboardType="numeric"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#002F34"
                 style={styles.modalInput}
               />
 
-              {/* Image Picker */}
-              <View style={styles.bannerImagePickerBox}>
+              {/* Banner Image Picker */}
+              <View style={styles.bannerPickerBox}>
                 <Text style={styles.bannerPickerLabel}>Banner Image *</Text>
                 {bannerImageUrl ? (
-                  <Image source={{ uri: bannerImageUrl }} style={styles.previewBannerImg} />
+                  <Image source={{ uri: bannerImageUrl }} style={styles.previewBannerImg} resizeMode="cover" />
                 ) : null}
 
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
@@ -1716,7 +1846,7 @@ export default function AdminScreen({ navigation }: any) {
                     disabled={uploadingBannerImage}
                     style={{ flex: 1 }}
                   >
-                    Upload Image
+                    Upload Photo
                   </Button>
                 </View>
 
@@ -1725,12 +1855,13 @@ export default function AdminScreen({ navigation }: any) {
                   value={bannerImageUrl}
                   onChangeText={setBannerImageUrl}
                   mode="outlined"
+                  outlineColor="#E2E8F0"
+                  activeOutlineColor="#002F34"
                   style={[styles.modalInput, { marginTop: 8 }]}
                 />
               </View>
 
-              {/* Active Toggle */}
-              <View style={[styles.switchRow, { marginVertical: 8 }]}>
+              <View style={[styles.switchNativeRow, { marginVertical: 8 }]}>
                 <Text style={styles.switchLabel}>Active in Carousel</Text>
                 <Switch
                   value={bannerActive}
@@ -1745,6 +1876,8 @@ export default function AdminScreen({ navigation }: any) {
               <Button onPress={() => setBannerModalVisible(false)}>Cancel</Button>
               <Button
                 mode="contained"
+                buttonColor="#002F34"
+                textColor="#FFFFFF"
                 onPress={handleSaveBanner}
                 loading={savingBanner}
                 disabled={savingBanner}
@@ -1752,7 +1885,7 @@ export default function AdminScreen({ navigation }: any) {
                 Save Banner
               </Button>
             </View>
-          </Surface>
+          </View>
         </View>
       </Modal>
     </View>
@@ -1760,84 +1893,261 @@ export default function AdminScreen({ navigation }: any) {
 }
 
 // -------------------------------------------------------------
-// Stylesheet
+// Native Marketplace Admin Stylesheet
 // -------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F2F4F5',
   },
-  header: {
+  adminTopHeader: {
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#0B1220',
+    paddingTop: Platform.OS === 'ios' ? 48 : 14,
+    paddingBottom: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
-  headerTitleRow: {
+  headerLeftCol: {
+    flex: 1,
+  },
+  adminBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#FFFFFF',
+  crownCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#002F34',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
-  subtitle: {
+  adminMainTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#002F34',
+    letterSpacing: 0.5,
+  },
+  livePulsePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4EA',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 8,
+    gap: 4,
+  },
+  pulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#137333',
+  },
+  pulseText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#137333',
+  },
+  adminSubTitle: {
     fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 1,
+    color: '#64748B',
+    marginTop: 2,
   },
   exitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 10,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   exitBtnText: {
-    color: '#FFFFFF',
-    fontSize: 11,
+    color: '#002F34',
+    fontSize: 12,
     fontWeight: '700',
   },
-  tabScrollContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+  tabBarContainer: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    gap: 6,
   },
-  tabButton: {
+  tabScrollContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  nativeTabPill: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     gap: 6,
   },
-  tabButtonActive: {
-    backgroundColor: '#1565FF',
+  nativeTabPillActive: {
+    backgroundColor: '#002F34',
+    borderColor: '#002F34',
   },
-  tabButtonText: {
+  nativeTabPillText: {
     fontSize: 12,
     fontWeight: '700',
     color: '#475569',
   },
-  tabButtonTextActive: {
+  nativeTabPillTextActive: {
     color: '#FFFFFF',
   },
-  filterScroll: {
+  overviewScroll: {
+    padding: 12,
+    paddingBottom: 40,
+  },
+  sectionHeaderTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#64748B',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  metricCard: {
+    width: (width - 34) / 2,
     backgroundColor: '#FFFFFF',
-    paddingVertical: 8,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderLeftWidth: 4,
+  },
+  metricIconWrap: {
+    marginBottom: 8,
+  },
+  metricValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#002F34',
+  },
+  metricLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  shortcutsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  shortcutBtn: {
+    width: (width - 34) / 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  shortcutIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  shortcutTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#002F34',
+  },
+  shortcutSub: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  recentSnapshotCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 24,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  snapshotHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
-  filterPill: {
+  snapshotTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#002F34',
+  },
+  viewAllText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#002F34',
+  },
+  snapshotItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  snapshotThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#E2E8F0',
+  },
+  snapshotItemTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#002F34',
+  },
+  snapshotItemSub: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  snapshotStatusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  snapshotStatusText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  filterScroll: {
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  filterScrollContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -1845,25 +2155,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  filterPillActive: {
-    backgroundColor: '#1565FF',
-    borderColor: '#1565FF',
+  filterChipActive: {
+    backgroundColor: '#002F34',
+    borderColor: '#002F34',
   },
-  filterPillText: {
+  filterChipText: {
     fontSize: 11,
     fontWeight: '700',
     color: '#475569',
   },
-  filterPillTextActive: {
+  filterChipTextActive: {
     color: '#FFFFFF',
   },
-  searchBarRow: {
+  searchBarBox: {
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
-  searchInput: {
-    backgroundColor: '#FFFFFF',
+  searchInnerWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  searchInputField: {
+    flex: 1,
+    height: 38,
+    fontSize: 13,
+    color: '#002F34',
+    marginLeft: 6,
   },
   bulkActionBar: {
     flexDirection: 'row',
@@ -1871,9 +2196,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#E0F2FE',
     borderBottomWidth: 1,
-    borderBottomColor: '#DBEAFE',
+    borderBottomColor: '#BAE6FD',
   },
   bulkSelectBtn: {
     flexDirection: 'row',
@@ -1882,28 +2207,28 @@ const styles = StyleSheet.create({
   },
   bulkSelectText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#1565FF',
+    fontWeight: '800',
+    color: '#002F34',
   },
   bulkDeleteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#DC2626',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 5,
+    borderRadius: 6,
     gap: 4,
   },
   bulkDeleteText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#EF4444',
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   listContent: {
     padding: 12,
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
-  listingCard: {
+  nativeListingCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 12,
@@ -1911,7 +2236,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  cardTopRow: {
+  selectedListingCard: {
+    borderColor: '#002F34',
+    backgroundColor: '#F8FAFC',
+  },
+  trashListingCard: {
+    opacity: 0.75,
+    backgroundColor: '#FEF2F2',
+  },
+  cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
@@ -1919,83 +2252,99 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingRight: 6,
   },
-  imageContainer: {
-    width: 74,
-    height: 74,
+  thumbWrap: {
+    width: 80,
+    height: 80,
     borderRadius: 10,
     overflow: 'hidden',
     position: 'relative',
+    backgroundColor: '#E2E8F0',
   },
-  listingImage: {
+  thumbImage: {
     width: '100%',
     height: '100%',
   },
-  soldOverlay: {
+  soldBadgeOverlay: {
     position: 'absolute',
     inset: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  soldOverlayText: {
+  soldBadgeText: {
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
-  listingInfo: {
+  featuredBadgeOverlay: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    backgroundColor: '#FEF08A',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  featuredBadgeText: {
+    color: '#854D0E',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  cardInfoCol: {
     flex: 1,
     marginLeft: 10,
   },
-  cardTitleRow: {
+  priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  listingTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#0F172A',
-    flex: 1,
-  },
-  priceTag: {
-    fontSize: 13,
+  cardPrice: {
+    fontSize: 16,
     fontWeight: '900',
-    color: '#1565FF',
-    marginLeft: 6,
+    color: '#002F34',
   },
-  listingMeta: {
-    fontSize: 11,
-    color: '#475569',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  listingSeller: {
-    fontSize: 10,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  listingLoc: {
-    fontSize: 10,
-    color: '#94A3B8',
-    marginTop: 1,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    marginTop: 6,
-  },
-  statusBadge: {
+  statusTagPill: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 6,
   },
-  statusText: {
-    fontSize: 9,
+  statusTagText: {
+    fontSize: 10,
     fontWeight: '800',
   },
-  actionsBar: {
+  cardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginTop: 2,
+  },
+  vehiclePillRow: {
+    marginTop: 4,
+  },
+  vehiclePillText: {
+    fontSize: 11,
+    color: '#002F34',
+    fontWeight: '700',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 4,
+  },
+  metaLocationText: {
+    fontSize: 11,
+    color: '#64748B',
+    flex: 1,
+  },
+  metaSellerText: {
+    fontSize: 11,
+    color: '#64748B',
+    flex: 1,
+  },
+  cardActionToolbar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
@@ -2003,101 +2352,109 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    justifyContent: 'flex-end',
   },
-  actionBtn: {
+  toolBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 5,
-    borderRadius: 8,
-    gap: 3,
+    borderRadius: 6,
+    gap: 4,
   },
-  actionBtnText: {
+  toolBtnText: {
     fontSize: 11,
     fontWeight: '700',
   },
-  centerContainer: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    color: '#64748B',
-    fontSize: 13,
-    marginTop: 8,
-    fontWeight: '600',
-  },
-  userBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#DBEAFE',
-  },
-  userBannerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1E3A8A',
-  },
-  userCard: {
+  userBannerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  userBannerIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  userBannerText: {
+    fontSize: 13,
+    color: '#475569',
+  },
+  nativeUserCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  userAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#EFF6FF',
+  blockedUserCard: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+  },
+  userAvatarWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
   userInfoCol: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10,
   },
   userName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#002F34',
   },
-  userMeta: {
+  superAdminPill: {
+    backgroundColor: '#FEF08A',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  superAdminPillText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#854D0E',
+  },
+  suspendedPill: {
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  suspendedPillText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#DC2626',
+  },
+  userMetaText: {
     fontSize: 11,
     color: '#64748B',
-    marginTop: 1,
+    marginTop: 2,
   },
-  superChip: {
-    backgroundColor: '#FEF08A',
-    height: 20,
-  },
-  blockedChip: {
-    backgroundColor: '#FEE2E2',
-    height: 20,
-  },
-  userActionBtns: {
+  userActionsCol: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
-  userBtn: {
-    padding: 6,
-    borderRadius: 8,
-    flexDirection: 'row',
+  userActionIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 3,
-  },
-  userBtnText: {
-    fontSize: 10,
-    fontWeight: '700',
   },
   bannerHeaderRow: {
     flexDirection: 'row',
@@ -2109,37 +2466,44 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
-  sectionHeaderTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
   sectionHeaderSubtitle: {
     fontSize: 11,
     color: '#64748B',
+    marginTop: 1,
   },
-  addBannerBtn: {
-    backgroundColor: '#1565FF',
-    borderRadius: 10,
+  addBannerNativeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#002F34',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
   },
-  bannerCard: {
+  addBannerBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  nativeBannerCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: 'hidden',
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   bannerImageWrap: {
-    width: '100%',
     height: 120,
+    width: '100%',
     position: 'relative',
+    backgroundColor: '#E2E8F0',
   },
   bannerCardImg: {
     width: '100%',
     height: '100%',
   },
-  bannerTagRow: {
+  bannerTagOverlay: {
     position: 'absolute',
     top: 8,
     left: 8,
@@ -2147,104 +2511,131 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  orderChip: {
-    backgroundColor: '#0F172A',
-    height: 22,
+  bannerOrderBadge: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
-  bannerInfoBody: {
+  bannerOrderText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  bannerStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  bannerStatusText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  bannerBodyContent: {
     padding: 12,
   },
   bannerTitleText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#002F34',
   },
   bannerSubText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#64748B',
     marginTop: 2,
   },
-  bannerTargetLink: {
-    fontSize: 10,
-    color: '#1565FF',
-    fontFamily: 'monospace',
+  bannerTargetLinkText: {
+    fontSize: 11,
+    color: '#0284C7',
     marginTop: 4,
   },
-  bannerActionsRow: {
+  bannerActionsBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 6,
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
-  reorderGroup: {
+  bannerActionBtn: {
     flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
     gap: 4,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    padding: 2,
   },
-  reorderBtn: {
-    padding: 4,
+  bannerActionBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
-  formCard: {
+  nativeFormCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 14,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  formCardHeader: {
+  formHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  formCardTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  formCardSubtitle: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 2,
     marginBottom: 12,
   },
-  formInput: {
-    marginBottom: 10,
-    backgroundColor: '#FFFFFF',
+  formIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  broadcastBtn: {
-    backgroundColor: '#1565FF',
-    borderRadius: 10,
-    marginTop: 6,
-  },
-  sectionTitle: {
+  formTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 10,
+    color: '#002F34',
+  },
+  formSubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  formInput: {
+    backgroundColor: '#FFFFFF',
+  },
+  nativePrimarySubmitBtn: {
+    backgroundColor: '#002F34',
+    borderRadius: 8,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+  },
+  primarySubmitBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
   },
   annItemCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
-    marginBottom: 10,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   annHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   annItemTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#002F34',
   },
   annItemDate: {
     fontSize: 10,
@@ -2257,26 +2648,26 @@ const styles = StyleSheet.create({
   annItemText: {
     fontSize: 12,
     color: '#475569',
-    marginTop: 6,
-    lineHeight: 16,
+    lineHeight: 18,
   },
   rowInputs: {
     flexDirection: 'row',
-    gap: 10,
   },
-  switchRow: {
+  switchNativeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#F8FAFC',
     padding: 12,
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   switchLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#002F34',
   },
   switchSubLabel: {
     fontSize: 10,
@@ -2285,16 +2676,13 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 16,
   },
-  modalCard: {
-    width: '100%',
-    maxWidth: 420,
+  modalContentCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 14,
     padding: 16,
   },
   modalHeaderRow: {
@@ -2303,28 +2691,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  modalTitle: {
+  modalTitleText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#002F34',
   },
   modalInput: {
-    marginBottom: 10,
     backgroundColor: '#FFFFFF',
+    marginBottom: 8,
   },
-  bannerImagePickerBox: {
-    backgroundColor: '#F8FAFC',
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 10,
+  modalBtnRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 12,
+  },
+  bannerPickerBox: {
+    marginVertical: 8,
   },
   bannerPickerLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#475569',
-    marginBottom: 6,
+    color: '#002F34',
+    marginBottom: 4,
   },
   previewBannerImg: {
     width: '100%',
@@ -2332,10 +2721,22 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 6,
   },
-  modalBtnRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#002F34',
+  },
+  emptyText: {
     marginTop: 8,
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '600',
   },
 });
