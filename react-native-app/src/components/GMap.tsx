@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  Linking,
   Platform,
   ActivityIndicator,
   ViewStyle,
@@ -12,83 +11,77 @@ import {
   Alert,
 } from 'react-native';
 import { IconButton } from 'react-native-paper';
-import { reverseGeocodeOSM, getCurrentLocation } from '../services/location';
+import { 
+  reverseGeocodeLatLng, 
+  getCurrentLocation, 
+  openLocationInExternalMaps,
+  getApproxCoordinates,
+  LatLng
+} from '../services/location';
 
 export interface GMapProps {
   latitude?: number;
   longitude?: number;
+  lat?: number;
+  lng?: number;
+  state?: string;
+  district?: string;
   title?: string;
   zoom?: number;
   interactive?: boolean;
   onLocationSelect?: (coords: { latitude: number; longitude: number }) => void;
   style?: ViewStyle;
+  height?: number;
+  showDetectBtn?: boolean;
 }
 
 export const GMap: React.FC<GMapProps> = ({
-  latitude = 19.0760, // Mumbai default
-  longitude = 72.8777,
+  latitude,
+  longitude,
+  lat,
+  lng,
+  state,
+  district,
   title = 'Spare Part Location',
   zoom = 14,
   interactive = false,
   onLocationSelect,
   style,
+  height = 180,
+  showDetectBtn = true,
 }) => {
-  const [currentLat, setCurrentLat] = useState(latitude);
-  const [currentLng, setCurrentLng] = useState(longitude);
+  // Determine coordinate fallback
+  const resolvedLat = lat ?? latitude ?? (state || district ? getApproxCoordinates(state, district).lat : 19.0760);
+  const resolvedLng = lng ?? longitude ?? (state || district ? getApproxCoordinates(state, district).lng : 72.8777);
+
+  const [currentLat, setCurrentLat] = useState<number>(resolvedLat);
+  const [currentLng, setCurrentLng] = useState<number>(resolvedLng);
   const [address, setAddress] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setCurrentLat(latitude);
-    setCurrentLng(longitude);
-    loadAddress(latitude, longitude);
-  }, [latitude, longitude]);
+    const nextLat = lat ?? latitude ?? (state || district ? getApproxCoordinates(state, district).lat : 19.0760);
+    const nextLng = lng ?? longitude ?? (state || district ? getApproxCoordinates(state, district).lng : 72.8777);
+    setCurrentLat(nextLat);
+    setCurrentLng(nextLng);
+    loadAddress(nextLat, nextLng);
+  }, [lat, lng, latitude, longitude, state, district]);
 
-  const loadAddress = async (lat: number, lng: number) => {
+  const loadAddress = async (la: number, lo: number) => {
     try {
-      const geo = await reverseGeocodeOSM(lat, lng);
-      if (geo && geo.displayName) {
-        setAddress(geo.displayName);
+      const geo = await reverseGeocodeLatLng(la, lo);
+      if (geo?.formattedAddress) {
+        setAddress(geo.formattedAddress);
+      } else if (geo?.district) {
+        setAddress(`${geo.district}, ${geo.state}`);
       }
     } catch (err) {
-      console.warn('[GMap] Reverse geocode error:', err);
+      console.warn('[GMap] Reverse geocode notice:', err);
     }
   };
 
   const handleOpenGoogleMaps = () => {
-    const lat = currentLat;
-    const lng = currentLng;
-    const gmapsNavUrl = `google.navigation:q=${lat},${lng}`;
-    const gmapsWebUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-
-    if (Platform.OS === 'android') {
-      Linking.canOpenURL(gmapsNavUrl)
-        .then((supported) => {
-          if (supported) {
-            Linking.openURL(gmapsNavUrl);
-          } else {
-            Linking.openURL(gmapsWebUrl);
-          }
-        })
-        .catch(() => {
-          Linking.openURL(gmapsWebUrl);
-        });
-    } else if (Platform.OS === 'ios') {
-      const iosGmapsUrl = `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`;
-      Linking.canOpenURL(iosGmapsUrl)
-        .then((supported) => {
-          if (supported) {
-            Linking.openURL(iosGmapsUrl);
-          } else {
-            Linking.openURL(gmapsWebUrl);
-          }
-        })
-        .catch(() => {
-          Linking.openURL(gmapsWebUrl);
-        });
-    } else {
-      Linking.openURL(gmapsWebUrl);
-    }
+    openLocationInExternalMaps(currentLat, currentLng, title);
   };
 
   const handleDetectGPS = async () => {
@@ -104,13 +97,13 @@ export const GMap: React.FC<GMapProps> = ({
         }
       }
     } catch (e: any) {
-      Alert.alert('GPS Location', 'Unable to retrieve location. Please check device permissions.');
+      Alert.alert('GPS Location', 'Unable to retrieve location. Please check device GPS permissions.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Convert lat/lng to OpenStreetMap static tile url for lightweight native image display
+  // Convert lat/lng to OpenStreetMap static tile url
   const latRad = (currentLat * Math.PI) / 180;
   const n = Math.pow(2, zoom);
   const xTile = Math.floor(((currentLng + 180) / 360) * n);
@@ -119,8 +112,8 @@ export const GMap: React.FC<GMapProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      {/* Native Map Graphic Canvas */}
-      <View style={styles.mapCanvas}>
+      {/* Map Canvas */}
+      <View style={[styles.mapCanvas, { height }]}>
         {/* Background OpenStreetMap Tile Layer */}
         <Image
           source={{ uri: mapTileUrl }}
@@ -128,7 +121,7 @@ export const GMap: React.FC<GMapProps> = ({
           resizeMode="cover"
         />
 
-        {/* Dark Map Overlay for high-contrast auto parts theme */}
+        {/* Contrast Overlay */}
         <View style={styles.tileOverlay} />
 
         {/* Center Target Pin Marker */}
@@ -149,18 +142,18 @@ export const GMap: React.FC<GMapProps> = ({
           <TouchableOpacity
             style={styles.actionBtn}
             onPress={handleOpenGoogleMaps}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <IconButton icon="google-maps" iconColor="#FFFFFF" size={16} style={styles.btnIcon} />
             <Text style={styles.actionBtnText}>Open in Maps</Text>
           </TouchableOpacity>
 
-          {interactive && (
+          {interactive && showDetectBtn && (
             <TouchableOpacity
               style={[styles.actionBtn, styles.gpsBtn]}
               onPress={handleDetectGPS}
               disabled={loading}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
@@ -174,15 +167,15 @@ export const GMap: React.FC<GMapProps> = ({
           )}
         </View>
 
-        {/* Coordinates Pill */}
+        {/* Coordinates HUD Badge */}
         <View style={styles.coordsBadge}>
           <Text style={styles.coordsText}>
-            {currentLat.toFixed(4)}° N, {currentLng.toFixed(4)}° E
+            LAT: {currentLat.toFixed(4)} | LNG: {currentLng.toFixed(4)}
           </Text>
         </View>
       </View>
 
-      {/* Address & Verified Location Info Card */}
+      {/* Address & Verified Location Card */}
       <View style={styles.infoCard}>
         <View style={styles.infoRow}>
           <IconButton icon="map-marker-radius" iconColor="#1565FF" size={20} style={{ margin: 0, padding: 0 }} />
@@ -213,7 +206,6 @@ const styles = StyleSheet.create({
   },
   mapCanvas: {
     width: '100%',
-    height: 180,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
@@ -224,11 +216,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
-    opacity: 0.85,
+    opacity: 0.9,
   },
   tileOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(11, 18, 32, 0.45)',
+    backgroundColor: 'rgba(11, 18, 32, 0.4)',
   },
   markerContainer: {
     alignItems: 'center',
@@ -354,4 +346,3 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
 });
-

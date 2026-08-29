@@ -132,6 +132,38 @@ export async function openNativeGallery(options?: Partial<ImageLibraryOptions>):
 }
 
 /**
+ * Open native gallery to select multiple photos
+ */
+export async function openNativeGalleryMultiple(maxCount: number = 6): Promise<string[]> {
+  await requestNativeStoragePermission();
+
+  const libraryOptions: ImageLibraryOptions = {
+    mediaType: 'photo',
+    quality: 0.8,
+    maxWidth: 1200,
+    maxHeight: 1200,
+    selectionLimit: maxCount,
+  };
+
+  return new Promise((resolve) => {
+    launchImageLibrary(libraryOptions, (response) => {
+      if (response.didCancel || !response.assets) {
+        resolve([]);
+        return;
+      }
+      if (response.errorCode) {
+        console.warn('[Gallery] Error:', response.errorMessage);
+        Alert.alert('Gallery Error', response.errorMessage || 'Unable to open image gallery.');
+        resolve([]);
+        return;
+      }
+      const uris = response.assets.map((a) => a.uri).filter(Boolean) as string[];
+      resolve(uris);
+    });
+  });
+}
+
+/**
  * Shows native action dialog prompting user to choose between Camera or Gallery
  */
 export function promptImageSourceDialog(

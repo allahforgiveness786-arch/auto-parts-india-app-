@@ -101,11 +101,10 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
     state: "Karnataka",
     districts: [
       "Bagalkote", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", 
-      "Chamarajanagara", "Chikkaballapura", "Chikkamagaluru", "Chitradurga", 
-      "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", 
-      "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", 
-      "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayanagara", 
-      "Vijayapura", "Yadgir"
+      "Chamarajanagar", "Chikkaballapura", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", 
+      "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", 
+      "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", 
+      "Tumakuru", "Udupi", "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"
     ]
   },
   {
@@ -119,25 +118,24 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
   {
     state: "Madhya Pradesh",
     districts: [
-      "Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", 
-      "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", 
-      "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Narmadapuram", 
-      "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", 
-      "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Niwari", "Panna", "Raisen", 
-      "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", 
-      "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", 
-      "Umaria", "Vidisha"
+      "Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", 
+      "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", 
+      "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", 
+      "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", 
+      "Morena", "Narsinghpur", "Neemuch", "Niwari", "Panna", "Raisen", "Rajgarh", 
+      "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", 
+      "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"
     ]
   },
   {
     state: "Maharashtra",
     districts: [
-      "Ahmednagar", "Akola", "Amravati", "Chhatrapati Sambhajinagar", "Beed", "Bhandara", 
-      "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", 
-      "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", 
-      "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", 
-      "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", 
-      "Wardha", "Washim", "Yavatmal"
+      "Ahmednagar", "Akola", "Amravati", "Aurangabad (Chhatrapati Sambhajinagar)", "Beed", 
+      "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", 
+      "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", 
+      "Nanded", "Nandurbar", "Nashik", "Osmanabad (Dharashiv)", "Palghar", "Parbhani", 
+      "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", 
+      "Thane", "Wardha", "Washim", "Yavatmal"
     ]
   },
   {
@@ -151,7 +149,7 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
   {
     state: "Meghalaya",
     districts: [
-      "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "Eastern West Khasi Hills", 
+      "Eastern West Khasi Hills", "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", 
       "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", 
       "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"
     ]
@@ -159,26 +157,26 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
   {
     state: "Mizoram",
     districts: [
-      "Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", "Lunglei", 
-      "Mamit", "Saiha", "Saitual", "Serchhip"
+      "Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai", 
+      "Lunglei", "Mamit", "Saitual", "Serchhip", "Siaha"
     ]
   },
   {
     state: "Nagaland",
     districts: [
-      "Chümoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", 
-      "Niuland", "Noklak", "Peren", "Phek", "Shamator", "Tseminyu", "Tuensang", "Wokha", 
-      "Zunheboto"
+      "Chumoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", 
+      "Mon", "Niuland", "Noklak", "Peren", "Phek", "Shamator", "Tseminyu", 
+      "Tuensang", "Wokha", "Zunheboto"
     ]
   },
   {
     state: "Odisha",
     districts: [
-      "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh", "Cuttack", "Deogarh", 
-      "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", "Jharsuguda", 
-      "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", 
-      "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", 
-      "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"
+      "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh", "Cuttack", 
+      "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur", "Jajpur", 
+      "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha (Bhubaneswar)", 
+      "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", 
+      "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"
     ]
   },
   {
@@ -187,19 +185,21 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
       "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", 
       "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", 
       "Malerkotla", "Mansa", "Moga", "Muktsar", "Pathankot", "Patiala", "Rupnagar", 
-      "Sahibzada Ajit Singh Nagar", "Sangrur", "Shahid Bhagat Singh Nagar", "Tarn Taran"
+      "Sahibzada Ajit Singh Nagar (Mohali)", "Sangrur", "Shahid Bhagat Singh Nagar", 
+      "Sri Muktsar Sahib", "Tarn Taran"
     ]
   },
   {
     state: "Rajasthan",
     districts: [
-      "Ajmer", "Alwar", "Anupgarh", "Balotra", "Baran", "Barmer", "Beawar", "Bharatpur", 
-      "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Deeg", "Dholpur", 
-      "Didwana-Kuchaman", "Dudu", "Dungarpur", "Gangapur City", "Hanumangarh", "Jaipur", 
-      "Jaipur Rural", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", 
-      "Jodhpur Rural", "Karauli", "Kekri", "Kota", "Kotputli-Behror", "Nagaur", 
-      "Neem Ka Thana", "Phalodi", "Pratapgarh", "Rajsamand", "Salumbar", "Sanchore", 
-      "Sawai Madhopur", "Shahpura", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"
+      "Ajmer", "Alwar", "Anupgarh", "Balotra", "Banswara", "Baran", "Barmer", 
+      "Beawar", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", 
+      "Churu", "Dausa", "Deeg", "Didwana-Kuchaman", "Dholpur", "Dudu", "Dungarpur", 
+      "Ganganagar", "Gangapur City", "Hanumangarh", "Jaipur", "Jaipur Rural", "Jaisalmer", 
+      "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Jodhpur Rural", "Karauli", 
+      "Kekri", "Khairthal-Tijara", "Kota", "Kotputli-Behror", "Nagaur", "Neem Ka Thana", 
+      "Pali", "Phalodi", "Pratapgarh", "Rajsamand", "Salumbar", "Sanchore", "Sawai Madhopur", 
+      "Shahpura", "Sikar", "Sirohi", "Tonk", "Udaipur"
     ]
   },
   {
@@ -210,23 +210,24 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
     state: "Tamil Nadu",
     districts: [
       "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", 
-      "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanniyakumari", "Karur", 
-      "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", 
-      "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", 
-      "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", 
-      "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", 
-      "Viluppuram", "Virudhunagar"
+      "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur", 
+      "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", 
+      "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", 
+      "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", 
+      "Tirunelveli", "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", 
+      "Vellore", "Viluppuram", "Virudhunagar"
     ]
   },
   {
     state: "Telangana",
     districts: [
-      "Adilabad", "Bhadradri Kothagudem", "Hanamkonda", "Hyderabad", "Jagtial", "Jangaon", 
-      "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", 
-      "Kumuram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", 
-      "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", 
-      "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", 
-      "Suryapet", "Vikarabad", "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"
+      "Adilabad", "Bhadradri Kothagudem", "Hanumakonda", "Hyderabad", "Jagtial", 
+      "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", 
+      "Karimnagar", "Khammam", "Kumuram Bheem Asifabad", "Mahabubabad", 
+      "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri", "Mulugu", 
+      "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", 
+      "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", 
+      "Vikarabad", "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"
     ]
   },
   {
@@ -237,54 +238,44 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
     ]
   },
   {
-    state: "Uttarakhand",
-    districts: [
-      "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", 
-      "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", 
-      "Uttarkashi"
-    ]
-  },
-  {
     state: "Uttar Pradesh",
     districts: [
       "Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Ayodhya", 
       "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", 
       "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", 
       "Chitrakoot", "Deoria", "Etah", "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", 
-      "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", 
-      "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat", 
-      "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", "Kushinagar", "Lalitpur", "Lucknow", 
-      "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", 
-      "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh", "Prayagraj", "Raebareli", 
-      "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar", "Shahjahanpur", "Shamli", 
-      "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"
+      "Gautam Buddha Nagar (Noida)", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", 
+      "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Jhansi", 
+      "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", 
+      "Kushinagar", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", 
+      "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", 
+      "Pratapgarh", "Prayagraj", "Raebareli", "Rampur", "Saharanpur", "Sambhal", 
+      "Sant Kabir Nagar", "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", 
+      "Sitapur", "Sonbhadra", "Sultanpur", "Unnao", "Varanasi"
+    ]
+  },
+  {
+    state: "Uttarakhand",
+    districts: [
+      "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", 
+      "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", 
+      "Udham Singh Nagar", "Uttarkashi"
     ]
   },
   {
     state: "West Bengal",
     districts: [
-      "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", "Darjeeling", 
-      "Hooghly", "Howrah", "Jalapuri", "Jhargram", "Kalimpong", "Kolkata", "Malda", 
-      "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", "Paschim Medinipur", 
-      "Purba Bardhaman", "Purba Medinipur", "Purulia", "South 24 Parganas", "Uttar Dinajpur"
+      "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur", 
+      "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong", 
+      "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas", "Paschim Bardhaman", 
+      "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur", "Purulia", 
+      "South 24 Parganas", "Uttar Dinajpur"
     ]
   },
 
   // 8 Union Territories
   {
-    state: "Andaman and Nicobar Islands",
-    districts: ["Nicobar", "North and Middle Andaman", "South Andaman"]
-  },
-  {
-    state: "Chandigarh",
-    districts: ["Chandigarh"]
-  },
-  {
-    state: "Dadra and Nagar Haveli and Daman and Diu",
-    districts: ["Dadra and Nagar Haveli", "Daman", "Diu"]
-  },
-  {
-    state: "Delhi",
+    state: "Delhi (NCT)",
     districts: [
       "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi", 
       "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", 
@@ -295,8 +286,8 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
     state: "Jammu and Kashmir",
     districts: [
       "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", 
-      "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Mendhar", "Poonch", "Pulwama", 
-      "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"
+      "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", 
+      "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"
     ]
   },
   {
@@ -304,11 +295,46 @@ export const INDIAN_STATES_AND_DISTRICTS: StateWithDistricts[] = [
     districts: ["Kargil", "Leh"]
   },
   {
-    state: "Lakshadweep",
-    districts: ["Lakshadweep"]
+    state: "Chandigarh",
+    districts: ["Chandigarh"]
   },
   {
     state: "Puducherry",
     districts: ["Karaikal", "Mahe", "Puducherry", "Yanam"]
+  },
+  {
+    state: "Andaman and Nicobar Islands",
+    districts: ["Nicobar", "North and Middle Andaman", "South Andaman"]
+  },
+  {
+    state: "Dadra and Nagar Haveli and Daman and Diu",
+    districts: ["Dadra and Nagar Haveli", "Daman", "Diu"]
+  },
+  {
+    state: "Lakshadweep",
+    districts: ["Lakshadweep"]
   }
+];
+
+export const POPULAR_CITIES = [
+  "All India",
+  "Delhi",
+  "Mumbai",
+  "Bengaluru",
+  "Chennai",
+  "Hyderabad",
+  "Pune",
+  "Kolkata",
+  "Ahmedabad",
+  "Jaipur",
+  "Coimbatore",
+  "Karur",
+  "Madurai",
+  "Trichy",
+  "Salem",
+  "Chandigarh",
+  "Lucknow",
+  "Kochi",
+  "Indore",
+  "Surat"
 ];

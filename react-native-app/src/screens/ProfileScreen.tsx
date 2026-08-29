@@ -221,30 +221,44 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
   };
 
   // 5. Toggle Mark As Sold
-  const handleToggleSold = async (part: any) => {
-    try {
-      const db = getFirebaseFirestore();
-      const newSoldStatus = !part.sold;
-      if (db && typeof db.collection === 'function') {
-        await db.collection('spareParts').doc(part.id).update({
-          sold: newSoldStatus,
-          status: newSoldStatus ? 'sold' : 'available'
-        });
-      }
-      setMyListings((prev) =>
-        prev.map((item) => (item.id === part.id ? { ...item, sold: newSoldStatus } : item))
-      );
-      Alert.alert('Status Updated', newSoldStatus ? 'Marked as Sold.' : 'Marked as Available.');
-    } catch (_) {
-      Alert.alert('Notice', 'Status updated locally.');
-    }
+  const handleToggleSold = (part: any) => {
+    const newSoldStatus = !part.sold;
+    Alert.alert(
+      newSoldStatus ? 'Mark as Sold' : 'Mark as Available',
+      newSoldStatus
+        ? 'Are you sure you want to mark this spare part as Sold?'
+        : 'Do you want to restore this spare part listing to Available status?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: newSoldStatus ? 'Mark Sold' : 'Make Available',
+          onPress: async () => {
+            try {
+              const db = getFirebaseFirestore();
+              if (db && typeof db.collection === 'function') {
+                await db.collection('spareParts').doc(part.id).update({
+                  sold: newSoldStatus,
+                  status: newSoldStatus ? 'sold' : 'available'
+                });
+              }
+              setMyListings((prev) =>
+                prev.map((item) => (item.id === part.id ? { ...item, sold: newSoldStatus } : item))
+              );
+              Alert.alert('Status Updated', newSoldStatus ? 'Marked as Sold.' : 'Marked as Available.');
+            } catch (_) {
+              Alert.alert('Notice', 'Status updated locally.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   // 6. Delete Listing
   const handleDeleteListing = (partId: string) => {
     Alert.alert(
       'Delete Listing',
-      'Are you sure you want to permanently delete this listing?',
+      'Are you sure you want to permanently delete this listing? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -267,24 +281,37 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
     );
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOutFromGoogle();
-      const authInst = getFirebaseAuth();
-      if (authInst && typeof authInst.signOut === 'function') {
-        await authInst.signOut();
-      }
-      if (navigation?.reset) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }],
-        });
-      } else {
-        navigation.navigate('Auth');
-      }
-    } catch (err: any) {
-      Alert.alert('Error', 'Failed to sign out.');
-    }
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out of your account?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOutFromGoogle();
+              const authInst = getFirebaseAuth();
+              if (authInst && typeof authInst.signOut === 'function') {
+                await authInst.signOut();
+              }
+              if (navigation?.reset) {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Auth' }],
+                });
+              } else {
+                navigation.navigate('Auth');
+              }
+            } catch (err: any) {
+              Alert.alert('Error', 'Failed to sign out.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const rawPhoto = profileData?.photoURL || currentAuthUser?.photoURL;

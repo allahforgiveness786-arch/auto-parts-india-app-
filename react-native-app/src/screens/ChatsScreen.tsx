@@ -1,97 +1,418 @@
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from "react-native";
-import { List, Avatar, Text, Badge, Divider, useTheme, Button } from 'react-native-paper';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  RefreshControl,
+  Image,
+  StatusBar,
+} from 'react-native';
+import {
+  Text,
+  Searchbar,
+  Badge,
+  Divider,
+  ActivityIndicator,
+  Button,
+  Icon,
+} from 'react-native-paper';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
+import BrandLogo from '../components/BrandLogo';
 
 export default function ChatsScreen({ navigation, user: initialUser }: any) {
   const [chats, setChats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const activeUser = initialUser || getCurrentUser();
   const { translateDynamic } = useLanguage();
 
-  useEffect(() => {
+  const loadUserChats = useCallback(() => {
     const activeUid = activeUser?.uid || activeUser?.id;
-    if (!activeUid) return;
-
-    let unsubscribe = () => {};
-    try {
-      const db = getFirebaseFirestore();
-      if (!db || typeof db.collection !== 'function') return;
-
-      const q = db.collection('chats').where('participants', 'array-contains', activeUid);
-      unsubscribe = q.onSnapshot((snapshot: any) => {
-        const list: any[] = [];
-        snapshot.forEach((doc: any) => {
-          list.push({ id: doc.id, ...doc.data() });
-        });
-        setChats(list);
-      }, (err: any) => {
-        console.warn('Chats snapshot error:', err);
-      });
-    } catch (e) {
-      console.warn('Chats query error:', e);
+    if (!activeUid) {
+      setLoading(false);
+      setRefreshing(false);
+      return () => {};
     }
 
-    return () => {
-      try { unsubscribe(); } catch (_) {}
-    };
+    try {
+      const db = getFirebaseFirestore();
+      if (!db || typeof db.collection !== 'function') {
+        setLoading(false);
+        setRefreshing(false);
+        return () => {};
+      }
+
+      // Query chats collection where activeUid is a participant or buyer or seller
+      const chatsRef = db.collection('chats');
+      
+      const unsubscribe = chatsRef.onSnapshot(
+        (snapshot: any) => {
+          const list: any[] = [];
+          if (snapshot && typeof snapshot.forEach === 'function') {
+            snapshot.forEach((doc: any) => {
+              const data = doc.data ? doc.data() : doc;
+              const chatId = doc.id || data.id;
+              
+              const isParticipant =
+                (Array.isArray(data.participants) && data.participants.includes(activeUid)) ||
+                data.buyerId === activeUid ||
+                data.sellerId === activeUid ||
+                (typeof chatId === 'string' && chatId.includes(activeUid));
+
+              if (isParticipant) {
+                list.push({ id: chatId, ...data });
+              }
+            });
+          }
+
+          // Sort by latest message time
+          list.sort((a, b) => {
+            const timeA = a.lastMessageAt || a.updatedAt || a.createdAt || 0;
+            const timeB = b.lastMessageAt || b.updatedAt || b.createdAt || 0;
+            return timeB - timeA;
+          });
+
+          setChats(list);
+          setLoading(false);
+          setRefreshing(false);
+        },
+        (err: any) => {
+          console.warn('[ChatsScreen] Snapshot error:', err);
+          setLoading(false);
+          setRefreshing(false);
+        }
+      );
+
+      return unsubscribe;
+    } catch (e) {
+      console.warn('[ChatsScreen] Error in loadUserChats:', e);
+      setLoading(false);
+      setRefreshing(false);
+      return () => {};
+    }
   }, [activeUser?.uid, activeUser?.id]);
+
+  useEffect(() => {
+    setLoading(true);
+    const unsub = loadUserChats();
+    return () => {
+      try {
+        if (typeof unsub === 'function') unsub();
+      } catch (_) {}
+    };
+  }, [loadUserChats]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadUserChats();
+  };
+
+  const parseTimestamp = (ts: any): number => {
+    if (!ts) return Date.now();
+    if (typeof ts === 'number') return ts;
+    if (typeof ts === 'string') {
+      const parsed = Date.parse(ts);
+      return isNaN(parsed) ? Date.now() : parsed;
+    }
+    if (typeof ts === 'object') {
+      if (typeof ts.toMillis === 'function') return ts.toMillis();
+      if (typeof ts.seconds === 'number') return ts.seconds * 1000;
+    }
+    return Date.now();
+  };
+
+  const getRelativeTime = (timestamp: any) => {
+    const millis = parseTimestamp(timestamp);
+    const difference = Date.now() - millis;
+    if (difference < 0) return translateDynamic('Just now');
+    const minutes = Math.floor(difference / (60 * 1000));
+    if (minutes < 1) return translateDynamic('Just now');
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days > 30) return translateDynamic('Recently');
+    return `${days}d ago`;
+  };
+
+  const formatPrice = (price: number) => {
+    if (!price) return '₹0';
+    return `₹${Number(price).toLocaleString('en-IN')}`;
+  };
 
   if (!activeUser) {
     return (
-      <View style={styles.centerContainer}>
-        <Text variant="titleMedium" style={styles.text}>{translateDynamic('Sign in to view your conversations')}</Text>
-        <Button mode="contained" onPress={() => navigation.navigate('Auth')} style={{ marginTop: 16 }}>
-          {translateDynamic('Sign In')}
-        </Button>
+      <View style={styles.authPromptContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#0B1220" />
+        <View style={styles.authCard}>
+          <View style={styles.authIconCircle}>
+            <Icon source="message-text-lock-outline" size={36} color="#1565FF" />
+          </View>
+          <Text variant="titleLarge" style={styles.authTitle}>
+            {translateDynamic('Sign in to View Chats')}
+          </Text>
+          <Text variant="bodyMedium" style={styles.authSub}>
+            {translateDynamic('Connect directly with verified buyers and sellers in real-time.')}
+          </Text>
+          <Button
+            mode="contained"
+            onPress={() => navigation.navigate('Auth')}
+            style={styles.signInBtn}
+            buttonColor="#1565FF"
+            textColor="#FFFFFF"
+            icon="login"
+          >
+            {translateDynamic('Sign In / Register')}
+          </Button>
+        </View>
       </View>
     );
   }
 
-  const renderChatItem = ({ item }: { item: any }) => {
-    const unreadCount = item.unreadCount?.[activeUser.uid || activeUser.id] || 0;
-    
+  const filteredChats = chats.filter((chat) => {
+    const activeUid = activeUser.uid || activeUser.id;
+    const isUserBuyer = activeUid === chat.buyerId;
+    const partnerName = isUserBuyer ? chat.sellerName : chat.buyerName;
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
     return (
-      <TouchableOpacity 
-        onPress={() => navigation.navigate('ChatRoom', { chatId: item.id, part: { title: item.partTitle, imageUrl: item.partImageUrl, price: item.partPrice } })}
+      (partnerName || '').toLowerCase().includes(query) ||
+      (chat.partTitle || '').toLowerCase().includes(query) ||
+      (chat.lastMessageText || '').toLowerCase().includes(query)
+    );
+  });
+
+  const renderChatItem = ({ item }: { item: any }) => {
+    const activeUid = activeUser.uid || activeUser.id;
+    const isUserBuyer = activeUid === item.buyerId;
+    const partnerName = isUserBuyer
+      ? item.sellerName || 'Verified Seller'
+      : item.buyerName || 'Buyer';
+    const partnerRole = isUserBuyer ? 'Seller' : 'Buyer';
+    const partnerPhoto = isUserBuyer ? item.sellerPhoto : item.buyerPhoto;
+    const partnerId = isUserBuyer ? item.sellerId : item.buyerId;
+
+    const unreadCount =
+      item.unreadCount?.[activeUid] ||
+      (item.lastSenderId && item.lastSenderId !== activeUid && item.unread ? 1 : 0);
+
+    const partImage =
+      item.partImageUrl ||
+      'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=200';
+
+    const handleDeleteChat = (chatItem: any) => {
+      Alert.alert(
+        'Delete Conversation',
+        `Are you sure you want to delete the chat history with ${partnerName}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const db = getFirebaseFirestore();
+                if (db && typeof db.collection === 'function' && chatItem.id) {
+                  await db.collection('chats').doc(chatItem.id).delete();
+                }
+                setChats((prev) => prev.filter((c) => c.id !== chatItem.id));
+                Alert.alert('Deleted', 'Conversation removed.');
+              } catch (err: any) {
+                console.warn('[ChatsScreen] Delete error:', err);
+              }
+            },
+          },
+        ]
+      );
+    };
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.7}
+        style={styles.chatCard}
+        onLongPress={() => handleDeleteChat(item)}
+        onPress={() =>
+          navigation.navigate('ChatRoom', {
+            chatId: item.id,
+            part: {
+              id: item.partId,
+              title: item.partTitle || 'Spare Part',
+              imageUrl: item.partImageUrl,
+              price: item.partPrice || 0,
+              sellerId: item.sellerId,
+              sellerName: item.sellerName,
+            },
+            chat: item,
+          })
+        }
       >
-        <List.Item
-          title={item.partTitle || translateDynamic('Spare Part Discussion')}
-          description={item.lastMessageText || translateDynamic('Tap to open chat')}
-          left={(props) => (
-            <Avatar.Image 
-              {...props} 
-              source={{ uri: item.partImageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=100' }} 
-            />
-          )}
-          right={(props) => (
-            <View style={styles.rightContainer}>
-              <Text variant="bodySmall" style={styles.timeText}>
-                {item.lastMessageAt ? new Date(item.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+        {/* Avatar with part thumbnail badge */}
+        <View style={styles.avatarContainer}>
+          {partnerPhoto ? (
+            <Image source={{ uri: partnerPhoto }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitial}>
+                {(partnerName || 'U').charAt(0).toUpperCase()}
               </Text>
-              {unreadCount > 0 && (
-                <Badge size={22} style={styles.badge}>{unreadCount}</Badge>
-              )}
             </View>
           )}
-        />
-        <Divider />
+
+          {/* Small thumbnail badge of the spare part */}
+          {item.partImageUrl ? (
+            <View style={styles.partBadgeOverlay}>
+              <Image source={{ uri: item.partImageUrl }} style={styles.partBadgeImg} />
+            </View>
+          ) : null}
+
+          {unreadCount > 0 && <View style={styles.unreadPulseDot} />}
+        </View>
+
+        {/* Middle content info */}
+        <View style={styles.chatInfo}>
+          <View style={styles.chatHeaderRow}>
+            <View style={styles.partnerNameRow}>
+              <Text variant="titleSmall" numberOfLines={1} style={styles.partnerNameText}>
+                {partnerName}
+              </Text>
+              <View
+                style={[
+                  styles.roleTag,
+                  isUserBuyer ? styles.sellerTag : styles.buyerTag,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.roleTagText,
+                    isUserBuyer ? styles.sellerTagText : styles.buyerTagText,
+                  ]}
+                >
+                  {partnerRole}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.timestampText}>
+              {getRelativeTime(item.lastMessageAt || item.updatedAt || item.createdAt)}
+            </Text>
+          </View>
+
+          {/* Spare part title badge */}
+          <View style={styles.partTitleRow}>
+            <Icon source="car-wrench" size={13} color="#2563EB" />
+            <Text numberOfLines={1} style={styles.partTitleText}>
+              {item.partTitle || translateDynamic('Spare Part Inquiry')}
+            </Text>
+            {item.partPrice ? (
+              <Text style={styles.partPriceText}>{formatPrice(item.partPrice)}</Text>
+            ) : null}
+          </View>
+
+          {/* Last message preview */}
+          <View style={styles.lastMessageRow}>
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.lastMessageText,
+                unreadCount > 0 && styles.lastMessageTextUnread,
+              ]}
+            >
+              {item.lastMessageText || translateDynamic('Tap to start conversation...')}
+            </Text>
+            {unreadCount > 0 ? (
+              <Badge size={20} style={styles.unreadBadge}>
+                {unreadCount}
+              </Badge>
+            ) : null}
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={chats}
-        keyExtractor={(item) => item.id}
-        renderItem={renderChatItem}
-        ListEmptyComponent={
-          <View style={styles.centerContainer}>
-            <Text variant="bodyMedium" style={styles.text}>{translateDynamic('No active chat conversations yet.')}</Text>
-          </View>
-        }
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#0B1220" />
+
+      {/* Modern Navy Header matching Web & App Theme */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <BrandLogo size="sm" variant="horizontal" theme="dark" showTagline={false} />
+          <TouchableOpacity
+            style={styles.notifIconBtn}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <Icon source="bell-outline" size={22} color="#94A3B8" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Inbox Search input */}
+        <Searchbar
+          placeholder={translateDynamic('Search conversations or parts...')}
+          onChangeText={setSearchQuery}
+          value={searchQuery}
+          style={styles.searchbar}
+          inputStyle={styles.searchInput}
+          iconColor="#94A3B8"
+          placeholderTextColor="#64748B"
+        />
+      </View>
+
+      {/* Main Conversation List */}
+      {loading ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#1565FF" />
+          <Text style={styles.loadingText}>{translateDynamic('Syncing conversations...')}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredChats}
+          keyExtractor={(item) => item.id}
+          renderItem={renderChatItem}
+          ItemSeparatorComponent={() => <Divider style={styles.divider} />}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#1565FF']}
+              tintColor="#1565FF"
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <Icon source="chat-outline" size={44} color="#94A3B8" />
+              </View>
+              <Text variant="titleMedium" style={styles.emptyTitle}>
+                {searchQuery
+                  ? translateDynamic('No matching conversations found')
+                  : translateDynamic('No active conversations yet')}
+              </Text>
+              <Text variant="bodySmall" style={styles.emptySub}>
+                {searchQuery
+                  ? translateDynamic('Try a different search query for parts or sellers.')
+                  : translateDynamic('Browse spare parts and click "Chat" to contact sellers in real-time.')}
+              </Text>
+              {!searchQuery && (
+                <Button
+                  mode="contained-tonal"
+                  onPress={() => navigation.navigate('HomeTab')}
+                  style={{ marginTop: 16 }}
+                  buttonColor="#EFF6FF"
+                  textColor="#1565FF"
+                  icon="car-search"
+                >
+                  {translateDynamic('Browse Spare Parts')}
+                </Button>
+              )}
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -99,28 +420,283 @@ export default function ChatsScreen({ navigation, user: initialUser }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
   },
-  centerContainer: {
-    flex: 1,
-    padding: 32,
+  header: {
+    backgroundColor: '#0B1220',
+    paddingTop: 12,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  notifIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1E293B',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  text: {
-    color: '#64748B',
+  searchbar: {
+    backgroundColor: '#131D31',
+    borderRadius: 14,
+    height: 42,
+    elevation: 0,
+    borderWidth: 1,
+    borderColor: '#1E2D4A',
   },
-  rightContainer: {
+  searchInput: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    minHeight: 0,
+  },
+  listContent: {
+    paddingVertical: 8,
+    flexGrow: 1,
+  },
+  chatCard: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  avatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#E2E8F0',
+  },
+  avatarPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#1565FF',
     justifyContent: 'center',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  partBadgeOverlay: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    overflow: 'hidden',
+    backgroundColor: '#0F172A',
+  },
+  partBadgeImg: {
+    width: '100%',
+    height: '100%',
+  },
+  unreadPulseDot: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  chatInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  chatHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  partnerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  partnerNameText: {
+    fontWeight: '700',
+    color: '#0F172A',
+    fontSize: 14,
+    maxWidth: '70%',
+  },
+  roleTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  sellerTag: {
+    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+  },
+  sellerTagText: {
+    color: '#2563EB',
+    fontSize: 9,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  buyerTag: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+  },
+  buyerTagText: {
+    color: '#059669',
+    fontSize: 9,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  timestampText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  partTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
     gap: 4,
   },
-  timeText: {
-    color: '#94A3B8',
+  partTitleText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#2563EB',
+    flex: 1,
   },
-  badge: {
+  partPriceText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  lastMessageRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  lastMessageText: {
+    fontSize: 12,
+    color: '#64748B',
+    flex: 1,
+    marginRight: 8,
+  },
+  lastMessageTextUnread: {
+    color: '#0F172A',
+    fontWeight: '700',
+  },
+  unreadBadge: {
     backgroundColor: '#EF4444',
     color: '#FFFFFF',
     fontWeight: 'bold',
-  }
+    fontSize: 10,
+  },
+  divider: {
+    backgroundColor: '#F1F5F9',
+    height: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 64,
+    paddingHorizontal: 32,
+  },
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontWeight: '700',
+    color: '#1E293B',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  emptySub: {
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 18,
+    maxWidth: 280,
+  },
+  authPromptContainer: {
+    flex: 1,
+    backgroundColor: '#0B1220',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  authCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 28,
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  authIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(21, 101, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  authTitle: {
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  authSub: {
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  signInBtn: {
+    width: '100%',
+    borderRadius: 14,
+    paddingVertical: 4,
+  },
 });

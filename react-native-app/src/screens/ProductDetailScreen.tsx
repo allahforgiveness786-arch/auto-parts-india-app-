@@ -7,10 +7,17 @@ import RatingModal from '../components/RatingModal';
 import { ImageGalleryModal } from '../components/ImageGalleryModal';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { useFavorites } from '../services/favorites';
+import { 
+  getCurrentLocation, 
+  formatLocationBadgeWithDistance, 
+  openLocationInExternalMaps,
+  LocationCoords 
+} from '../services/location';
 
 export default function ProductDetailScreen({ route, navigation, user: initialUser }: any) {
   const { part: initialPart } = route.params || {};
   const [part, setPart] = useState<any>(initialPart);
+  const [userCoords, setUserCoords] = useState<LocationCoords | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
   const [galleryVisible, setGalleryVisible] = useState(false);
@@ -19,6 +26,13 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
   const user = initialUser || getCurrentUser();
   const { favorites, toggleFavorite } = useFavorites();
   const isFav = favorites.includes(part?.id);
+
+  // Fetch device GPS coords for real distance calculation
+  useEffect(() => {
+    getCurrentLocation().then((coords) => {
+      if (coords) setUserCoords(coords);
+    });
+  }, []);
 
   useEffect(() => {
     if (initialPart?.id) {
@@ -62,9 +76,21 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
   const listingOwnerId = part.ownerId || part.sellerId || part.userId || null;
   const isOwner = Boolean(currentUserId && listingOwnerId && String(currentUserId) === String(listingOwnerId));
 
+  const distanceInfo = formatLocationBadgeWithDistance(part, userCoords);
+
   const handleCall = () => {
     if (part.contactPhone) {
-      Linking.openURL(`tel:${part.contactPhone}`);
+      Alert.alert(
+        'Call Seller',
+        `Do you want to call ${part.contactName || 'the seller'} at ${part.contactPhone}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Call Now',
+            onPress: () => Linking.openURL(`tel:${part.contactPhone}`),
+          },
+        ]
+      );
     } else {
       Alert.alert('Contact', 'Phone number not listed for this seller.');
     }
@@ -77,7 +103,9 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
     }
     const currentUid = user.uid || user.id;
     const sellerUid = part.sellerId || part.userId || part.ownerId || 'seller';
-    const chatId = `${part.id}_${currentUid}_${sellerUid}`;
+    const currentName = user.displayName || user.name || user.email?.split('@')[0] || 'Buyer';
+    const sellerName = part.contactName || part.sellerName || 'Verified Seller';
+    const chatId = `${currentUid}_${sellerUid}_${part.id}`;
     
     try {
       const db = getFirebaseFirestore();
@@ -85,14 +113,16 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
         const chatDocRef = db.collection('chats').doc(chatId);
         await chatDocRef.set({
           id: chatId,
-          partId: part.id,
+          partId: part.id || '',
           partTitle: part.title || 'Spare Part',
-          partImageUrl: part.imageUrl || '',
-          partPrice: part.price || 0,
+          partImageUrl: part.imageUrl || (part.imageUrls && part.imageUrls[0]) || '',
+          partPrice: Number(part.price) || 0,
           buyerId: currentUid,
-          buyerName: user.displayName || user.name || user.email || 'Buyer',
+          buyerName: currentName,
+          buyerPhoto: user.photoURL || '',
           sellerId: sellerUid,
-          sellerName: part.contactName || part.sellerName || 'Seller',
+          sellerName: sellerName,
+          sellerPhoto: part.sellerPhoto || '',
           participants: [currentUid, sellerUid],
           lastMessageText: '',
           lastMessageAt: Date.now()
@@ -102,7 +132,29 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
       console.warn('[ProductDetailScreen] Pre-creating chat doc:', e);
     }
 
-    navigation.navigate('ChatRoom', { chatId, part });
+    navigation.navigate('ChatRoom', { 
+      chatId, 
+      part: {
+        id: part.id,
+        title: part.title || 'Spare Part',
+        imageUrl: part.imageUrl || (part.imageUrls && part.imageUrls[0]) || '',
+        price: Number(part.price) || 0,
+        sellerId: sellerUid,
+        sellerName: sellerName,
+        contactPhone: part.contactPhone || ''
+      },
+      chat: {
+        id: chatId,
+        partId: part.id || '',
+        partTitle: part.title || 'Spare Part',
+        partImageUrl: part.imageUrl || (part.imageUrls && part.imageUrls[0]) || '',
+        partPrice: Number(part.price) || 0,
+        buyerId: currentUid,
+        buyerName: currentName,
+        sellerId: sellerUid,
+        sellerName: sellerName,
+      }
+    });
   };
 
   const handleShare = async () => {
@@ -148,6 +200,9 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
     );
   };
 
+  const partLat = part.latitude || part.lat;
+  const partLng = part.longitude || part.lng;
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.imageHeader}>
@@ -179,11 +234,19 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
         <Text variant="headlineSmall" style={styles.title}>{part.title}</Text>
         <Text variant="headlineMedium" style={styles.price}>₹{part.price?.toLocaleString('en-IN')}</Text>
 
+        {/* Distance & Location Pill Banner */}
+        <View style={styles.locationBanner}>
+          <IconButton icon="map-marker-distance" size={18} iconColor="#1565FF" style={{ margin: 0 }} />
+          <Text style={styles.locationBannerText}>
+            {distanceInfo.text} {distanceInfo.distanceText ? `• ${distanceInfo.distanceText}` : ''}
+          </Text>
+        </View>
+
         <View style={styles.badgeRow}>
           <Chip icon="car" style={styles.chip}>{part.carBrand} {part.carModel}</Chip>
           <Chip icon="shape" style={styles.chip}>{part.category}</Chip>
           <Chip icon="checkbox-marked-circle-outline" style={styles.chip}>{part.condition || 'Used'}</Chip>
-          <Chip icon="map-marker" style={styles.chip}>{part.location || 'India'}</Chip>
+          <Chip icon="map-marker" style={styles.chip}>{part.district || part.location || 'India'}</Chip>
         </View>
 
         <Divider style={styles.divider} />
@@ -217,10 +280,25 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
 
         <Divider style={styles.divider} />
 
-        <Text variant="titleMedium" style={styles.sectionTitle}>Seller Location Map</Text>
+        {/* Interactive Map & Seller Location Details */}
+        <View style={styles.mapSectionHeader}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Seller Location & Map</Text>
+          {partLat && partLng ? (
+            <TouchableOpacity 
+              style={styles.openNavBtn}
+              onPress={() => openLocationInExternalMaps(partLat, partLng, part.title)}
+            >
+              <IconButton icon="directions" size={16} iconColor="#1565FF" style={{ margin: 0 }} />
+              <Text style={styles.openNavText}>Get Directions</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
         <GMap
-          latitude={part.latitude || part.lat || 19.0760}
-          longitude={part.longitude || part.lng || 72.8777}
+          latitude={partLat}
+          longitude={partLng}
+          state={part.state}
+          district={part.district || part.location}
           title={`${part.title} - ${part.location || 'India'}`}
           interactive={false}
           style={{ marginBottom: 16 }}
@@ -232,7 +310,7 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
         <Card style={styles.sellerCard}>
           <Card.Title
             title={part.contactName || part.sellerEmail || 'Verified Parts Dealer'}
-            subtitle={`📍 ${part.location || 'India'} • Verified Vendor`}
+            subtitle={`📍 ${distanceInfo.text} • Verified Vendor`}
             left={(props) => <Avatar.Icon {...props} icon="account" style={{ backgroundColor: "#1565FF" }} />}
             right={(props) => (
               <IconButton 
@@ -347,12 +425,14 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
           }}
         />
       )}
+
       {/* Image Gallery Modal */}
       <ImageGalleryModal
         visible={galleryVisible}
-        part={part}
+        onClose={() => setGalleryVisible(false)}
+        images={part.imageUrls && part.imageUrls.length > 0 ? part.imageUrls : [part.imageUrl]}
         initialIndex={galleryIndex}
-        onDismiss={() => setGalleryVisible(false)}
+        title={part.title}
       />
     </ScrollView>
   );
@@ -363,44 +443,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
   imageHeader: {
     position: 'relative',
+    height: 280,
+    backgroundColor: '#F1F5F9',
   },
   image: {
     width: '100%',
-    height: 280,
+    height: '100%',
+    resizeMode: 'cover',
   },
   galleryBadge: {
     position: 'absolute',
     bottom: 12,
     left: 12,
     backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingRight: 10,
-    paddingVertical: 2,
   },
   galleryBadgeText: {
     color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '700',
+    marginLeft: 2,
   },
-  shareFab: {
+  favFab: {
     position: 'absolute',
     top: 16,
     right: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-  favFab: {
+  shareFab: {
     position: 'absolute',
     top: 16,
-    right: 70,
+    right: 68,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   content: {
     padding: 16,
@@ -408,17 +506,35 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     color: '#0B1220',
+    marginBottom: 6,
   },
   price: {
-    color: '#1565FF',
     fontWeight: 'bold',
-    marginVertical: 8,
+    color: '#1565FF',
+    marginBottom: 8,
+  },
+  locationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    marginBottom: 12,
+  },
+  locationBannerText: {
+    color: '#1E40AF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   badgeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginVertical: 8,
+    marginBottom: 16,
   },
   chip: {
     backgroundColor: '#F1F5F9',
@@ -431,52 +547,74 @@ const styles = StyleSheet.create({
     color: '#0B1220',
     marginBottom: 8,
   },
+  mapSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  openNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  openNavText: {
+    color: '#1565FF',
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 2,
+  },
   specGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     backgroundColor: '#F8FAFC',
     borderRadius: 12,
     padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   specItem: {
     width: '50%',
-    marginVertical: 6,
+    paddingVertical: 6,
   },
   specLabel: {
     fontSize: 11,
     color: '#64748B',
+    fontWeight: '500',
   },
   specVal: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#0B1220',
+    color: '#0F172A',
+    fontWeight: '700',
+    marginTop: 2,
   },
   description: {
-    color: '#475569',
+    color: '#334155',
     lineHeight: 22,
   },
   sellerCard: {
     backgroundColor: '#F8FAFC',
-    marginVertical: 8,
-  },
-  actionColumn: {
-    marginTop: 16,
-    marginBottom: 32,
-    gap: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    marginBottom: 20,
   },
   actionRow: {
     flexDirection: 'row',
+    marginTop: 8,
+  },
+  actionColumn: {
+    marginTop: 8,
   },
   secondaryActionRow: {
     flexDirection: 'row',
+    marginTop: 10,
   },
   actionBtn: {
+    borderRadius: 8,
     paddingVertical: 4,
-  },
-  errorContainer: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
