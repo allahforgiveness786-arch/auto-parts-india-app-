@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, Platform, StatusBar, TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Icon } from 'react-native-paper';
+import { Icon, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -24,18 +24,18 @@ const Tab = createBottomTabNavigator();
 function TabNavigator({ user }: { user: any }) {
   const insets = useSafeAreaInsets();
   const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 6) : insets.bottom;
-  const tabHeight = 56 + bottomPadding;
+  const tabHeight = 60 + bottomPadding;
 
   return (
     <Tab.Navigator id="MainTab"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1565FF',
+        tabBarActiveTintColor: '#0066FF',
         tabBarInactiveTintColor: '#64748B',
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginBottom: Platform.OS === 'android' ? 2 : 0,
+          marginBottom: Platform.OS === 'android' ? 4 : 0,
         },
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
@@ -44,11 +44,11 @@ function TabNavigator({ user }: { user: any }) {
           height: tabHeight,
           paddingBottom: bottomPadding,
           paddingTop: 6,
-          elevation: 8,
+          elevation: 10,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
         },
       }}
     >
@@ -56,8 +56,8 @@ function TabNavigator({ user }: { user: any }) {
         name="HomeTab" 
         options={{ 
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Icon source="home" color={color} size={size || 22} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Icon source={focused ? "home" : "home-outline"} color={color} size={24} />
           )
         }}
       >
@@ -68,8 +68,8 @@ function TabNavigator({ user }: { user: any }) {
         name="ChatsTab" 
         options={{ 
           title: 'Chat',
-          tabBarIcon: ({ color, size }) => (
-            <Icon source="message-text" color={color} size={size || 22} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Icon source={focused ? "message-text" : "message-text-outline"} color={color} size={23} />
           )
         }}
       >
@@ -80,8 +80,17 @@ function TabNavigator({ user }: { user: any }) {
         name="SellTab" 
         options={{ 
           title: 'Sell',
-          tabBarIcon: ({ color, size }) => (
-            <Icon source="plus-circle" color={color} size={size || 24} />
+          tabBarLabel: ({ focused }) => (
+            <Text style={{ fontSize: 11, fontWeight: '700', color: focused ? '#0066FF' : '#64748B', marginTop: -2 }}>
+              Sell
+            </Text>
+          ),
+          tabBarIcon: () => (
+            <View style={tabStyles.sellButtonContainer}>
+              <View style={tabStyles.sellButtonCircle}>
+                <Icon source="plus" color="#FFFFFF" size={26} />
+              </View>
+            </View>
           )
         }}
       >
@@ -92,8 +101,8 @@ function TabNavigator({ user }: { user: any }) {
         name="MyAdsTab" 
         options={{ 
           title: 'My Ads',
-          tabBarIcon: ({ color, size }) => (
-            <Icon source="package-variant-closed" color={color} size={size || 22} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Icon source={focused ? "format-list-bulleted-square" : "newspaper-variant-outline"} color={color} size={23} />
           )
         }}
       >
@@ -104,8 +113,8 @@ function TabNavigator({ user }: { user: any }) {
         name="ProfileTab" 
         options={{ 
           title: 'Account',
-          tabBarIcon: ({ color, size }) => (
-            <Icon source="account" color={color} size={size || 22} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Icon source={focused ? "account" : "account-outline"} color={color} size={24} />
           )
         }}
       >
@@ -114,6 +123,29 @@ function TabNavigator({ user }: { user: any }) {
     </Tab.Navigator>
   );
 }
+
+const tabStyles = StyleSheet.create({
+  sellButtonContainer: {
+    top: -14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sellButtonCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0066FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+});
 
 export default function AppNavigator({ user }: { user: any }) {
   return (

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
-  FlatList, 
   StyleSheet, 
   TouchableOpacity, 
   ScrollView, 
@@ -21,14 +20,13 @@ import {
   Text, 
   Chip, 
   Card, 
-  FAB, 
   Badge, 
   IconButton, 
   useTheme, 
   ActivityIndicator,
   Button,
   Divider,
-  Surface
+  Icon
 } from 'react-native-paper';
 import { getFirebaseFirestore } from '../services/firebase';
 import { useFavorites } from '../services/favorites';
@@ -42,24 +40,24 @@ import { InAppNotification, InAppNotificationData } from '../components/InAppNot
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Animated Card Component with smooth scale & fade-in entrance
-function AnimatedPartCard({ item, index, navigation, styles }: any) {
+// Animated Card Component matching the user screenshot 1:1
+function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavorite, styles }: any) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(24)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
-        delay: Math.min(index * 60, 400),
+        duration: 350,
+        delay: Math.min(index * 40, 300),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 450,
-        delay: Math.min(index * 60, 400),
+        duration: 400,
+        delay: Math.min(index * 40, 300),
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
@@ -68,7 +66,7 @@ function AnimatedPartCard({ item, index, navigation, styles }: any) {
 
   const onPressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.96,
+      toValue: 0.97,
       useNativeDriver: true,
     }).start();
   };
@@ -82,6 +80,8 @@ function AnimatedPartCard({ item, index, navigation, styles }: any) {
     }).start();
   };
 
+  const isNew = (item.condition || '').toLowerCase().includes('new');
+
   return (
     <Animated.View
       style={{
@@ -90,76 +90,97 @@ function AnimatedPartCard({ item, index, navigation, styles }: any) {
       }}
     >
       <TouchableOpacity
-        activeOpacity={0.9}
+        activeOpacity={0.92}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         onPress={() => navigation.navigate('ProductDetail', { part: item })}
+        style={styles.card}
       >
-        <Card style={styles.card} elevation={2}>
-          <View style={styles.imageContainer}>
-            <Card.Cover 
-              source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }} 
-              style={styles.cardImage} 
-            />
-            {item.verified && (
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>Verified</Text>
-              </View>
-            )}
+        {/* Top Image Container */}
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }} 
+            style={styles.cardImage} 
+            resizeMode="cover"
+          />
+
+          {/* Condition Badge (Used: Green, New: Blue) */}
+          <View style={[styles.conditionBadge, isNew ? styles.conditionBadgeNew : styles.conditionBadgeUsed]}>
+            <Text style={[styles.conditionBadgeText, isNew ? styles.conditionTextNew : styles.conditionTextUsed]}>
+              {isNew ? 'New' : 'Used'}
+            </Text>
           </View>
-          <Card.Content style={styles.cardContent}>
-            <Text variant="titleMedium" numberOfLines={1} style={styles.partTitle}>
-              {item.title}
-            </Text>
-            <Text variant="bodySmall" numberOfLines={1} style={styles.partModel}>
-              {item.carBrand} {item.carModel}
-            </Text>
-            <Text variant="bodySmall" style={styles.locationText}>
-              📍 {item.location || 'India'}
-            </Text>
-            <View style={styles.priceRow}>
-              <Text variant="titleMedium" style={styles.price}>
-                ₹{item.price?.toLocaleString('en-IN')}
-              </Text>
-              <Chip compact style={styles.conditionChip} textStyle={{ fontSize: 10 }}>
-                {item.condition || 'Used'}
-              </Chip>
-            </View>
 
-            {/* Quick Contact Buttons */}
-            <View style={styles.cardQuickActions}>
-              <TouchableOpacity
-                style={styles.waPill}
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  const phoneClean = (item.contactPhone || '').replace(/[^0-9]/g, '');
-                  const waUrl = phoneClean
-                    ? `https://wa.me/91${phoneClean.slice(-10)}?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)} on Auto Parts India.`
-                    : `https://wa.me/?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)}`;
-                  Linking.openURL(waUrl).catch(() => Alert.alert('Notice', 'Unable to open WhatsApp'));
-                }}
-              >
-                <IconButton icon="whatsapp" size={14} iconColor="#15803D" style={{ margin: 0, padding: 0 }} />
-                <Text style={styles.waPillText}>WhatsApp</Text>
-              </TouchableOpacity>
+          {/* Favorite Heart Button */}
+          <TouchableOpacity
+            style={styles.favoriteButton}
+            activeOpacity={0.8}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onToggleFavorite?.(item.id);
+            }}
+          >
+            <Icon 
+              source={isFavorited ? "heart" : "heart-outline"} 
+              size={20} 
+              color={isFavorited ? "#EF4444" : "#FFFFFF"} 
+            />
+          </TouchableOpacity>
+        </View>
 
-              <TouchableOpacity
-                style={styles.callPill}
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  if (item.contactPhone) {
-                    Linking.openURL(`tel:${item.contactPhone}`);
-                  } else {
-                    Alert.alert('Notice', 'Phone number not available for this listing.');
-                  }
-                }}
-              >
-                <IconButton icon="phone" size={14} iconColor="#1565FF" style={{ margin: 0, padding: 0 }} />
-                <Text style={styles.callPillText}>Call</Text>
-              </TouchableOpacity>
-            </View>
-          </Card.Content>
-        </Card>
+        {/* Card Body */}
+        <View style={styles.cardContent}>
+          <Text numberOfLines={1} style={styles.partTitle}>
+            {item.title}
+          </Text>
+          <Text numberOfLines={1} style={styles.partModel}>
+            {item.carBrand} {item.carModel}
+          </Text>
+          <View style={styles.locationRow}>
+            <Icon source="map-marker" size={13} color="#64748B" />
+            <Text numberOfLines={1} style={styles.locationText}>
+              {item.location || 'India'}
+            </Text>
+          </View>
+          <Text style={styles.price}>
+            ₹{item.price?.toLocaleString('en-IN')}
+          </Text>
+
+          {/* Quick Action Contact Buttons */}
+          <View style={styles.cardQuickActions}>
+            <TouchableOpacity
+              style={styles.waPill}
+              activeOpacity={0.8}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                const phoneClean = (item.contactPhone || '').replace(/[^0-9]/g, '');
+                const waUrl = phoneClean
+                  ? `https://wa.me/91${phoneClean.slice(-10)}?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)} on Auto Parts India.`
+                  : `https://wa.me/?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)}`;
+                Linking.openURL(waUrl).catch(() => Alert.alert('Notice', 'Unable to open WhatsApp'));
+              }}
+            >
+              <Icon source="whatsapp" size={14} color="#15803D" />
+              <Text style={styles.waPillText}>WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.callPill}
+              activeOpacity={0.8}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                if (item.contactPhone) {
+                  Linking.openURL(`tel:${item.contactPhone}`);
+                } else {
+                  Alert.alert('Notice', 'Phone number not available for this listing.');
+                }
+              }}
+            >
+              <Icon source="phone" size={14} color="#0066FF" />
+              <Text style={styles.callPillText}>Call</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -167,15 +188,11 @@ function AnimatedPartCard({ item, index, navigation, styles }: any) {
 
 export default function HomeScreen({ navigation, user }: any) {
   const { favorites, toggleFavorite } = useFavorites();
-  const [firestoreBanners, setFirestoreBanners] = useState<any[]>([]);
   const [taxonomyCategories, setTaxonomyCategories] = useState<string[]>([]);
-  const [taxonomyBrands, setTaxonomyBrands] = useState<string[]>([]);
-  const theme = useTheme();
-  const { t, translateDynamic, language } = useLanguage();
+  const { t } = useLanguage();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedBrand, setSelectedBrand] = useState('All');
   const [selectedCity, setSelectedCity] = useState('All India');
   const [parts, setParts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -186,14 +203,12 @@ export default function HomeScreen({ navigation, user }: any) {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [updateConfig, setUpdateConfig] = useState<any>(null);
 
-  // Entrance Animations for sections
+  // Entrance Animations for smooth load
   const headerFade = useRef(new Animated.Value(0)).current;
-  const searchSlide = useRef(new Animated.Value(-15)).current;
-  const bannersFade = useRef(new Animated.Value(0)).current;
-  const fabScale = useRef(new Animated.Value(0)).current;
+  const searchSlide = useRef(new Animated.Value(-12)).current;
 
   useEffect(() => {
-    Animated.stagger(100, [
+    Animated.parallel([
       Animated.timing(headerFade, {
         toValue: 1,
         duration: 350,
@@ -202,159 +217,25 @@ export default function HomeScreen({ navigation, user }: any) {
       Animated.timing(searchSlide, {
         toValue: 0,
         duration: 400,
-        easing: Easing.out(Easing.back(1.5)),
-        useNativeDriver: true,
-      }),
-      Animated.timing(bannersFade, {
-        toValue: 1,
-        duration: 450,
-        useNativeDriver: true,
-      }),
-      Animated.spring(fabScale, {
-        toValue: 1,
-        friction: 5,
-        tension: 50,
+        easing: Easing.out(Easing.back(1.4)),
         useNativeDriver: true,
       }),
     ]).start();
   }, []);
 
-  const displayCategories = taxonomyCategories.length > 0 
-    ? ['All', ...taxonomyCategories].map(cat => ({ 
-        id: cat, 
-        name: cat, 
-        tag: 'Auto',
-        subtext: 'Verified Parts',
-        icon: 'tag-outline', 
-        count: parts.filter(p => p.category === cat).length, 
-        color: '#1565FF', 
-        bg: '#EFF6FF',
-        border: '#DBEAFE',
-        accentColor: '#1D4ED8'
-      })) 
-    : [
-    { 
-      id: 'All', 
-      name: 'All Parts', 
-      tag: 'Catalog',
-      subtext: 'Browse everything', 
-      icon: 'view-grid-plus', 
-      count: parts.length, 
-      color: '#2563EB', 
-      bg: '#EFF6FF', 
-      border: '#BFDBFE',
-      accentColor: '#1D4ED8'
-    },
-    { 
-      id: 'Engine & Mechanical', 
-      name: 'Engine & Mechanical', 
-      tag: 'Core Power',
-      subtext: 'Pistons, Turbo, Block', 
-      icon: 'engine', 
-      count: parts.filter(p => p.category === 'Engine & Mechanical').length, 
-      color: '#D97706', 
-      bg: '#FFFBEB', 
-      border: '#FDE68A',
-      accentColor: '#B45309'
-    },
-    { 
-      id: 'Body & Exterior', 
-      name: 'Body & Exterior', 
-      tag: 'Structure',
-      subtext: 'Doors, Bumpers, Hood', 
-      icon: 'car-door', 
-      count: parts.filter(p => p.category === 'Body & Exterior').length, 
-      color: '#4F46E5', 
-      bg: '#EEF2FF', 
-      border: '#C7D2FE',
-      accentColor: '#4338CA'
-    },
-    { 
-      id: 'Lights & Electricals', 
-      name: 'Lights & Electricals', 
-      tag: 'OEM Glow',
-      subtext: 'LEDs, Headlamps, Horns', 
-      icon: 'car-light-high', 
-      count: parts.filter(p => p.category === 'Lights & Electricals').length, 
-      color: '#EAB308', 
-      bg: '#FEFCE8', 
-      border: '#FEF08A',
-      accentColor: '#A16207'
-    },
-    { 
-      id: 'Suspension & Brakes', 
-      name: 'Suspension & Brakes', 
-      tag: 'Safety Pro',
-      subtext: 'Shocks, ABS, Calipers', 
-      icon: 'car-brake-alert', 
-      count: parts.filter(p => p.category === 'Suspension & Brakes').length, 
-      color: '#E11D48', 
-      bg: '#FFF1F2', 
-      border: '#FECDD3',
-      accentColor: '#BE123C'
-    },
-    { 
-      id: 'Interior & Wheels', 
-      name: 'Interior & Wheels', 
-      tag: 'Cabin',
-      subtext: 'Steering, Seats, Alloys', 
-      icon: 'steering', 
-      count: parts.filter(p => p.category === 'Interior & Wheels').length, 
-      color: '#059669', 
-      bg: '#ECFDF5', 
-      border: '#A7F3D0',
-      accentColor: '#047857'
-    },
-    { 
-      id: 'Wiring & Harnesses', 
-      name: 'Wiring & Harnesses', 
-      tag: 'Precision',
-      subtext: 'ECUs, Relays, Cables', 
-      icon: 'lightning-bolt', 
-      count: parts.filter(p => p.category === 'Wiring & Harnesses').length, 
-      color: '#0891B2', 
-      bg: '#ECFEFF', 
-      border: '#A5F3FC',
-      accentColor: '#0E7490'
-    },
-  ];
-
-  const displayBrands = taxonomyBrands.length > 0
-    ? ['All', ...taxonomyBrands].map(b => ({ name: b, icon: 'car-side' }))
-    : [
-
-    { name: 'All', icon: 'car-multiple' },
-    { name: 'Maruti Suzuki', icon: 'car-sports' },
-    { name: 'Hyundai', icon: 'car' },
-    { name: 'Tata', icon: 'car-estate' },
-    { name: 'Mahindra', icon: 'truck-pickup' },
-    { name: 'Toyota', icon: 'car-side' },
-    { name: 'Honda', icon: 'car-convertible' },
-    { name: 'Kia', icon: 'car-hatchback' },
+  // Exact categories matching the user screenshot
+  const categoryItems = [
+    { id: 'Engine & Parts', name: 'Engine & Parts', icon: 'engine', iconColor: '#0F172A' },
+    { id: 'Body Parts', name: 'Body Parts', icon: 'car-door', iconColor: '#0F172A' },
+    { id: 'Electricals', name: 'Electricals', icon: 'lightning-bolt', iconColor: '#0066FF' },
+    { id: 'Suspension', name: 'Suspension', icon: 'car-brake-alert', iconColor: '#0F172A' },
+    { id: 'Exhaust', name: 'Exhaust', icon: 'needle', iconColor: '#0F172A' },
+    { id: 'More', name: 'More', icon: 'apps', iconColor: '#0F172A' },
   ];
 
   const cities = [
-    'All India', 'Mumbai', 'Delhi NCR', 'Bengaluru', 'Chennai', 
-    'Hyderabad', 'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur'
-  ];
-
-  const banners = [
-    {
-      id: '1',
-      title: '0% Marketplace Commission',
-      subtitle: 'Sell auto spare parts directly to verified buyers',
-      tag: 'DIRECT DEAL',
-      color: '#0F172A',
-      accentColor: '#1565FF'
-    },
-    {
-      id: '2',
-      title: '100% Genuine Certified Parts',
-      subtitle: 'Browse OEM & verified aftermarket spares across India',
-      tag: 'VERIFIED',
-      color: '#1E293B',
-      accentColor: '#10B981'
-    }
+    'All India', 'Delhi', 'Mumbai', 'Bangalore', 'Pune', 
+    'Chennai', 'Hyderabad', 'Kolkata', 'Ahmedabad', 'Jaipur'
   ];
 
   useEffect(() => {
@@ -397,365 +278,190 @@ export default function HomeScreen({ navigation, user }: any) {
     };
   }, []);
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
   const filteredParts = parts.filter((part) => {
     const queryLower = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
       part.title?.toLowerCase().includes(queryLower) ||
       part.carBrand?.toLowerCase().includes(queryLower) ||
       part.carModel?.toLowerCase().includes(queryLower) ||
-      part.category?.toLowerCase().includes(queryLower) ||
-      part.partNumber?.toLowerCase().includes(queryLower);
+      part.category?.toLowerCase().includes(queryLower);
 
-    const matchesCategory = selectedCategory === 'All' || part.category === selectedCategory;
-    const matchesBrand = selectedBrand === 'All' || part.carBrand === selectedBrand;
-    const matchesCity = selectedCity === 'All India' || !part.location || part.location.includes(selectedCity);
+    const matchesCategory = selectedCategory === 'All' || selectedCategory === 'More' || 
+      (part.category && part.category.toLowerCase().includes(selectedCategory.toLowerCase().split(' ')[0]));
+    
+    const matchesCity = selectedCity === 'All India' || !part.location || 
+      part.location.toLowerCase().includes(selectedCity.toLowerCase());
 
-    return matchesSearch && matchesCategory && matchesBrand && matchesCity;
+    return matchesSearch && matchesCategory && matchesCity;
   });
-
-  const renderPartItem = ({ item }: { item: any }) => (
-    <Card 
-      style={styles.card} 
-      onPress={() => navigation.navigate('ProductDetail', { part: item })}
-      elevation={2}
-    >
-      <View style={styles.imageContainer}>
-        <Card.Cover 
-          source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }} 
-          style={styles.cardImage} 
-        />
-        {item.verified && (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>Verified</Text>
-          </View>
-        )}
-      </View>
-      <Card.Content style={styles.cardContent}>
-        <Text variant="titleMedium" numberOfLines={1} style={styles.partTitle}>
-          {item.title}
-        </Text>
-        <Text variant="bodySmall" numberOfLines={1} style={styles.partModel}>
-          {item.carBrand} {item.carModel}
-        </Text>
-        <Text variant="bodySmall" style={styles.locationText}>
-          📍 {item.location || 'India'}
-        </Text>
-        <View style={styles.priceRow}>
-          <Text variant="titleMedium" style={styles.price}>
-            ₹{item.price?.toLocaleString('en-IN')}
-          </Text>
-          <Chip compact style={styles.conditionChip} textStyle={{ fontSize: 10 }}>
-            {item.condition || 'Used'}
-          </Chip>
-        </View>
-
-        {/* Quick Contact Buttons */}
-        <View style={styles.cardQuickActions}>
-          <TouchableOpacity
-            style={styles.waPill}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              const phoneClean = (item.contactPhone || '').replace(/[^0-9]/g, '');
-              const waUrl = phoneClean
-                ? `https://wa.me/91${phoneClean.slice(-10)}?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)} on Auto Parts India.`
-                : `https://wa.me/?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)}`;
-              Linking.openURL(waUrl).catch(() => Alert.alert('Notice', 'Unable to open WhatsApp'));
-            }}
-          >
-            <IconButton icon="whatsapp" size={14} iconColor="#15803D" style={{ margin: 0, padding: 0 }} />
-            <Text style={styles.waPillText}>WhatsApp</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.callPill}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              if (item.contactPhone) {
-                Linking.openURL(`tel:${item.contactPhone}`);
-              } else {
-                Alert.alert('Notice', 'Phone number not available for this listing.');
-              }
-            }}
-          >
-            <IconButton icon="phone" size={14} iconColor="#1565FF" style={{ margin: 0, padding: 0 }} />
-            <Text style={styles.callPillText}>Call</Text>
-          </TouchableOpacity>
-        </View>
-      </Card.Content>
-    </Card>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0B1220" />
+      <StatusBar barStyle="light-content" backgroundColor="#080E1B" />
       
-      {/* Native Header */}
-      <Animated.View style={[styles.header, { opacity: headerFade }]}>
-        <View style={styles.headerLeft}>
-          <BrandLogo size={38} style={styles.logoImage} />
-          <View>
-            <Text variant="titleMedium" style={styles.headerTitle}>Auto Parts India</Text>
+      {/* Top Header - Exact dark bar from screenshot */}
+      <View style={styles.topHeaderWrapper}>
+        <Animated.View style={[styles.header, { opacity: headerFade }]}>
+          <View style={styles.headerLeft}>
+            <BrandLogo size={36} style={styles.logoImage} />
+            <View>
+              <Text style={styles.headerTitle}>Auto Parts India</Text>
+              <TouchableOpacity 
+                style={styles.locationSelector} 
+                activeOpacity={0.8}
+                onPress={() => setShowLocationModal(true)}
+              >
+                <Icon source="map-marker" size={13} color="#EF4444" />
+                <Text style={styles.headerSubtitle}>
+                  {selectedCity} ▾
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.headerRight}>
             <TouchableOpacity 
-              style={styles.locationSelector} 
-              onPress={() => setShowLocationModal(true)}
+              style={styles.headerActionBtn} 
+              onPress={() => setShowLanguageModal(true)}
             >
-              <Text variant="bodySmall" style={styles.headerSubtitle}>
-                📍 {selectedCity} ▾
-              </Text>
+              <Icon source="translate" color="#FFFFFF" size={22} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.headerActionBtn} 
+              onPress={() => navigation.navigate('Notifications')}
+            >
+              <Icon source="bell-outline" color="#FFFFFF" size={22} />
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>2</Text>
+              </View>
             </TouchableOpacity>
           </View>
-        </View>
-
-        <View style={styles.headerRight}>
-          <TouchableOpacity 
-            style={styles.bellBtn} 
-            onPress={() => setShowLanguageModal(true)}
-          >
-            <IconButton icon="translate" iconColor="#F1F5F9" size={20} style={{ margin: 0 }} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.bellBtn} 
-            onPress={() => navigation.navigate('Search')}
-          >
-            <IconButton icon="magnify" iconColor="#FFFFFF" size={20} style={{ margin: 0 }} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.bellBtn} 
-            onPress={() => navigation.navigate('Notifications')}
-          >
-            <IconButton icon="bell-outline" iconColor="#FFFFFF" size={20} style={{ margin: 0 }} />
-            <Badge size={8} style={styles.badge} />
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-
-      {/* Search Bar & Filter Button with Slide Animation */}
-      <Animated.View style={[styles.searchContainer, { transform: [{ translateY: searchSlide }] }]}>
-        <Searchbar
-          placeholder="Search parts, brands, models..."
-          onChangeText={setSearchQuery}
-          onSubmitEditing={() => {
-            if (searchQuery.trim()) {
-              navigation.navigate('Search', { initialQuery: searchQuery });
-            }
-          }}
-          value={searchQuery}
-          style={styles.searchBar}
-          inputStyle={{ fontSize: 14 }}
-          elevation={1}
-        />
-        <TouchableOpacity 
-          style={styles.filterBtn} 
-          onPress={() => setShowFilterModal(true)}
-        >
-          <IconButton icon="tune-variant" iconColor="#FFFFFF" size={20} style={{ margin: 0 }} />
-        </TouchableOpacity>
-      </Animated.View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Promotional Banner Carousel */}
-        <Animated.View style={{ opacity: bannersFade }}>
-          <ScrollView 
-            horizontal 
-            pagingEnabled 
-            showsHorizontalScrollIndicator={false} 
-            style={styles.bannerContainer}
-          >
-            {banners.map((b) => (
-              <Surface key={b.id} style={[styles.bannerCard, { backgroundColor: b.color }]} elevation={2}>
-                <View style={[styles.bannerTag, { backgroundColor: b.accentColor }]}>
-                  <Text style={styles.bannerTagText}>{b.tag}</Text>
-                </View>
-                <Text variant="titleMedium" style={styles.bannerTitle}>{b.title}</Text>
-                <Text variant="bodySmall" style={styles.bannerSubtitle}>{b.subtitle}</Text>
-              </Surface>
-            ))}
-          </ScrollView>
         </Animated.View>
 
-        {/* Top Car Brands */}
-        <View style={styles.sectionHeader}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>Popular Car Brands</Text>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.brandList}>
-          {displayBrands.map((b) => (
-            <TouchableOpacity 
-              key={b.name}
-              style={[
-                styles.brandChip,
-                selectedBrand === b.name ? styles.selectedBrandChip : undefined
-              ]}
-              onPress={() => setSelectedBrand(b.name)}
-            >
-              <Text 
-                style={[
-                  styles.brandText,
-                  selectedBrand === b.name ? styles.selectedBrandText : undefined
-                ]}
-              >
-                {b.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {/* Search Bar & Blue Filter Button */}
+        <Animated.View style={[styles.searchContainer, { transform: [{ translateY: searchSlide }] }]}>
+          <Searchbar
+            placeholder="Search parts, brands, models..."
+            placeholderTextColor="#94A3B8"
+            onChangeText={setSearchQuery}
+            onSubmitEditing={() => {
+              if (searchQuery.trim()) {
+                navigation.navigate('Search', { initialQuery: searchQuery });
+              }
+            }}
+            value={searchQuery}
+            iconColor="#64748B"
+            style={styles.searchBar}
+            inputStyle={styles.searchInput}
+            elevation={0}
+          />
+          <TouchableOpacity 
+            style={styles.filterBtn} 
+            activeOpacity={0.85}
+            onPress={() => setShowFilterModal(true)}
+          >
+            <Icon source="tune-variant" color="#FFFFFF" size={22} />
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
 
-        {/* Top Categories Visual Cards */}
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066FF']} />
+        }
+      >
+        {/* Categories Section Header */}
         <View style={styles.sectionHeader}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>Top Categories</Text>
-            <View style={styles.categoryHeaderLiveDot} />
-          </View>
-          {selectedCategory !== 'All' ? (
-            <TouchableOpacity 
-              activeOpacity={0.7}
-              style={styles.resetCategoryPill}
-              onPress={() => setSelectedCategory('All')}
-            >
-              <IconButton icon="close-circle-outline" size={14} iconColor="#1565FF" style={{ margin: 0, padding: 0 }} />
-              <Text style={styles.resetCategoryText}>Clear ({selectedCategory.split(' ')[0]})</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.categoryHeaderHint}>Swipe to explore</Text>
-          )}
+          <Text style={styles.sectionTitle}>Categories</Text>
+          <TouchableOpacity 
+            onPress={() => {
+              setSelectedCategory('All');
+            }}
+          >
+            <Text style={styles.seeAllText}>See all</Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Horizontal Category Cards */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
-          contentContainerStyle={styles.categoryCardList}
+          contentContainerStyle={styles.categoryList}
         >
-          {displayCategories.map((cat) => {
+          {categoryItems.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
               <TouchableOpacity
                 key={cat.id}
-                activeOpacity={0.75}
+                activeOpacity={0.8}
                 onPress={() => setSelectedCategory(isSelected ? 'All' : cat.id)}
                 style={[
                   styles.categoryCard,
-                  isSelected 
-                    ? styles.categoryCardSelected 
-                    : { backgroundColor: '#FFFFFF', borderColor: cat.border || '#E2E8F0' }
+                  isSelected && styles.categoryCardSelected
                 ]}
               >
-                {/* Top Row: Icon Container + Sleek Tag */}
-                <View style={styles.categoryCardTopRow}>
-                  <View 
-                    style={[
-                      styles.categoryIconWrap, 
-                      isSelected 
-                        ? styles.categoryIconWrapSelected 
-                        : { backgroundColor: cat.bg, borderColor: cat.border || '#DBEAFE' }
-                    ]}
-                  >
-                    <IconButton
-                      icon={cat.icon}
-                      iconColor={isSelected ? '#FFFFFF' : cat.color}
-                      size={22}
-                      style={{ margin: 0, padding: 0 }}
-                    />
-                  </View>
-                  
-                  <View 
-                    style={[
-                      styles.categoryTagPill,
-                      isSelected 
-                        ? { backgroundColor: 'rgba(37, 99, 235, 0.25)', borderColor: '#3B82F6' } 
-                        : { backgroundColor: cat.bg, borderColor: cat.border || '#E2E8F0' }
-                    ]}
-                  >
-                    <Text 
-                      style={[
-                        styles.categoryTagPillText,
-                        isSelected ? { color: '#60A5FA' } : { color: cat.accentColor || cat.color }
-                      ]}
-                    >
-                      {cat.tag || 'AUTO'}
-                    </Text>
-                  </View>
+                <View style={styles.categoryIconWrap}>
+                  <Icon 
+                    source={cat.icon} 
+                    color={isSelected ? '#0066FF' : cat.iconColor} 
+                    size={28} 
+                  />
                 </View>
-
-                {/* Middle Row: Title & Subtext */}
-                <View style={styles.categoryCardMiddle}>
-                  <Text 
-                    numberOfLines={1} 
-                    style={[
-                      styles.categoryCardTitle,
-                      isSelected && styles.categoryCardTitleSelected
-                    ]}
-                  >
-                    {cat.name}
-                  </Text>
-                  <Text 
-                    numberOfLines={1} 
-                    style={[
-                      styles.categoryCardSubtext,
-                      isSelected && styles.categoryCardSubtextSelected
-                    ]}
-                  >
-                    {cat.subtext || 'Genuine Auto Parts'}
-                  </Text>
-                </View>
-
-                {/* Bottom Row: Active / Count Badge */}
-                <View 
+                <Text 
+                  numberOfLines={1} 
                   style={[
-                    styles.categoryBottomPill,
-                    isSelected ? styles.categoryBottomPillSelected : { backgroundColor: cat.bg }
+                    styles.categoryName,
+                    isSelected && styles.categoryNameSelected
                   ]}
                 >
-                  <View 
-                    style={[
-                      styles.categoryStatusDot, 
-                      isSelected ? { backgroundColor: '#38BDF8' } : { backgroundColor: cat.color }
-                    ]} 
-                  />
-                  <Text 
-                    style={[
-                      styles.categoryBottomPillText,
-                      isSelected ? { color: '#FFFFFF' } : { color: '#334155' }
-                    ]}
-                  >
-                    {isSelected ? 'Active Filter' : `${cat.count} ${cat.count === 1 ? 'part' : 'parts'}`}
-                  </Text>
-                </View>
+                  {cat.name}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
 
-        {/* Main Content Feed */}
-        <View style={styles.feedHeader}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Spare Parts {selectedCategory !== 'All' ? `• ${selectedCategory}` : ''}
-          </Text>
-          <Text variant="bodySmall" style={{ color: '#64748B' }}>
-            {filteredParts.length} items found
-          </Text>
+        {/* Latest Parts Section Header */}
+        <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+          <Text style={styles.sectionTitle}>Latest Parts</Text>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Search')}
+          >
+            <Text style={styles.seeAllText}>See all</Text>
+          </TouchableOpacity>
         </View>
 
+        {/* 2-Column Product Grid */}
         {loading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#1565FF" />
+            <ActivityIndicator size="large" color="#0066FF" />
           </View>
         ) : filteredParts.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text variant="titleSmall" style={{ color: '#475569', fontWeight: 'bold' }}>
-              No spare parts found
-            </Text>
-            <Text variant="bodySmall" style={{ color: '#64748B', marginTop: 4, textAlign: 'center' }}>
-              Try resetting your search query, brand, or location filter.
-            </Text>
+            <Icon source="package-variant" size={48} color="#94A3B8" />
+            <Text style={styles.emptyTitle}>No spare parts found</Text>
+            <Text style={styles.emptySubtitle}>Try resetting your search query or location filter.</Text>
             <Button 
-              mode="outlined" 
+              mode="contained" 
+              buttonColor="#0066FF"
               onPress={() => {
                 setSearchQuery('');
                 setSelectedCategory('All');
-                setSelectedBrand('All');
                 setSelectedCity('All India');
               }}
-              style={{ marginTop: 12 }}
+              style={{ marginTop: 14 }}
             >
-              Reset All Filters
+              Reset Filters
             </Button>
           </View>
         ) : (
@@ -766,40 +472,61 @@ export default function HomeScreen({ navigation, user }: any) {
                   item={item} 
                   index={idx} 
                   navigation={navigation} 
+                  isFavorited={favorites?.includes(item.id)}
+                  onToggleFavorite={toggleFavorite}
                   styles={styles} 
                 />
               </View>
             ))}
           </View>
         )}
-      </ScrollView>
 
-      {/* Floating Action Button for Sellers with Animated Bounce */}
-      <Animated.View style={[styles.fabContainer, { transform: [{ scale: fabScale }] }]}>
-        <FAB
-          icon="plus"
-          label="Sell Part"
-          style={styles.fab}
-          color="#FFFFFF"
-          onPress={() => {
-            if (!user) {
-              navigation.navigate('Auth');
-            } else {
-              navigation.navigate('SellPart');
-            }
-          }}
-        />
-      </Animated.View>
+        {/* Promotional Bottom Banner ("Sell Your Parts") */}
+        <View style={styles.bottomBanner}>
+          <View style={styles.bannerLeft}>
+            <Text style={styles.bannerTitle}>Sell Your Parts</Text>
+            <Text style={styles.bannerSubtitle}>
+              Quickly list and reach thousands of buyers across India
+            </Text>
+            <TouchableOpacity 
+              style={styles.bannerBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                if (!user) {
+                  navigation.navigate('Auth');
+                } else {
+                  navigation.navigate('SellPart');
+                }
+              }}
+            >
+              <Text style={styles.bannerBtnText}>Sell Now</Text>
+              <Icon source="chevron-right" size={16} color="#0F172A" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.bannerRight}>
+            <Image 
+              source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }}
+              style={styles.bannerImage}
+              resizeMode="cover"
+            />
+          </View>
+        </View>
+      </ScrollView>
 
       {/* Location Selector Modal */}
       <Modal visible={showLocationModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text variant="titleLarge" style={styles.modalTitle}>Select Location</Text>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Select Location</Text>
+              <TouchableOpacity onPress={() => setShowLocationModal(false)}>
+                <Icon source="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
             <Divider style={{ marginVertical: 12 }} />
             
             <TouchableOpacity 
-              style={[styles.locationItem, { backgroundColor: '#EFF6FF', borderRadius: 8, paddingHorizontal: 12, marginBottom: 8 }]}
+              style={styles.gpsLocationBtn}
               onPress={async () => {
                 const coords = await getCurrentLocation();
                 if (coords) {
@@ -811,8 +538,9 @@ export default function HomeScreen({ navigation, user }: any) {
                 setShowLocationModal(false);
               }}
             >
-              <Text style={[styles.locationTextModal, { color: '#1565FF', fontWeight: 'bold' }]}>
-                🎯 Detect Current Location (GPS)
+              <Icon source="crosshairs-gps" size={18} color="#0066FF" />
+              <Text style={styles.gpsLocationText}>
+                Detect Current Location (GPS)
               </Text>
             </TouchableOpacity>
 
@@ -825,62 +553,56 @@ export default function HomeScreen({ navigation, user }: any) {
                   setShowLocationModal(false);
                 }}
               >
-                <Text style={[styles.locationTextModal, selectedCity === city ? { color: '#1565FF', fontWeight: 'bold' } : undefined]}>
+                <Text style={[styles.locationItemText, selectedCity === city && styles.locationItemTextActive]}>
                   {city}
                 </Text>
-                {selectedCity === city && <Text style={{ color: '#1565FF' }}>✓</Text>}
+                {selectedCity === city && <Icon source="check" size={18} color="#0066FF" />}
               </TouchableOpacity>
             ))}
-            <Button mode="contained" buttonColor="#0F172A" onPress={() => setShowLocationModal(false)} style={{ marginTop: 16 }}>
-              Close
-            </Button>
           </View>
         </View>
       </Modal>
 
-      {/* Advanced Filters Modal */}
+      {/* Filter Modal */}
       <Modal visible={showFilterModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text variant="titleLarge" style={styles.modalTitle}>Filter Spare Parts</Text>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Filter Spare Parts</Text>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Icon source="close" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
             <Divider style={{ marginVertical: 12 }} />
 
-            <Text variant="titleSmall" style={{ fontWeight: 'bold', marginBottom: 8 }}>Car Brand</Text>
+            <Text style={styles.filterSectionTitle}>Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-              {displayBrands.map((b) => (
+              {['All', ...categoryItems.map(c => c.name)].map((c) => (
                 <Chip
-                  key={b.name}
-                  selected={selectedBrand === b.name}
-                  onPress={() => setSelectedBrand(b.name)}
-                  style={{ marginRight: 6 }}
+                  key={c}
+                  selected={selectedCategory === c}
+                  onPress={() => setSelectedCategory(c)}
+                  style={{ marginRight: 8, backgroundColor: selectedCategory === c ? '#DBEAFE' : '#F1F5F9' }}
+                  textStyle={{ color: selectedCategory === c ? '#0066FF' : '#334155', fontWeight: '600' }}
                 >
-                  {b.name}
+                  {c}
                 </Chip>
               ))}
             </ScrollView>
 
-            <Text variant="titleSmall" style={{ fontWeight: 'bold', marginBottom: 8 }}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-              {displayCategories.map((c) => (
-                <Chip
-                  key={c.id}
-                  selected={selectedCategory === c.id}
-                  onPress={() => setSelectedCategory(c.id)}
-                  style={{ marginRight: 6 }}
-                >
-                  {c.name}
-                </Chip>
-              ))}
-            </ScrollView>
-
-            <Button mode="contained" buttonColor="#1565FF" onPress={() => setShowFilterModal(false)} style={{ marginTop: 16 }}>
+            <Button 
+              mode="contained" 
+              buttonColor="#0066FF" 
+              onPress={() => setShowFilterModal(false)} 
+              style={{ marginTop: 12, borderRadius: 12, paddingVertical: 4 }}
+            >
               Apply Filters
             </Button>
           </View>
         </View>
       </Modal>
 
-      {/* Trilingual Language Selector Modal */}
+      {/* Language Selector Modal */}
       <LanguageSelectorModal
         visible={showLanguageModal}
         onDismiss={() => setShowLanguageModal(false)}
@@ -890,9 +612,7 @@ export default function HomeScreen({ navigation, user }: any) {
       <InAppNotification
         notification={inAppNotification}
         onClose={() => setInAppNotification(null)}
-        onPress={(notif) => {
-          navigation.navigate('Chats');
-        }}
+        onPress={() => navigation.navigate('Chats')}
       />
 
       {/* Version Update Check Modal */}
@@ -913,11 +633,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  header: {
-    backgroundColor: '#0B1220',
-    paddingHorizontal: 16,
-    paddingTop: 12,
+  topHeaderWrapper: {
+    backgroundColor: '#080E1B',
     paddingBottom: 16,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -925,326 +650,254 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
   logoImage: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
-    marginRight: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 9,
   },
   headerTitle: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  headerSubtitle: {
-    color: '#94A3B8',
+    fontWeight: '800',
+    fontSize: 17,
+    letterSpacing: -0.2,
   },
   locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 2,
+    gap: 3,
+  },
+  headerSubtitle: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '500',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  bellBtn: {
+  headerActionBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
     position: 'relative',
   },
-  badge: {
+  notificationBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
+    top: 4,
+    right: 4,
     backgroundColor: '#EF4444',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 'bold',
   },
   searchContainer: {
     paddingHorizontal: 16,
-    marginTop: -12,
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    gap: 10,
   },
   searchBar: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
     height: 48,
+  },
+  searchInput: {
+    fontSize: 14,
+    minHeight: 48,
   },
   filterBtn: {
     width: 48,
     height: 48,
-    backgroundColor: '#1565FF',
-    borderRadius: 12,
+    backgroundColor: '#0066FF',
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
   },
-  bannerContainer: {
-    marginTop: 16,
-    paddingLeft: 16,
-  },
-  bannerCard: {
-    width: 280,
-    marginRight: 12,
-    padding: 16,
-    borderRadius: 16,
-  },
-  bannerTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  bannerTagText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  bannerTitle: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  bannerSubtitle: {
-    color: '#94A3B8',
-    marginTop: 4,
+  scrollContent: {
+    paddingBottom: 24,
   },
   sectionHeader: {
     paddingHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 18,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   sectionTitle: {
-    fontWeight: 'bold',
-    color: '#0F172A',
-  },
-  brandList: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  brandChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#E2E8F0',
-  },
-  selectedBrandChip: {
-    backgroundColor: '#1565FF',
-  },
-  brandText: {
-    color: '#0F172A',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  selectedBrandText: {
-    color: '#FFFFFF',
-  },
-  categoryHeaderLiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#10B981',
-  },
-  categoryHeaderHint: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '500',
-  },
-  resetCategoryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  resetCategoryText: {
-    fontSize: 11,
-    color: '#1565FF',
-    fontWeight: '700',
-  },
-  categoryCardList: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    gap: 12,
-  },
-  categoryCard: {
-    width: 148,
-    minHeight: 142,
-    borderRadius: 18,
-    padding: 12,
-    justifyContent: 'space-between',
-    borderWidth: 1.5,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  categoryCardSelected: {
-    backgroundColor: '#0B132B',
-    borderColor: '#2563EB',
-    borderWidth: 2,
-    shadowColor: '#1D4ED8',
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  categoryCardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  categoryIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  categoryIconWrapSelected: {
-    backgroundColor: 'rgba(37, 99, 235, 0.35)',
-    borderColor: '#3B82F6',
-  },
-  categoryTagPill: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  categoryTagPillText: {
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
-  categoryCardMiddle: {
-    marginBottom: 8,
-  },
-  categoryCardTitle: {
-    fontSize: 13,
+    fontSize: 17,
     fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.2,
   },
-  categoryCardTitleSelected: {
-    color: '#FFFFFF',
-  },
-  categoryCardSubtext: {
-    fontSize: 10,
-    color: '#64748B',
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  categoryCardSubtextSelected: {
-    color: '#93C5FD',
-  },
-  categoryBottomPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-    alignSelf: 'flex-start',
-    gap: 5,
-  },
-  categoryBottomPillSelected: {
-    backgroundColor: '#2563EB',
-  },
-  categoryStatusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-  },
-  categoryBottomPillText: {
-    fontSize: 10,
+  seeAllText: {
+    fontSize: 14,
     fontWeight: '700',
+    color: '#0066FF',
   },
-  feedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  categoryList: {
     paddingHorizontal: 16,
-    marginTop: 20,
-    marginBottom: 10,
+    gap: 10,
+  },
+  categoryCard: {
+    width: 96,
+    height: 98,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  categoryCardSelected: {
+    borderColor: '#0066FF',
+    borderWidth: 1.5,
+    backgroundColor: '#EFF6FF',
+  },
+  categoryIconWrap: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  categoryName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  categoryNameSelected: {
+    color: '#0066FF',
   },
   partsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 14,
-    paddingBottom: 80,
   },
   gridItem: {
-    width: '48%',
+    width: '48.5%',
     marginBottom: 12,
   },
   card: {
-    width: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   imageContainer: {
     position: 'relative',
+    height: 124,
+    backgroundColor: '#0F172A',
   },
   cardImage: {
-    height: 110,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    width: '100%',
+    height: '100%',
   },
-  verifiedBadge: {
+  conditionBadge: {
     position: 'absolute',
-    top: 6,
-    left: 6,
-    backgroundColor: '#10B981',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    top: 8,
+    left: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
-  verifiedText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: 'bold',
+  conditionBadgeUsed: {
+    backgroundColor: '#DCFCE7',
+  },
+  conditionBadgeNew: {
+    backgroundColor: '#DBEAFE',
+  },
+  conditionBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  conditionTextUsed: {
+    color: '#15803D',
+  },
+  conditionTextNew: {
+    color: '#0066FF',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardContent: {
-    paddingTop: 8,
-    paddingBottom: 8,
+    padding: 10,
   },
   partTitle: {
-    fontWeight: 'bold',
-    color: '#0B1220',
-    fontSize: 13,
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.2,
   },
   partModel: {
-    color: '#64748B',
     fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+    fontWeight: '500',
   },
-  locationText: {
-    color: '#94A3B8',
-    fontSize: 10,
-    marginVertical: 2,
-  },
-  priceRow: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 3,
+    gap: 2,
+  },
+  locationText: {
+    fontSize: 11,
+    color: '#64748B',
   },
   price: {
-    color: '#1565FF',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  conditionChip: {
-    height: 22,
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0066FF',
+    marginTop: 5,
+    letterSpacing: -0.3,
   },
   cardQuickActions: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    marginTop: 9,
     gap: 6,
   },
   waPill: {
@@ -1252,32 +905,81 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DCFCE7',
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 6,
+    backgroundColor: '#E8F8EE',
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 4,
   },
   waPillText: {
-    fontSize: 9,
+    fontSize: 10.5,
     fontWeight: '700',
     color: '#15803D',
-    marginLeft: 2,
   },
   callPill: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EFF6FF',
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 6,
+    backgroundColor: '#EBF3FF',
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 4,
   },
   callPillText: {
-    fontSize: 9,
+    fontSize: 10.5,
     fontWeight: '700',
-    color: '#1565FF',
-    marginLeft: 2,
+    color: '#0066FF',
+  },
+  bottomBanner: {
+    backgroundColor: '#08142C',
+    borderRadius: 18,
+    marginHorizontal: 14,
+    marginTop: 16,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    overflow: 'hidden',
+  },
+  bannerLeft: {
+    flex: 1.3,
+  },
+  bannerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  bannerSubtitle: {
+    fontSize: 11.5,
+    color: '#94A3B8',
+    marginTop: 4,
+    lineHeight: 16,
+  },
+  bannerBtn: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  bannerBtnText: {
+    color: '#0F172A',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  bannerRight: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bannerImage: {
+    width: 110,
+    height: 80,
+    borderRadius: 12,
   },
   loaderContainer: {
     padding: 32,
@@ -1288,13 +990,17 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
   },
-  fabContainer: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#334155',
+    marginTop: 8,
   },
-  fab: {
-    backgroundColor: '#1565FF',
+  emptySubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 4,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -1308,19 +1014,50 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: '80%',
   },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   modalTitle: {
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '800',
     color: '#0F172A',
+  },
+  gpsLocationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    gap: 8,
+  },
+  gpsLocationText: {
+    color: '#0066FF',
+    fontWeight: '700',
+    fontSize: 13,
   },
   locationItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
-  locationTextModal: {
+  locationItemText: {
     color: '#0F172A',
-    fontSize: 15,
+    fontSize: 14,
+  },
+  locationItemTextActive: {
+    color: '#0066FF',
+    fontWeight: 'bold',
+  },
+  filterSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
   },
 });
