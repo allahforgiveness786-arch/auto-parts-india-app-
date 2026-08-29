@@ -40,16 +40,16 @@ export default function SplashScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0B1220" />
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-        <BrandLogo size={100} style={styles.logoImage} />
+        <BrandLogo size={110} style={styles.logoImage} />
         <Text style={styles.title}>
           AUTO PARTS <Text style={styles.accent}>INDIA</Text>
         </Text>
         <Text style={styles.subtitle}>
           Direct Spare Parts Marketplace
         </Text>
-        <ActivityIndicator size="large" color="#1565FF" style={styles.loader} />
+        <ActivityIndicator size="large" color="#0066FF" style={styles.loader} />
       </Animated.View>
     </View>
   );
@@ -58,7 +58,7 @@ export default function SplashScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B1220',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -66,21 +66,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoImage: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   title: {
     fontSize: 24,
     color: '#FFFFFF',
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   accent: {
-    color: '#38BDF8',
+    color: '#0066FF',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#94A3B8',
     marginTop: 8,
+    letterSpacing: 0.5,
   },
   loader: {
     marginTop: 32,
