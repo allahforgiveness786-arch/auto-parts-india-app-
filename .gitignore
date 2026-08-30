@@ -10,3 +10,5 @@ coverage/
 !*.jar
 !**/gradle-wrapper.jar
 !**/debug.keystore
+
+firebase-service-account.json

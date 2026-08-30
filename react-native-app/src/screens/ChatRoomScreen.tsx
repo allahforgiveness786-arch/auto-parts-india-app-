@@ -320,6 +320,22 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, id: docRef.id || tempId, status: 'sent' } : m))
       );
+
+      // Trigger Push Notification via Backend Server
+      try {
+        fetch('https://ais-dev-7edqjbzlqrmbdqv4rx3rez-572875732715.asia-southeast1.run.app/api/notifications/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senderId: currentUid,
+            senderName: currentName,
+            receiverId: partnerId,
+            text: cleanText || 'Sent an image',
+            chatId: chatId,
+          })
+        }).catch(() => {});
+      } catch (_) {}
+
     } catch (err: any) {
       console.warn('[ChatRoomScreen] Failed to send message:', err);
       setMessages((prev) =>

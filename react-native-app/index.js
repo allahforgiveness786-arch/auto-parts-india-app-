@@ -21,7 +21,35 @@ try {
       try {
         messaging().setBackgroundMessageHandler(async (remoteMessage) => {
           console.log('[FCM] Background message received:', remoteMessage?.messageId);
+          try {
+            const notifee = require('@notifee/react-native').default;
+            const AndroidImportance = require('@notifee/react-native').AndroidImportance;
+            const title = remoteMessage.notification?.title || remoteMessage.data?.title || 'Auto Parts India';
+            const body = remoteMessage.notification?.body || remoteMessage.data?.body || 'New background notification';
+            
+            await notifee.displayNotification({
+              title,
+              body,
+              data: remoteMessage.data,
+              android: {
+                channelId: 'default',
+                importance: AndroidImportance.HIGH,
+                pressAction: { id: 'default' },
+              },
+            });
+          } catch (e) {
+             console.warn('[FCM] notifee background error', e);
+          }
         });
+        
+        try {
+          const notifee = require('@notifee/react-native').default;
+          notifee.onBackgroundEvent(async ({ type, detail }: any) => {
+            // Background press is handled when the app opens natively, 
+            // but we must register the handler so it doesn't crash
+            console.log('[Notifee] Background event', type);
+          });
+        } catch (e) {}
       } catch (_) {}
     }
   }

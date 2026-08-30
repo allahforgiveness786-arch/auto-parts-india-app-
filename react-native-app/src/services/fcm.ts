@@ -1,6 +1,7 @@
 import firestore from '@react-native-firebase/firestore';
 
-import { Platform, PermissionsAndroid, Alert } from 'react-native';
+import { Platform, PermissionsAndroid, Alert } from "react-native";
+import notifee, { AndroidImportance, EventType } from "@notifee/react-native";
 
 
 import { navigate } from '../navigation/navigationRef';
@@ -225,6 +226,27 @@ export function setupFcmListeners(userId?: string): () => void {
     return () => {};
   }
 
+  const setupChannel = async () => {
+    try {
+      await notifee.requestPermission();
+      await notifee.createChannel({
+        id: 'default',
+        name: 'Default Notifications',
+        importance: AndroidImportance.HIGH,
+        sound: 'default',
+      });
+    } catch (e) {
+      console.warn('[FCM] Notifee channel creation error:', e);
+    }
+  };
+  setupChannel();
+
+  const unsubscribeForeground = notifee.onForegroundEvent(({ type, detail }) => {
+    if (type === EventType.PRESS && detail.notification?.data) {
+      handleNotificationPayload({ data: detail.notification.data });
+    }
+  });
+
   let unsubscribeTokenRefresh = () => {};
   let unsubscribeOnMessage = () => {};
   let unsubscribeOnNotificationOpened = () => {};
@@ -251,18 +273,22 @@ export function setupFcmListeners(userId?: string): () => void {
       const title = remoteMessage.notification?.title || (remoteMessage.data?.title as string) || 'Auto Parts India';
       const body = remoteMessage.notification?.body || (remoteMessage.data?.body as string) || 'You have a new message';
 
-      Alert.alert(
-        title,
-        body,
-        [
-          {
-            text: 'View',
-            onPress: () => handleNotificationPayload(remoteMessage),
+      try {
+        await notifee.displayNotification({
+          title,
+          body,
+          data: remoteMessage.data,
+          android: {
+            channelId: 'default',
+            importance: AndroidImportance.HIGH,
+            pressAction: {
+              id: 'default',
+            },
           },
-          { text: 'Dismiss', style: 'cancel' },
-        ],
-        { cancelable: true }
-      );
+        });
+      } catch (err) {
+        console.warn('[FCM] notifee display error', err);
+      }
     });
   } catch (e) {
     console.warn('[FCM] onMessage listener error:', e);
@@ -298,5 +324,6 @@ export function setupFcmListeners(userId?: string): () => void {
     try { unsubscribeTokenRefresh(); } catch (_) {}
     try { unsubscribeOnMessage(); } catch (_) {}
     try { unsubscribeOnNotificationOpened(); } catch (_) {}
+    try { unsubscribeForeground(); } catch (_) {}
   };
 }

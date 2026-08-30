@@ -103,12 +103,12 @@ export const GMap: React.FC<GMapProps> = ({
     }
   };
 
-  // Convert lat/lng to OpenStreetMap static tile url
+  // Convert lat/lng to CartoDB Dark Matter static tile url (does not block generic User-Agent)
   const latRad = (currentLat * Math.PI) / 180;
   const n = Math.pow(2, zoom);
   const xTile = Math.floor(((currentLng + 180) / 360) * n);
   const yTile = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n);
-  const mapTileUrl = `https://tile.openstreetmap.org/${zoom}/${xTile}/${yTile}.png`;
+  const mapTileUrl = `https://a.basemaps.cartocdn.com/dark_all/${zoom}/${xTile}/${yTile}.png`;
 
   return (
     <View style={[styles.container, style]}>

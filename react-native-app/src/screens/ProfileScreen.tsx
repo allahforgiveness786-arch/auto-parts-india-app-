@@ -425,7 +425,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 description="List your car parts and accessories across India"
                 left={(props) => <List.Icon {...props} icon="plus-circle" color="#10B981" />}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => navigation.navigate('Sell')}
+                onPress={() => navigation.navigate('SellTab')}
                 style={styles.listItem}
               />
               <List.Item
@@ -433,7 +433,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 description="Chat with interested buyers in real-time"
                 left={(props) => <List.Icon {...props} icon="chat-processing" color="#8B5CF6" />}
                 right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => navigation.navigate('Chats')}
+                onPress={() => navigation.navigate('ChatsTab')}
                 style={styles.listItem}
               />
 
@@ -447,14 +447,18 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 onPress={() => setShowLanguageModal(true)}
                 style={styles.listItem}
               />
-              <List.Item
-                title="Admin Moderation"
-                description="Manage listings, taxonomy categories & banners"
-                left={(props) => <List.Icon {...props} icon="shield-account" color="#F59E0B" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => navigation.navigate('Admin')}
-                style={styles.listItem}
-              />
+              
+              {currentAuthUser?.email === 'wwwautoparts2@gmail.com' && (
+                <List.Item
+                  title="Admin Moderation"
+                  description="Manage listings, taxonomy categories & banners"
+                  left={(props) => <List.Icon {...props} icon="shield-account" color="#F59E0B" />}
+                  right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                  onPress={() => navigation.navigate('Admin')}
+                  style={styles.listItem}
+                />
+              )}
+
               <List.Item
                 title="Notifications"
                 description="Marketplace announcements and alerts"
@@ -480,7 +484,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
               <Text style={styles.listingsTitle}>My Published Ads</Text>
               <TouchableOpacity
                 style={styles.newListingBtn}
-                onPress={() => navigation.navigate('Sell')}
+                onPress={() => navigation.navigate('SellTab')}
               >
                 <Icon source="plus" size={16} color="#FFFFFF" />
                 <Text style={styles.newListingBtnText}>Post Part</Text>

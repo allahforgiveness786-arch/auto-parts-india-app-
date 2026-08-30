@@ -1,4 +1,5 @@
 import { PermissionsAndroid, Platform, Linking } from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
 import { INDIAN_STATES_AND_DISTRICTS } from '../data/indianLocations';
 
 export interface LatLng {
@@ -364,24 +365,19 @@ export async function getCurrentLocation(): Promise<LocationCoords | null> {
   }
 
   return new Promise((resolve) => {
-    const nav: any = typeof navigator !== 'undefined' ? navigator : null;
-    if (nav && nav.geolocation) {
-      nav.geolocation.getCurrentPosition(
-        (position: any) => {
-          resolve({
-            latitude: parseFloat(position.coords.latitude.toFixed(6)),
-            longitude: parseFloat(position.coords.longitude.toFixed(6)),
-          });
-        },
-        (error: any) => {
-          console.warn('GPS location fetch error:', error);
-          resolve({ latitude: 19.0760, longitude: 72.8777 });
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 }
-      );
-    } else {
-      resolve({ latitude: 19.0760, longitude: 72.8777 });
-    }
+    Geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: parseFloat(position.coords.latitude.toFixed(6)),
+          longitude: parseFloat(position.coords.longitude.toFixed(6)),
+        });
+      },
+      (error) => {
+        console.warn('GPS location fetch error:', error);
+        resolve({ latitude: 19.0760, longitude: 72.8777 }); // Default Mumbai fallback
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
   });
 }
 

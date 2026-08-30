@@ -129,6 +129,17 @@ async function startServer() {
   app.post("/api/delete-cloudinary-image", handleCloudinaryDelete);
   app.post("/api/cloudinary/delete", handleCloudinaryDelete);
 
+  // Chat Notification Endpoint
+  app.post("/api/notifications/send", async (req, res) => {
+    try {
+      // Lazy load to avoid crash if file is missing
+      const module = await import('./notification-logic.js');
+      await module.sendChatNotification(req, res);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Gemini AI Smart Listing Auto-Fill Endpoint
   app.post("/api/ai/autofill-listing", async (req, res) => {
     try {

@@ -13,7 +13,8 @@ import {
   Linking, 
   Alert,
   Animated,
-  Easing
+  Easing,
+  TextInput
 } from "react-native";
 import { 
   Searchbar, 
@@ -58,7 +59,9 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
         toValue: 0,
         duration: 400,
         delay: Math.min(index * 40, 300),
-        easing: Easing.out(Easing.cubic),
+        easing: Easing,
+  TextInput.out(Easing,
+  TextInput.cubic),
         useNativeDriver: true,
       }),
     ]).start();
@@ -194,7 +197,11 @@ export default function HomeScreen({ navigation, user }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCity, setSelectedCity] = useState('All India');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [parts, setParts] = useState<any[]>([]);
+  const [promoBanners, setPromoBanners] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -202,6 +209,27 @@ export default function HomeScreen({ navigation, user }: any) {
   const [inAppNotification, setInAppNotification] = useState<InAppNotificationData | null>(null);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [updateConfig, setUpdateConfig] = useState<any>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+    const db = getFirebaseFirestore();
+    if (!db) return;
+    const unsub = db.collection('chats')
+      .where('participants', 'array-contains', user.uid)
+      .onSnapshot((snap: any) => {
+        let count = 0;
+        snap.forEach((doc: any) => {
+          const data = doc.data();
+          const c = data.unreadCount?.[user.uid] || (data.lastSenderId && data.lastSenderId !== user.uid && data.unread ? 1 : 0);
+          count += c;
+        });
+        setUnreadCount(count);
+      });
+    return () => unsub();
+  }, [user]);
 
   // Entrance Animations for smooth load
   const headerFade = useRef(new Animated.Value(0)).current;
@@ -217,7 +245,9 @@ export default function HomeScreen({ navigation, user }: any) {
       Animated.timing(searchSlide, {
         toValue: 0,
         duration: 400,
-        easing: Easing.out(Easing.back(1.4)),
+        easing: Easing,
+  TextInput.out(Easing,
+  TextInput.back(1.4)),
         useNativeDriver: true,
       }),
     ]).start();
@@ -240,7 +270,9 @@ export default function HomeScreen({ navigation, user }: any) {
 
   useEffect(() => {
     setLoading(true);
-    let unsubscribe = () => {};
+    let unsubscribeParts = () => {};
+    let unsubscribeBanners = () => {};
+
     try {
       const db = getFirebaseFirestore();
       if (!db || typeof db.collection !== 'function') {
@@ -248,15 +280,13 @@ export default function HomeScreen({ navigation, user }: any) {
         setLoading(false);
         return;
       }
-      const q = db.collection('spareParts').orderBy('createdAt', 'desc');
-
-      unsubscribe = q.onSnapshot((snapshot: any) => {
+      
+      const qParts = db.collection('spareParts').orderBy('createdAt', 'desc');
+      unsubscribeParts = qParts.onSnapshot((snapshot: any) => {
         const list: any[] = [];
         snapshot.forEach((doc: any) => {
           list.push({ id: doc.id, ...doc.data() });
         });
-
-        // Use real Firestore listings, or initial catalog if database is fresh
         setParts(list.length > 0 ? list : INITIAL_SPARE_PARTS);
         setLoading(false);
         setRefreshing(false);
@@ -266,15 +296,33 @@ export default function HomeScreen({ navigation, user }: any) {
         setLoading(false);
         setRefreshing(false);
       });
+
+      const qBanners = db.collection('banners').orderBy('order', 'asc');
+      unsubscribeBanners = qBanners.onSnapshot((snapshot: any) => {
+        const list: any[] = [];
+        snapshot.forEach((doc: any) => {
+          const data = doc.data();
+          // Filter active on client side to avoid composite index requirement
+          if (data.active !== false && data.activeStatus !== false) {
+            list.push({ id: doc.id, ...data });
+          }
+        });
+        list.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+        setPromoBanners(list);
+      }, (err: any) => {
+        console.warn('Notice from banners listener:', err);
+      });
+
     } catch (queryErr) {
-      console.warn('Failed to query spareParts:', queryErr);
+      console.warn('Failed to query Firestore:', queryErr);
       setParts((current) => current.length > 0 ? current : INITIAL_SPARE_PARTS);
       setLoading(false);
       setRefreshing(false);
     }
 
     return () => {
-      try { unsubscribe(); } catch (_) {}
+      try { unsubscribeParts(); } catch (_) {}
+      try { unsubscribeBanners(); } catch (_) {}
     };
   }, []);
 
@@ -299,7 +347,11 @@ export default function HomeScreen({ navigation, user }: any) {
     const matchesCity = selectedCity === 'All India' || !part.location || 
       part.location.toLowerCase().includes(selectedCity.toLowerCase());
 
-    return matchesSearch && matchesCategory && matchesCity;
+    const partPrice = Number(part.price || part.partPrice) || 0;
+    const isAboveMin = minPrice ? partPrice >= Number(minPrice) : true;
+    const isBelowMax = maxPrice ? partPrice <= Number(maxPrice) : true;
+
+    return matchesSearch && matchesCategory && matchesCity && isAboveMin && isBelowMax;
   });
 
   return (
@@ -339,9 +391,11 @@ export default function HomeScreen({ navigation, user }: any) {
               onPress={() => navigation.navigate('Notifications')}
             >
               <Icon source="bell-outline" color="#FFFFFF" size={22} />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>2</Text>
-              </View>
+              {unreadCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -458,6 +512,8 @@ export default function HomeScreen({ navigation, user }: any) {
                 setSearchQuery('');
                 setSelectedCategory('All');
                 setSelectedCity('All India');
+                setMinPrice('');
+                setMaxPrice('');
               }}
               style={{ marginTop: 14 }}
             >
@@ -481,36 +537,76 @@ export default function HomeScreen({ navigation, user }: any) {
           </View>
         )}
 
-        {/* Promotional Bottom Banner ("Sell Your Parts") */}
-        <View style={styles.bottomBanner}>
-          <View style={styles.bannerLeft}>
-            <Text style={styles.bannerTitle}>Sell Your Parts</Text>
-            <Text style={styles.bannerSubtitle}>
-              Quickly list and reach thousands of buyers across India
-            </Text>
+        {/* Promotional Bottom Banners */}
+        {promoBanners.length > 0 ? (
+          promoBanners.map((banner, index) => (
             <TouchableOpacity 
-              style={styles.bannerBtn}
-              activeOpacity={0.85}
+              key={banner.id || index} 
+              style={[styles.bottomBanner, { marginTop: index === 0 ? 0 : 16 }]}
+              activeOpacity={banner.targetLink ? 0.85 : 1}
               onPress={() => {
-                if (!user) {
-                  navigation.navigate('Auth');
-                } else {
-                  navigation.navigate('SellPart');
+                if (banner.targetLink) {
+                  Linking.openURL(banner.targetLink).catch(err => console.warn('Could not open link:', err));
                 }
               }}
             >
-              <Text style={styles.bannerBtnText}>Sell Now</Text>
-              <Icon source="chevron-right" size={16} color="#0F172A" />
+              <View style={[styles.bannerLeft, { flex: banner.imageUrl ? 0.65 : 1 }]}>
+                {banner.tag ? (
+                   <View style={{ backgroundColor: '#10B981', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 8 }}>
+                     <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
+                   </View>
+                ) : null}
+                <Text style={styles.bannerTitle}>{banner.title}</Text>
+                <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text>
+                {banner.targetLink ? (
+                  <View style={[styles.bannerBtn, { alignSelf: 'flex-start' }]}>
+                    <Text style={styles.bannerBtnText}>View Offer</Text>
+                    <Icon source="chevron-right" size={16} color="#0F172A" />
+                  </View>
+                ) : null}
+              </View>
+              {banner.imageUrl ? (
+                <View style={[styles.bannerRight, { flex: 0.35 }]}>
+                  <Image 
+                    source={{ uri: banner.imageUrl }}
+                    style={styles.bannerImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : null}
             </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.bottomBanner}>
+            <View style={styles.bannerLeft}>
+              <Text style={styles.bannerTitle}>Sell Your Parts</Text>
+              <Text style={styles.bannerSubtitle}>
+                Quickly list and reach thousands of buyers across India
+              </Text>
+              <TouchableOpacity 
+                style={styles.bannerBtn}
+                activeOpacity={0.85}
+                onPress={() => {
+                  if (!user) {
+                    navigation.navigate('Auth');
+                  } else {
+                    navigation.navigate('SellPart');
+                  }
+                }}
+              >
+                <Text style={styles.bannerBtnText}>Sell Now</Text>
+                <Icon source="chevron-right" size={16} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.bannerRight}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }}
+                style={styles.bannerImage}
+                resizeMode="cover"
+              />
+            </View>
           </View>
-          <View style={styles.bannerRight}>
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }}
-              style={styles.bannerImage}
-              resizeMode="cover"
-            />
-          </View>
-        </View>
+        )}
       </ScrollView>
 
       {/* Location Selector Modal */}
@@ -590,14 +686,53 @@ export default function HomeScreen({ navigation, user }: any) {
               ))}
             </ScrollView>
 
-            <Button 
-              mode="contained" 
-              buttonColor="#0066FF" 
-              onPress={() => setShowFilterModal(false)} 
-              style={{ marginTop: 12, borderRadius: 12, paddingVertical: 4 }}
-            >
-              Apply Filters
-            </Button>
+            <Text style={styles.filterSectionTitle}>Price Range (₹)</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 12 }}>
+              <View style={{ flex: 1, backgroundColor: '#F8FAFC', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <TextInput
+                  placeholder="Min Price"
+                  placeholderTextColor="#94A3B8"
+                  value={minPrice}
+                  onChangeText={setMinPrice}
+                  keyboardType="numeric"
+                  style={{ fontSize: 15, color: '#0F172A', padding: 0 }}
+                />
+              </View>
+              <Text style={{ color: '#64748B', fontWeight: 'bold' }}>to</Text>
+              <View style={{ flex: 1, backgroundColor: '#F8FAFC', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <TextInput
+                  placeholder="Max Price"
+                  placeholderTextColor="#94A3B8"
+                  value={maxPrice}
+                  onChangeText={setMaxPrice}
+                  keyboardType="numeric"
+                  style={{ fontSize: 15, color: '#0F172A', padding: 0 }}
+                />
+              </View>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Button 
+                mode="outlined" 
+                textColor="#64748B"
+                onPress={() => {
+                  setSelectedCategory('All');
+                  setMinPrice('');
+                  setMaxPrice('');
+                }} 
+                style={{ flex: 1, borderRadius: 12, paddingVertical: 4, borderColor: '#CBD5E1' }}
+              >
+                Clear
+              </Button>
+              <Button 
+                mode="contained" 
+                buttonColor="#0066FF" 
+                onPress={() => setShowFilterModal(false)} 
+                style={{ flex: 1, borderRadius: 12, paddingVertical: 4 }}
+              >
+                Apply
+              </Button>
+            </View>
           </View>
         </View>
       </Modal>
