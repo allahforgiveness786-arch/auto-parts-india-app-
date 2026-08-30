@@ -15,6 +15,7 @@ import {
   Animated,
   Easing,
   TextInput,
+  TextInput as RNTextInput,
   KeyboardAvoidingView,
   Platform
 } from "react-native";
