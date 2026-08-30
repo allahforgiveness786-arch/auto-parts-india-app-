@@ -59,9 +59,7 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
         toValue: 0,
         duration: 400,
         delay: Math.min(index * 40, 300),
-        easing: Easing,
-  TextInput.out(Easing,
-  TextInput.cubic),
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
@@ -245,9 +243,7 @@ export default function HomeScreen({ navigation, user }: any) {
       Animated.timing(searchSlide, {
         toValue: 0,
         duration: 400,
-        easing: Easing,
-  TextInput.out(Easing,
-  TextInput.back(1.4)),
+        easing: Easing.out(Easing.back(1.4)),
         useNativeDriver: true,
       }),
     ]).start();
