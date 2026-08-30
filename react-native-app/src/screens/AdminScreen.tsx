@@ -14,7 +14,7 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
-import { Text, Icon, Button, TextInput, Chip, Surface, IconButton } from 'react-native-paper';
+import { Text, Icon, Button, TextInput, Chip, Surface, IconButton, Appbar } from 'react-native-paper';
 import { launchImageLibrary } from 'react-native-image-picker';
 import EditListingModal from '../components/EditListingModal';
 import { AdminTaxonomyCMS } from '../components/AdminTaxonomyCMS';
@@ -92,14 +92,15 @@ export default function AdminScreen({ navigation }: any) {
   const [savingVersion, setSavingVersion] = useState(false);
   const [loadingVersion, setLoadingVersion] = useState(false);
 
-  // Super Admin Email - Strictly restricted to wwwautoparts2@gmail.com
+  // Super Admin Email
   const SUPER_ADMIN_EMAILS = [
     'wwwautoparts2@gmail.com',
+    'www.allahforgiveness877@gmail.com'
   ];
 
   const currentUser = getCurrentUser();
   const userEmail = (currentUser?.email || '').trim().toLowerCase();
-  const isAuthorizedAdmin = userEmail === 'wwwautoparts2@gmail.com';
+  const isAuthorizedAdmin = SUPER_ADMIN_EMAILS.includes(userEmail);
 
   if (!isAuthorizedAdmin) {
     return (
@@ -1090,14 +1091,10 @@ export default function AdminScreen({ navigation }: any) {
           <Text style={styles.adminSubTitle}>Auto Parts Marketplace Management System</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.exitBtn}
-          onPress={() => (navigation ? navigation.goBack() : null)}
-          activeOpacity={0.7}
-        >
-          <Icon source="arrow-left" size={16} color="#0F172A" />
+        <View style={styles.exitBtn}>
+          <Appbar.BackAction size={20} color="#0F172A" onPress={() => (navigation ? navigation.goBack() : null)} style={{ margin: 0, padding: 0 }} />
           <Text style={styles.exitBtnText}>Exit</Text>
-        </TouchableOpacity>
+        </View>
       </View>
 
       {/* 2. Top Navigation Tabs (OLX Style Horizontal Pills) */}

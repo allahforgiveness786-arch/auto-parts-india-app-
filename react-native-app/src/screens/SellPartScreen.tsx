@@ -23,6 +23,7 @@ import {
   Divider,
   Surface,
   useTheme,
+  Appbar,
 } from 'react-native-paper';
 import {
   openNativeCamera,
@@ -783,13 +784,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
     >
       {/* Native-style header */}
       <View style={styles.nativeHeader}>
-        <TouchableOpacity
-          style={styles.headerBack}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.75}
-        >
-          <IconButton icon="arrow-left" size={22} iconColor="#FFFFFF" style={{ margin: 0 }} />
-        </TouchableOpacity>
+        <Appbar.BackAction color="#FFFFFF" onPress={() => navigation.goBack()} style={styles.headerBack} />
 
         <View style={styles.headerCenter}>
           <Text style={styles.nativeHeaderTitle}>Sell Your Part</Text>

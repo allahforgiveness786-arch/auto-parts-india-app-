@@ -50,6 +50,23 @@ export async function setCurrentAuthUser(user: any) {
   });
 }
 
+export async function clearAppCache() {
+  try {
+    Object.keys(cloudCache).forEach(k => delete cloudCache[k]);
+    const keys = await AsyncStorage.getAllKeys();
+    const cacheKeys = keys.filter(k => 
+      k.startsWith(STORAGE_KEY_PREFIX) || 
+      k === '@autoparts_recently_viewed' || 
+      k === '@autoparts_current_user'
+    );
+    if (cacheKeys.length > 0) {
+      await AsyncStorage.multiRemove(cacheKeys);
+    }
+  } catch (err) {
+    console.warn('[firebase.ts] Cache clear error:', err);
+  }
+}
+
 export function getFirebaseAuth(): any {
   try {
     let inst: any = null;
@@ -112,6 +129,7 @@ export function getFirebaseAuth(): any {
             await inst.signOut();
           }
         } catch (_) {}
+        await clearAppCache();
         await setCurrentAuthUser(null);
       },
     };
@@ -129,6 +147,7 @@ export function getFirebaseAuth(): any {
         return () => authListeners.delete(callback);
       },
       signOut: async () => {
+        await clearAppCache();
         await setCurrentAuthUser(null);
       },
     };
@@ -355,7 +374,7 @@ async function deleteCloudDoc(collPath: string, docId: string): Promise<void> {
 }
 
 // Pre-load from AsyncStorage cache on boot
-['spareParts', 'products/listings/items', 'users', 'chats'].forEach((coll) => {
+['spareParts', 'products/listings/items', 'users', 'chats', 'favorites', 'follows'].forEach((coll) => {
   AsyncStorage.getItem(STORAGE_KEY_PREFIX + coll).then((val) => {
     if (val) {
       try {
@@ -490,6 +509,11 @@ function createRealFirestoreQuery(collectionPath: string) {
                   exists: true,
                 };
               }
+            } else if (res.status === 404) {
+              if (cloudCache[collectionPath]) {
+                delete cloudCache[collectionPath][docId];
+              }
+              return { id: docId, data: () => null, exists: false };
             }
           } catch (_) {}
 
@@ -520,6 +544,12 @@ function createRealFirestoreQuery(collectionPath: string) {
                   onNext({ id: docId, data: () => ({ ...decoded }), exists: true });
                   return;
                 }
+              } else if (res.status === 404) {
+                if (cloudCache[collectionPath]) {
+                  delete cloudCache[collectionPath][docId];
+                }
+                onNext({ id: docId, data: () => null, exists: false });
+                return;
               }
             } catch (_) {}
             const cached = cloudCache[collectionPath]?.[docId];

@@ -13,17 +13,11 @@ import {
   Dimensions,
   StatusBar,
   Linking,
-} from 'react-native';
-import {
   TextInput,
-  IconButton,
   Text,
-  useTheme,
-  ActivityIndicator,
-  Chip,
-  Badge,
-  Icon,
-} from 'react-native-paper';
+} from 'react-native';
+import { Icon, ActivityIndicator, Appbar } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { promptImageSourceDialog } from '../services/imagePickerService';
 import { uploadImageToCloudinary } from '../services/cloudinary';
@@ -36,6 +30,7 @@ interface ChatMessage {
   id: string;
   senderId: string;
   senderName: string;
+  senderPhoto?: string;
   text?: string;
   imageUrl?: string | null;
   createdAt: number | any;
@@ -44,13 +39,16 @@ interface ChatMessage {
 }
 
 export default function ChatRoomScreen({ route, navigation, user: initialUser }: any) {
+  const insets = useSafeAreaInsets();
+  const { language, t, translateDynamic } = useLanguage();
+
   const { chatId: routeChatId, part: routePart, chat: routeChat } = route.params || {};
   const activeUser = initialUser || getCurrentUser();
   const currentUid = activeUser?.uid || activeUser?.id || 'guest';
   const currentName = activeUser?.displayName || activeUser?.name || activeUser?.email?.split('@')[0] || 'User';
   const currentUserPhoto = activeUser?.photoURL || '';
 
-  // Determine chatId if missing
+  // Determine item & chatId
   const part = routePart || (routeChat ? {
     id: routeChat.partId,
     title: routeChat.partTitle,
@@ -58,11 +56,12 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
     price: routeChat.partPrice,
     sellerId: routeChat.sellerId,
     sellerName: routeChat.sellerName,
+    contactPhone: routeChat.contactPhone,
   } : null);
 
   const chatId = routeChatId || (part && currentUid ? `${currentUid}_${part.sellerId || 'seller'}_${part.id || 'item'}` : 'default_chat');
 
-  // Partner Identification logic matching Web
+  // Partner Identification logic
   const isCurrentUserBuyer = routeChat?.buyerId === currentUid || (part && part.sellerId !== currentUid);
   const partnerId = routeChat 
     ? (isCurrentUserBuyer ? routeChat.sellerId : routeChat.buyerId)
@@ -92,7 +91,6 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
 
   const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { language, t, translateDynamic } = useLanguage();
 
   // 1. Subscribe to Chat Messages Real-time (Firestore query)
   useEffect(() => {
@@ -163,7 +161,6 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
     try {
       const db = getFirebaseFirestore();
       if (db && typeof db.collection === 'function') {
-        // Typing indicator doc: chats/{chatId}/typing/{partnerId}
         const typingDocRef = db.collection('chats').doc(chatId).collection('typing').doc(partnerId);
         unsubTyping = typingDocRef.onSnapshot(
           (docSnap: any) => {
@@ -178,7 +175,6 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
           (err: any) => console.warn('[ChatRoomScreen] Typing error:', err)
         );
 
-        // Presence doc: presence/{partnerId}
         const presenceDocRef = db.collection('presence').doc(partnerId);
         unsubPresence = presenceDocRef.onSnapshot(
           (docSnap: any) => {
@@ -242,7 +238,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
     }
   };
 
-  // 3. Send Message Logic (Optimistic update + Cloud Firestore + Chat metadata update)
+  // 3. Send Message Logic
   const executeSend = async (textToSend: string, imageUrl?: string | null) => {
     const cleanText = textToSend ? textToSend.trim() : '';
     if (!cleanText && !imageUrl) return;
@@ -270,7 +266,6 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
     emitTyping(false);
     setIsSending(true);
 
-    // Scroll to bottom immediately
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
@@ -283,7 +278,6 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
 
       const messagesRef = db.collection('chats').doc(chatId).collection('messages');
 
-      // Add to Firestore
       const docRef = await messagesRef.add({
         senderId: currentUid,
         senderName: currentName,
@@ -321,7 +315,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
         prev.map((m) => (m.id === tempId ? { ...m, id: docRef.id || tempId, status: 'sent' } : m))
       );
 
-      // Trigger Push Notification via Backend Server
+      // Push Notification trigger
       try {
         fetch('https://ais-dev-7edqjbzlqrmbdqv4rx3rez-572875732715.asia-southeast1.run.app/api/notifications/send', {
           method: 'POST',
@@ -353,7 +347,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
     }
   };
 
-  // 4. Image Upload Flow via Cloudinary
+  // 4. Image Picker via Cloudinary
   const handlePickImage = async () => {
     try {
       const selectedUri = await promptImageSourceDialog(
@@ -449,7 +443,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
           'Can you ship via courier?',
           'Any warranty or testing guarantee?',
         ];
-    }
+      }
   };
 
   const handleCallPartner = () => {
@@ -530,7 +524,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
 
         <View style={[styles.bubbleWrapper, isMe ? styles.myBubbleWrapper : styles.theirBubbleWrapper]}>
           <TouchableOpacity
-            activeOpacity={0.85}
+            activeOpacity={0.88}
             onLongPress={() => isMe && handleDeleteMessage(item)}
             style={[
               styles.bubbleBox,
@@ -541,7 +535,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
                 : styles.theirBubble,
             ]}
           >
-            {/* Image attachment inside bubble */}
+            {/* Image attachment */}
             {item.imageUrl ? (
               <TouchableOpacity
                 activeOpacity={0.9}
@@ -555,7 +549,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
                   resizeMode="cover"
                 />
                 <View style={styles.zoomOverlayIcon}>
-                  <Icon source="magnify-plus-outline" size={20} color="#FFFFFF" />
+                  <Icon source="magnify-plus-outline" size={18} color="#FFFFFF" />
                 </View>
               </TouchableOpacity>
             ) : null}
@@ -590,7 +584,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
                     <Text style={styles.retryText}>{translateDynamic('Retry')}</Text>
                   </TouchableOpacity>
                 ) : item.status === 'read' ? (
-                  <Icon source="check-all" size={14} color="#38BDF8" />
+                  <Icon source="check-all" size={14} color="#0066FF" />
                 ) : item.status === 'delivered' ? (
                   <Icon source="check-all" size={14} color="#94A3B8" />
                 ) : (
@@ -605,24 +599,15 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <StatusBar barStyle="light-content" backgroundColor="#0B1220" />
+    <View style={styles.outerContainer}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
-      {/* Top Header Bar matching Web */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Icon source="arrow-left" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
+      {/* 1. NATIVE HEADER (Single, Clean Bar) */}
+      <View style={[styles.headerBar, { paddingTop: Math.max(insets.top, 10) }]}>
+        {/* Back Button */}
+        <Appbar.BackAction color="#FFFFFF" onPress={() => navigation.goBack()} />
 
-        {/* Partner Info and Presence */}
+        {/* Partner Info and Presence Status */}
         <TouchableOpacity
           style={styles.partnerHeaderInfo}
           activeOpacity={0.8}
@@ -652,7 +637,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
 
           <View style={styles.partnerTextCol}>
             <View style={styles.partnerTitleRow}>
-              <Text variant="titleSmall" numberOfLines={1} style={styles.partnerHeaderName}>
+              <Text numberOfLines={1} style={styles.partnerHeaderName}>
                 {partnerName}
               </Text>
               <View style={styles.partnerRoleBadge}>
@@ -678,200 +663,190 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
           </View>
         </TouchableOpacity>
 
-        {/* Action Controls */}
+        {/* Header Right Action Buttons */}
         <View style={styles.headerRightActions}>
           {part?.contactPhone ? (
             <TouchableOpacity
               style={styles.phoneCallBtn}
+              activeOpacity={0.8}
               onPress={handleCallPartner}
             >
-              <Icon source="phone" size={18} color="#FFFFFF" />
+              <Icon source="phone" size={17} color="#FFFFFF" />
             </TouchableOpacity>
           ) : null}
+
           <TouchableOpacity
             style={styles.langBtn}
+            activeOpacity={0.8}
             onPress={() => setShowLanguageModal(true)}
           >
-            <Icon source="translate" size={18} color="#94A3B8" />
+            <Icon source="translate" size={17} color="#CBD5E1" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Linked Product Banner */}
+      {/* 2. COMPACT FLOATING INQUIRY CARD */}
       {part ? (
-        <TouchableOpacity
-          style={styles.productBanner}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('ProductDetail', { part })}
-        >
-          <Image
-            source={{
-              uri:
-                part.imageUrl ||
-                part.partImageUrl ||
-                'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=200',
-            }}
-            style={styles.productBannerImage}
-          />
-          <View style={styles.productBannerInfo}>
-            <Text style={styles.inquiryLabel}>
-              {translateDynamic('INQUIRY ABOUT')}
-            </Text>
-            <Text numberOfLines={1} style={styles.productBannerTitle}>
-              {part.title || part.partTitle || 'Auto Spare Part'}
-            </Text>
-            <Text style={styles.productBannerPrice}>
-              {formatPrice(Number(part.price || part.partPrice) || 0)}
-            </Text>
-          </View>
-          <View style={styles.activeChatBadge}>
-            <Text style={styles.activeChatBadgeText}>
-              {translateDynamic('Active Chat')}
-            </Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.productBannerWrap}>
+          <TouchableOpacity
+            style={styles.productBannerCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('ProductDetail', { part })}
+          >
+            <Image
+              source={{
+                uri:
+                  part.imageUrl ||
+                  part.partImageUrl ||
+                  'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=200',
+              }}
+              style={styles.productBannerImage}
+            />
+            <View style={styles.productBannerInfo}>
+              <Text style={styles.inquiryLabel}>
+                {translateDynamic('INQUIRY ITEM')}
+              </Text>
+              <Text numberOfLines={1} style={styles.productBannerTitle}>
+                {part.title || part.partTitle || 'Auto Spare Part'}
+              </Text>
+              <Text style={styles.productBannerPrice}>
+                {formatPrice(Number(part.price || part.partPrice) || 0)}
+              </Text>
+            </View>
+            <View style={styles.viewPartBtn}>
+              <Text style={styles.viewPartBtnText}>{translateDynamic('View')}</Text>
+              <Icon source="chevron-right" size={14} color="#0066FF" />
+            </View>
+          </TouchableOpacity>
+        </View>
       ) : null}
 
-      {/* Message Feed List */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMessage}
-        contentContainerStyle={styles.messageListContainer}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-        onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-        ListEmptyComponent={
-          <View style={styles.emptyFeedContainer}>
-            <View style={styles.emptyFeedIconCircle}>
-              <Icon source="hand-wave" size={32} color="#1565FF" />
-            </View>
-            <Text variant="titleMedium" style={styles.emptyFeedTitle}>
-              {translateDynamic('Start Conversation')}
-            </Text>
-            <Text variant="bodySmall" style={styles.emptyFeedSub}>
-              {translateDynamic('Ask about part condition, negotiate price, or arrange courier delivery.')}
-            </Text>
-
-            {/* Quick replies block in empty state */}
-            <View style={styles.emptyQuickRepliesWrapper}>
-              <Text style={styles.quickReplyHeaderLabel}>
-                ⚡ {translateDynamic('Quick Inquiries')}
+      {/* 3. MESSAGE FEED + COMPOSER */}
+      <KeyboardAvoidingView
+        style={styles.contentFlex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+      >
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMessage}
+          contentContainerStyle={styles.messageListContainer}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          ListEmptyComponent={
+            <View style={styles.emptyFeedContainer}>
+              <View style={styles.emptyFeedIconCircle}>
+                <Icon source="chat-processing-outline" size={32} color="#0066FF" />
+              </View>
+              <Text style={styles.emptyFeedTitle}>
+                {translateDynamic('Chat with')} {partnerName}
               </Text>
-              {getQuickReplies().map((replyText, idx) => (
-                <TouchableOpacity
-                  key={`empty-${idx}`}
-                  style={styles.emptyQuickReplyBtn}
-                  onPress={() => executeSend(replyText)}
-                  disabled={isSending || isUploadingImage}
-                >
-                  <Text style={styles.emptyQuickReplyText}>{replyText}</Text>
-                  <Icon source="arrow-top-right" size={14} color="#1565FF" />
-                </TouchableOpacity>
-              ))}
+              <Text style={styles.emptyFeedSub}>
+                {translateDynamic('Ask about part condition, negotiate price, or arrange courier delivery.')}
+              </Text>
             </View>
-          </View>
-        }
-        ListFooterComponent={
-          <>
-            {partnerIsTyping && (
-              <View style={styles.typingIndicatorBubble}>
-                <Text style={styles.typingBubbleText}>
-                  {partnerName} {translateDynamic('is typing...')}
-                </Text>
-                <ActivityIndicator size={10} color="#1565FF" />
-              </View>
-            )}
-            {isUploadingImage && (
-              <View style={styles.uploadingImageBubble}>
-                <ActivityIndicator size={14} color="#1565FF" />
-                <Text style={styles.uploadingImageText}>
-                  {translateDynamic('Uploading image to Cloudinary...')}
-                </Text>
-              </View>
-            )}
-          </>
-        }
-      />
-
-      {/* Quick Reply Bar above composer */}
-      <View style={styles.quickRepliesBar}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickRepliesScroll}
-        >
-          <View style={styles.zapIconContainer}>
-            <Icon source="flash" size={14} color="#F59E0B" />
-          </View>
-          {getQuickReplies().map((replyText, idx) => (
-            <TouchableOpacity
-              key={`bar-${idx}`}
-              style={styles.quickReplyChip}
-              onPress={() => executeSend(replyText)}
-              disabled={isSending || isUploadingImage}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.quickReplyChipText}>{replyText}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Message Input Composer matching Web */}
-      <View style={styles.composerContainer}>
-        {/* Direct Camera Button */}
-        <TouchableOpacity
-          style={styles.mediaIconButton}
-          onPress={handlePickImage}
-          disabled={isUploadingImage || isSending}
-          activeOpacity={0.7}
-        >
-          <Icon source="camera" size={22} color="#64748B" />
-        </TouchableOpacity>
-
-        {/* Direct Gallery Button */}
-        <TouchableOpacity
-          style={styles.mediaIconButton}
-          onPress={handlePickImage}
-          disabled={isUploadingImage || isSending}
-          activeOpacity={0.7}
-        >
-          <Icon source="image-outline" size={22} color="#64748B" />
-        </TouchableOpacity>
-
-        {/* Text Input */}
-        <TextInput
-          placeholder={translateDynamic('Type a message...')}
-          value={inputText}
-          onChangeText={handleInputChange}
-          mode="outlined"
-          style={styles.composerInput}
-          outlineColor="#E2E8F0"
-          activeOutlineColor="#1565FF"
-          placeholderTextColor="#94A3B8"
-          multiline
-          maxLength={1000}
-          dense
+          }
+          ListFooterComponent={
+            <>
+              {partnerIsTyping && (
+                <View style={styles.typingIndicatorBubble}>
+                  <Text style={styles.typingBubbleText}>
+                    {partnerName} {translateDynamic('is typing...')}
+                  </Text>
+                  <ActivityIndicator size={10} color="#0066FF" />
+                </View>
+              )}
+              {isUploadingImage && (
+                <View style={styles.uploadingImageBubble}>
+                  <ActivityIndicator size={14} color="#0066FF" />
+                  <Text style={styles.uploadingImageText}>
+                    {translateDynamic('Uploading image...')}
+                  </Text>
+                </View>
+              )}
+            </>
+          }
         />
 
-        {/* Send Button */}
-        <TouchableOpacity
-          style={[
-            styles.sendButton,
-            inputText.trim() ? styles.sendButtonActive : styles.sendButtonDisabled,
-          ]}
-          onPress={handleSendPress}
-          disabled={!inputText.trim() || isSending}
-          activeOpacity={0.8}
-        >
-          {isSending ? (
-            <ActivityIndicator size={18} color="#FFFFFF" />
-          ) : (
-            <Icon source="send" size={18} color="#FFFFFF" />
-          )}
-        </TouchableOpacity>
-      </View>
+        {/* 4. QUICK REPLIES CHIP BAR */}
+        <View style={styles.quickRepliesBar}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.quickRepliesScroll}
+          >
+            <View style={styles.zapIconContainer}>
+              <Icon source="flash" size={14} color="#F59E0B" />
+            </View>
+            {getQuickReplies().map((replyText, idx) => (
+              <TouchableOpacity
+                key={`bar-${idx}`}
+                style={styles.quickReplyChip}
+                onPress={() => executeSend(replyText)}
+                disabled={isSending || isUploadingImage}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.quickReplyChipText}>{replyText}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* 5. NATIVE MESSAGE COMPOSER */}
+        <View style={[styles.composerContainer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+          {/* Direct Camera Button */}
+          <TouchableOpacity
+            style={styles.mediaIconButton}
+            onPress={handlePickImage}
+            disabled={isUploadingImage || isSending}
+            activeOpacity={0.7}
+          >
+            <Icon source="camera-outline" size={22} color="#64748B" />
+          </TouchableOpacity>
+
+          {/* Direct Gallery Button */}
+          <TouchableOpacity
+            style={styles.mediaIconButton}
+            onPress={handlePickImage}
+            disabled={isUploadingImage || isSending}
+            activeOpacity={0.7}
+          >
+            <Icon source="image-outline" size={22} color="#64748B" />
+          </TouchableOpacity>
+
+          {/* Native Text Input */}
+          <View style={styles.inputBubbleWrap}>
+            <TextInput
+              placeholder={translateDynamic('Type a message...')}
+              value={inputText}
+              onChangeText={handleInputChange}
+              style={styles.nativeInput}
+              placeholderTextColor="#94A3B8"
+              multiline
+              maxLength={1000}
+            />
+          </View>
+
+          {/* Circular Send Button */}
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              inputText.trim() ? styles.sendButtonActive : styles.sendButtonDisabled,
+            ]}
+            onPress={handleSendPress}
+            disabled={!inputText.trim() || isSending}
+            activeOpacity={0.8}
+          >
+            {isSending ? (
+              <ActivityIndicator size={16} color="#FFFFFF" />
+            ) : (
+              <Icon source="send" size={18} color="#FFFFFF" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
 
       {/* Fullscreen Image Preview Modal */}
       <Modal
@@ -903,33 +878,35 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
         visible={showLanguageModal}
         onDismiss={() => setShowLanguageModal(false)}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  contentFlex: {
+    flex: 1,
+  },
   headerBar: {
-    backgroundColor: '#0B1220',
-    paddingTop: 8,
-    paddingBottom: 10,
+    backgroundColor: '#0F172A',
+    paddingBottom: 12,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#18233C',
+    borderBottomColor: '#1E293B',
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
   },
   backBtn: {
     padding: 6,
-    marginRight: 6,
+    marginRight: 4,
     borderRadius: 20,
   },
   partnerHeaderInfo: {
@@ -942,21 +919,21 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   partnerHeaderAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: 'rgba(56, 189, 248, 0.4)',
+    borderColor: '#38BDF8',
   },
   partnerHeaderAvatarPlaceholder: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#1565FF',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#0066FF',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(56, 189, 248, 0.4)',
+    borderColor: '#38BDF8',
   },
   partnerHeaderAvatarInitial: {
     color: '#FFFFFF',
@@ -967,11 +944,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: '#0B1220',
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#0F172A',
   },
   presenceOnline: {
     backgroundColor: '#10B981',
@@ -989,81 +966,93 @@ const styles = StyleSheet.create({
   },
   partnerHeaderName: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
+    fontWeight: '700',
+    fontSize: 15,
     maxWidth: '75%',
   },
   partnerRoleBadge: {
-    backgroundColor: 'rgba(37, 99, 235, 0.3)',
-    paddingHorizontal: 5,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
   },
   partnerRoleBadgeText: {
-    color: '#60A5FA',
-    fontSize: 8,
-    fontWeight: '900',
+    color: '#38BDF8',
+    fontSize: 9,
+    fontWeight: '800',
     textTransform: 'uppercase',
   },
   statusIndicatorRow: {
-    marginTop: 1,
+    marginTop: 2,
   },
   typingStatusText: {
     color: '#38BDF8',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
   },
   onlineStatusText: {
     color: '#34D399',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
   },
   offlineStatusText: {
     color: '#94A3B8',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
   },
   headerRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   phoneCallBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 2,
   },
   langBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#1E293B',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productBanner: {
+  productBannerWrap: {
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 2,
+    backgroundColor: '#F8FAFC',
+  },
+  productBannerCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    elevation: 1,
+    padding: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
+    elevation: 1,
   },
   productBannerImage: {
     width: 44,
     height: 44,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    backgroundColor: '#F1F5F9',
     marginRight: 10,
   },
   productBannerInfo: {
@@ -1071,43 +1060,46 @@ const styles = StyleSheet.create({
   },
   inquiryLabel: {
     fontSize: 9,
-    fontWeight: '900',
-    color: '#2563EB',
+    fontWeight: '800',
+    color: '#0066FF',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   productBannerTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#0F172A',
-    lineHeight: 16,
+    marginTop: 1,
   },
   productBannerPrice: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#1E293B',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  activeChatBadge: {
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  activeChatBadgeText: {
-    color: '#059669',
-    fontSize: 9,
+    fontSize: 13,
     fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 1,
+  },
+  viewPartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    gap: 2,
+  },
+  viewPartBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0066FF',
   },
   messageListContainer: {
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 10,
     flexGrow: 1,
   },
   messageRow: {
-    marginVertical: 4,
+    marginVertical: 3,
     flexDirection: 'row',
     maxWidth: '85%',
   },
@@ -1121,24 +1113,24 @@ const styles = StyleSheet.create({
   partnerBubbleAvatar: {
     marginRight: 6,
     alignSelf: 'flex-end',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   partnerSmallAvatarImg: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   partnerSmallAvatarPlaceholder: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#1565FF',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#0066FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   partnerSmallAvatarText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   bubbleWrapper: {
@@ -1153,7 +1145,7 @@ const styles = StyleSheet.create({
   bubbleBox: {
     paddingVertical: 9,
     paddingHorizontal: 13,
-    borderRadius: 18,
+    borderRadius: 16,
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -1161,29 +1153,29 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   myBubble: {
-    backgroundColor: '#1565FF',
-    borderBottomRightRadius: 2,
+    backgroundColor: '#0066FF',
+    borderBottomRightRadius: 3,
   },
   failedBubble: {
     backgroundColor: '#EF4444',
-    borderBottomRightRadius: 2,
+    borderBottomRightRadius: 3,
   },
   theirBubble: {
     backgroundColor: '#FFFFFF',
-    borderBottomLeftRadius: 2,
+    borderBottomLeftRadius: 3,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   imageAttachmentContainer: {
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
     marginBottom: 6,
     position: 'relative',
   },
   messageImage: {
-    width: SCREEN_WIDTH * 0.58,
+    width: SCREEN_WIDTH * 0.6,
     height: 160,
-    borderRadius: 12,
+    borderRadius: 10,
   },
   zoomOverlayIcon: {
     position: 'absolute',
@@ -1194,15 +1186,16 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   messageText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '500',
+    fontSize: 14,
+    lineHeight: 19,
   },
   myMessageText: {
     color: '#FFFFFF',
+    fontWeight: '500',
   },
   theirMessageText: {
     color: '#0F172A',
+    fontWeight: '500',
   },
   metaRow: {
     flexDirection: 'row',
@@ -1218,7 +1211,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   timeText: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#94A3B8',
     fontWeight: '500',
   },
@@ -1232,7 +1225,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#EF4444',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
   },
   typingIndicatorBubble: {
@@ -1255,12 +1248,12 @@ const styles = StyleSheet.create({
   },
   uploadingImageBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: 'rgba(21, 101, 255, 0.1)',
+    backgroundColor: '#EFF6FF',
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(21, 101, 255, 0.2)',
+    borderColor: '#DBEAFE',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -1268,71 +1261,40 @@ const styles = StyleSheet.create({
   },
   uploadingImageText: {
     fontSize: 11,
-    color: '#1565FF',
+    color: '#0066FF',
     fontWeight: '700',
   },
   emptyFeedContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 16,
+    paddingVertical: 36,
+    paddingHorizontal: 24,
   },
   emptyFeedIconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   emptyFeedTitle: {
+    fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
     textAlign: 'center',
   },
   emptyFeedSub: {
+    fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    marginTop: 4,
-    maxWidth: 260,
+    marginTop: 6,
     lineHeight: 18,
   },
-  emptyQuickRepliesWrapper: {
-    width: '100%',
-    maxWidth: 320,
-    marginTop: 20,
-    gap: 6,
-  },
-  quickReplyHeaderLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  emptyQuickReplyBtn: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  emptyQuickReplyText: {
-    color: '#1E40AF',
-    fontSize: 12,
-    fontWeight: '700',
-    flex: 1,
-  },
   quickRepliesBar: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
     paddingVertical: 6,
@@ -1343,29 +1305,35 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   zapIconContainer: {
-    paddingRight: 4,
+    paddingRight: 2,
   },
   quickReplyChip: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#CBD5E1',
-    borderRadius: 16,
-    paddingVertical: 5,
+    borderRadius: 18,
+    paddingVertical: 6,
     paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 1,
+    elevation: 1,
   },
   quickReplyChipText: {
     color: '#1E40AF',
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
   },
   composerContainer: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
     paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingTop: 8,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
   mediaIconButton: {
     width: 36,
@@ -1374,26 +1342,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  composerInput: {
+  inputBubbleWrap: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    fontSize: 13,
-    maxHeight: 90,
-    marginHorizontal: 4,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+    maxHeight: 100,
+    justifyContent: 'center',
+  },
+  nativeInput: {
+    fontSize: 14,
+    color: '#0F172A',
+    padding: 0,
+    margin: 0,
   },
   sendButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 4,
   },
   sendButtonActive: {
-    backgroundColor: '#1565FF',
+    backgroundColor: '#0066FF',
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   sendButtonDisabled: {
-    backgroundColor: '#94A3B8',
+    backgroundColor: '#CBD5E1',
   },
   imageModalContainer: {
     flex: 1,

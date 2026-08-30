@@ -27,10 +27,14 @@ export default function AuthScreen({ navigation }: any) {
       if (!user || !user.uid) {
         throw new Error('Unable to complete sign-in. Please try again.');
       }
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
-      });
+      if (navigation?.canGoBack && navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
+      }
     } catch (err: any) {
       console.warn('[AuthScreen] Google Sign-In failed:', err);
       const msg = err?.message || 'Unable to sign in with Google. Please check your internet connection and try again.';
@@ -45,6 +49,16 @@ export default function AuthScreen({ navigation }: any) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0B192C" />
       
+      {navigation?.canGoBack && navigation.canGoBack() && (
+        <TouchableOpacity 
+          style={{ position: 'absolute', top: 50, left: 20, zIndex: 10, padding: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20 }}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Icon source="close" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
+
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

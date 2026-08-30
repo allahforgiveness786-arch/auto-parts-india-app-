@@ -12,10 +12,11 @@ import {
   Platform,
   StatusBar
 } from 'react-native';
-import { Icon, Surface, Chip, useTheme, ActivityIndicator } from 'react-native-paper';
+import { Icon, Surface, Chip, useTheme, ActivityIndicator, Appbar } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { INITIAL_SPARE_PARTS } from '../data/mockData';
 import { getFirebaseFirestore } from '../services/firebase';
+import { useFavorites } from '../services/favorites';
 import { matchesCategoryFilter } from '../utils/categoryMatcher';
 
 export default function SearchScreen({ navigation, route, user }: any) {
@@ -33,7 +34,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
   const [parts, setParts] = useState<any[]>(INITIAL_SPARE_PARTS);
   const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const { favorites, toggleFavorite } = useFavorites();
 
   const defaultCategories = [
     'All Categories',
@@ -131,12 +132,6 @@ export default function SearchScreen({ navigation, route, user }: any) {
       setParts((current) => current.length > 0 ? current : INITIAL_SPARE_PARTS);
     }
   }, []);
-
-  const toggleFavorite = (id: string) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
 
   const activeFiltersCount = [
     selectedCategory !== 'All Categories',
@@ -257,9 +252,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
       
       {/* Top Search Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon source="arrow-left" color="#FFFFFF" size={24} />
-        </TouchableOpacity>
+        <Appbar.BackAction color="#FFFFFF" onPress={() => navigation.goBack()} />
         <View style={styles.searchBarContainer}>
           <Icon source="magnify" color="#94A3B8" size={20} />
           <TextInput

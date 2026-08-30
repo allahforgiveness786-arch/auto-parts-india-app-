@@ -16,8 +16,7 @@ export default function SplashScreen({ navigation }: any) {
 
     const timer = setTimeout(() => {
       try {
-        const currentUser = getCurrentUser();
-        const targetScreen = currentUser ? 'MainTabs' : 'Auth';
+        const targetScreen = 'MainTabs';
         if (navigation?.reset) {
           navigation.reset({
             index: 0,

@@ -274,6 +274,7 @@ export const MapLocationModal: React.FC<MapLocationModalProps> = ({
                   longitude={selectedLng}
                   title={`${district || state || 'Selected'} Location`}
                   interactive={true}
+                  height={180}
                   onLocationSelect={(coords) => {
                     setSelectedLat(coords.latitude);
                     setSelectedLng(coords.longitude);
@@ -283,7 +284,7 @@ export const MapLocationModal: React.FC<MapLocationModalProps> = ({
                       if (geo.area) setArea(geo.area);
                     });
                   }}
-                  style={{ height: 210, borderRadius: 14 }}
+                  style={{ borderRadius: 14 }}
                 />
               </View>
 

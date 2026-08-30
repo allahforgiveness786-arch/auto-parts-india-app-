@@ -53,7 +53,7 @@ import { matchesCategoryFilter } from '../utils/categoryMatcher';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Animated Card Component matching the user screenshot 1:1
-function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavorite, styles }: any) {
+const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onToggleFavorite, styles }: any) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -151,7 +151,7 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
 
 export default function HomeScreen({ navigation, route, user }: any) {
   const { favorites, toggleFavorite } = useFavorites();
@@ -290,6 +290,24 @@ export default function HomeScreen({ navigation, route, user }: any) {
     { id: 'Exhaust', name: 'Exhaust', icon: 'needle', iconColor: '#0F172A' },
     { id: 'More', name: 'More', icon: 'apps', iconColor: '#0F172A' },
   ];
+
+  const allCategoriesList = React.useMemo(() => {
+    const map = new Map();
+    categoryItems.filter(c => c.id !== 'More').forEach(c => map.set(c.name.toLowerCase(), c));
+    topCategories.forEach(c => {
+      if (c && c.name) {
+        map.set(c.name.toLowerCase(), {
+          id: c.id || c.name,
+          name: c.name,
+          icon: c.icon || 'apps',
+          iconColor: c.iconColor || '#0F172A',
+          imageUrl: c.imageUrl,
+          order: c.order || 0
+        });
+      }
+    });
+    return Array.from(map.values());
+  }, [topCategories]);
 
   const popularCities = [
     'All India', 'Chennai', 'Coimbatore', 'Karur', 'Pallapatti', 
@@ -512,6 +530,72 @@ export default function HomeScreen({ navigation, route, user }: any) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066FF']} />
         }
       >
+        {/* Promotional Top Banners Carousel (Strict 16:9 Aspect Ratio) */}
+        {(promoBanners.length > 0) && (
+          <View style={{ marginBottom: 20 }}>
+            <ScrollView 
+              horizontal 
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={Dimensions.get('window').width}
+              decelerationRate="fast"
+            >
+              {promoBanners.map((banner, index) => (
+                <TouchableOpacity 
+                  key={banner.id || index} 
+                  style={{
+                    width: Dimensions.get('window').width - 28, // 14 margin on each side
+                    marginHorizontal: 14,
+                    borderRadius: 14,
+                    overflow: 'hidden',
+                    backgroundColor: '#08142C',
+                    aspectRatio: 16 / 9,
+                    position: 'relative',
+                  }}
+                  activeOpacity={banner.targetLink ? 0.85 : 1}
+                  delayPressIn={0}
+                  onPress={() => {
+                    if (banner.targetLink) {
+                      Linking.openURL(banner.targetLink).catch(err => console.warn('Could not open link:', err));
+                    }
+                  }}
+                >
+                  {banner.imageUrl ? (
+                    <View style={{ width: '100%', height: '100%', position: 'relative' }}>
+                      <Image 
+                        source={{ uri: banner.imageUrl }}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
+                      />
+                      {banner.tag ? (
+                        <View style={{ position: 'absolute', top: 12, left: 12, backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
+                        </View>
+                      ) : null}
+                      {(banner.title && banner.title.toLowerCase() !== 'sale' && banner.title.toLowerCase() !== 'banner') ? (
+                        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12, backgroundColor: 'rgba(8, 20, 44, 0.8)' }}>
+                          <Text style={styles.bannerTitle}>{banner.title}</Text>
+                          {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
+                        </View>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <View style={{ flex: 1, padding: 16, justifyContent: 'center' }}>
+                      {banner.tag ? (
+                        <View style={{ backgroundColor: '#10B981', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginBottom: 8 }}>
+                          <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
+                        </View>
+                      ) : null}
+                      {banner.title ? <Text style={styles.bannerTitle}>{banner.title}</Text> : null}
+                      {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Categories Section Header */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Categories</Text>
@@ -534,82 +618,51 @@ export default function HomeScreen({ navigation, route, user }: any) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.categoryList}
         >
-          {topCategories.length > 0 ? (
-            <>
-              {topCategories.map((cat: any) => {
-                const isSelected = selectedCategory.toLowerCase() === (cat.name || '').toLowerCase();
-                const hasImageUrl = Boolean(cat.imageUrl && cat.imageUrl.startsWith('http'));
-                return (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
-                    onPress={() => {
-                      if (isSelected) {
-                        setSelectedCategory('All');
-                      } else {
-                        setSelectedCategory(cat.name);
-                      }
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[styles.categoryIconWrap, { backgroundColor: (cat.iconColor || '#1565FF') + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
-                      {hasImageUrl ? (
-                        <Image
-                          source={{ uri: cat.imageUrl }}
-                          style={{ width: 28, height: 28, borderRadius: 6 }}
-                          resizeMode="contain"
-                        />
-                      ) : (
-                        <Icon source={cat.icon || 'apps'} size={24} color={isSelected ? '#FFFFFF' : (cat.iconColor || '#1565FF')} />
-                      )}
-                    </View>
-                    <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]} numberOfLines={1}>
-                      {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+          {allCategoriesList.map((cat: any) => {
+            const isSelected = selectedCategory.toLowerCase() === (cat.name || '').toLowerCase();
+            const hasImageUrl = Boolean(cat.imageUrl && cat.imageUrl.startsWith('http'));
+            return (
               <TouchableOpacity
-                style={styles.categoryCard}
-                onPress={() => navigation.navigate('AllCategories', { categories: topCategories })}
+                key={cat.id || cat.name}
+                style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+                onPress={() => {
+                  if (isSelected) {
+                    setSelectedCategory('All');
+                  } else {
+                    setSelectedCategory(cat.name);
+                  }
+                }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.categoryIconWrap, { backgroundColor: '#0F172A15' }]}>
-                  <Icon source="apps" size={24} color="#0F172A" />
+                <View style={[styles.categoryIconWrap, { backgroundColor: (cat.iconColor || '#1565FF') + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
+                  {hasImageUrl ? (
+                    <Image
+                      source={{ uri: cat.imageUrl }}
+                      style={{ width: 28, height: 28, borderRadius: 6 }}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Icon source={cat.icon || 'apps'} size={24} color={isSelected ? '#FFFFFF' : (cat.iconColor || '#1565FF')} />
+                  )}
                 </View>
-                <Text style={styles.categoryName} numberOfLines={1}>
-                  More
+                <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]} numberOfLines={1}>
+                  {cat.name}
                 </Text>
               </TouchableOpacity>
-            </>
-          ) : (
-            categoryItems.map((cat) => {
-              const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
-                  onPress={() => {
-                    if (cat.id === 'More') {
-                      navigation.navigate('AllCategories', { categories: categoryItems });
-                    } else if (isSelected) {
-                      setSelectedCategory('All');
-                    } else {
-                      setSelectedCategory(cat.name);
-                    }
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.categoryIconWrap, { backgroundColor: cat.iconColor + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
-                    <Icon source={cat.icon} size={24} color={isSelected ? '#FFFFFF' : cat.iconColor} />
-                  </View>
-                  <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]} numberOfLines={1}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })
-          )}
+            );
+          })}
+          <TouchableOpacity
+            style={styles.categoryCard}
+            onPress={() => navigation.navigate('AllCategories', { categories: allCategoriesList })}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.categoryIconWrap, { backgroundColor: '#0F172A15' }]}>
+              <Icon source="apps" size={24} color="#0F172A" />
+            </View>
+            <Text style={styles.categoryName} numberOfLines={1}>
+              More
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
 
         {/* Active Category Filter Banner */}
@@ -699,64 +752,11 @@ export default function HomeScreen({ navigation, route, user }: any) {
           </View>
         )}
 
-        {/* Promotional Bottom Banners (Strict 16:9 Aspect Ratio) */}
-        {promoBanners.length > 0 ? (
-          promoBanners.map((banner, index) => (
-            <TouchableOpacity 
-              key={banner.id || index} 
-              style={{
-                marginHorizontal: 14,
-                marginTop: index === 0 ? 0 : 16,
-                borderRadius: 14,
-                overflow: 'hidden',
-                backgroundColor: '#08142C',
-                aspectRatio: 16 / 9,
-                position: 'relative',
-              }}
-              activeOpacity={banner.targetLink ? 0.85 : 1}
-              delayPressIn={0}
-              onPress={() => {
-                if (banner.targetLink) {
-                  Linking.openURL(banner.targetLink).catch(err => console.warn('Could not open link:', err));
-                }
-              }}
-            >
-              {banner.imageUrl ? (
-                <View style={{ width: '100%', height: '100%', position: 'relative' }}>
-                  <Image 
-                    source={{ uri: banner.imageUrl }}
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="cover"
-                  />
-                  {banner.tag ? (
-                    <View style={{ position: 'absolute', top: 12, left: 12, backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}>
-                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
-                    </View>
-                  ) : null}
-                  {(banner.title && banner.title.toLowerCase() !== 'sale' && banner.title.toLowerCase() !== 'banner') ? (
-                    <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12, backgroundColor: 'rgba(8, 20, 44, 0.8)' }}>
-                      <Text style={styles.bannerTitle}>{banner.title}</Text>
-                      {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
-                    </View>
-                  ) : null}
-                </View>
-              ) : (
-                <View style={{ flex: 1, padding: 16, justifyContent: 'center' }}>
-                  {banner.tag ? (
-                    <View style={{ backgroundColor: '#10B981', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginBottom: 8 }}>
-                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
-                    </View>
-                  ) : null}
-                  {banner.title ? <Text style={styles.bannerTitle}>{banner.title}</Text> : null}
-                  {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
-                </View>
-              )}
-            </TouchableOpacity>
-          ))
-        ) : (
+        {/* Promotional Bottom Banners (Strict 16:9 Aspect Ratio) - Fallback ONLY */}
+        {promoBanners.length === 0 && (
           <View style={{
             marginHorizontal: 14,
-            marginTop: 0,
+            marginTop: 16,
             borderRadius: 14,
             overflow: 'hidden',
             backgroundColor: '#08142C',
@@ -1001,7 +1001,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
       <InAppNotification
         notification={inAppNotification}
         onClose={() => setInAppNotification(null)}
-        onPress={() => navigation.navigate('Chats')}
+        onPress={() => navigation.navigate('ChatsTab')}
       />
 
       {/* Version Update Check Modal */}

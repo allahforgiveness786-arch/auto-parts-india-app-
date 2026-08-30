@@ -10,110 +10,75 @@ interface BrandLogoProps {
   className?: string;
 }
 
-export const ModernDeltaLogoIcon: React.FC<{ size?: number; color?: string }> = ({
-  size = 48,
-}) => {
-  // Renders the exact geometric triple chevron with lower diamond motif
-  // Using pure Native Vector shape layers with high precision proportions
+export const ModernDeltaLogoIcon: React.FC<{ size?: number }> = ({ size = 48 }) => {
   const s = size;
+  
   return (
-    <View
-      style={{
-        width: s,
-        height: s,
-        backgroundColor: '#000000',
-        borderRadius: s * 0.22,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: '#1E293B',
-      }}
-    >
-      <View
-        style={{
-          width: s * 0.85,
-          height: s * 0.85,
-          justifyContent: 'center',
-          alignItems: 'center',
-          position: 'relative',
-        }}
-      >
-        {/* Top Outer Blue Delta Chevron */}
-        <View
-          style={{
-            position: 'absolute',
-            top: s * 0.04,
-            width: 0,
-            height: 0,
-            borderLeftWidth: s * 0.38,
-            borderRightWidth: s * 0.38,
-            borderBottomWidth: s * 0.42,
-            borderLeftColor: 'transparent',
-            borderRightColor: 'transparent',
-            borderBottomColor: '#0066FF',
-          }}
-        />
+    <View style={{ width: s, height: s, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ width: s * 0.85, height: s * 0.85, position: 'relative' }}>
+        
+        {/* White Left Pillar & Apex */}
+        <View style={{
+          position: 'absolute',
+          left: s * 0.1,
+          bottom: s * 0.22,
+          width: s * 0.26,
+          height: s * 0.65,
+          backgroundColor: '#FFFFFF',
+          transform: [{ skewX: '-24deg' }],
+          borderWidth: 1,
+          borderColor: '#E2E8F0',
+          borderRightWidth: 0,
+        }} />
 
-        {/* Middle White Chevron Layer */}
-        <View
-          style={{
-            position: 'absolute',
-            top: s * 0.16,
-            width: 0,
-            height: 0,
-            borderLeftWidth: s * 0.28,
-            borderRightWidth: s * 0.28,
-            borderBottomWidth: s * 0.32,
-            borderLeftColor: 'transparent',
-            borderRightColor: 'transparent',
-            borderBottomColor: '#FFFFFF',
-          }}
-        />
+        {/* Blue Right Pillar */}
+        <View style={{
+          position: 'absolute',
+          right: s * 0.1,
+          bottom: s * 0.22,
+          width: s * 0.28,
+          height: s * 0.65,
+          backgroundColor: '#0066FF',
+          transform: [{ skewX: '24deg' }],
+        }} />
 
-        {/* Inner Blue Chevron */}
-        <View
-          style={{
-            position: 'absolute',
-            top: s * 0.29,
-            width: 0,
-            height: 0,
-            borderLeftWidth: s * 0.18,
-            borderRightWidth: s * 0.18,
-            borderBottomWidth: s * 0.22,
-            borderLeftColor: 'transparent',
-            borderRightColor: 'transparent',
-            borderBottomColor: '#0066FF',
-          }}
-        />
+        {/* White Crossbar */}
+        <View style={{
+          position: 'absolute',
+          bottom: s * 0.42,
+          left: s * 0.2,
+          width: s * 0.45,
+          height: s * 0.18,
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderBottomWidth: 1,
+          borderColor: '#E2E8F0',
+        }} />
 
-        {/* Cutout / Depth shadow */}
-        <View
-          style={{
-            position: 'absolute',
-            top: s * 0.40,
-            width: 0,
-            height: 0,
-            borderLeftWidth: s * 0.1,
-            borderRightWidth: s * 0.1,
-            borderBottomWidth: s * 0.12,
-            borderLeftColor: 'transparent',
-            borderRightColor: 'transparent',
-            borderBottomColor: '#000000',
-          }}
-        />
+        {/* Top Cover (to smooth the apex) */}
+        <View style={{
+          position: 'absolute',
+          top: -s * 0.05,
+          left: s * 0.35,
+          width: s * 0.15,
+          height: s * 0.15,
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderColor: '#E2E8F0',
+        }} />
 
-        {/* Bottom Diamond Apex Accent */}
-        <View
-          style={{
-            position: 'absolute',
-            bottom: s * 0.05,
-            width: s * 0.11,
-            height: s * 0.11,
-            backgroundColor: '#FFFFFF',
-            transform: [{ rotate: '45deg' }],
-          }}
-        />
+        {/* Orange Slanted Accent Line Below */}
+        <View style={{
+          position: 'absolute',
+          bottom: s * 0.02,
+          left: s * 0.2,
+          width: s * 0.45,
+          height: s * 0.12,
+          backgroundColor: '#FF6B00',
+          transform: [{ skewX: '-24deg' }],
+          borderRadius: 2,
+        }} />
+
       </View>
     </View>
   );

@@ -198,38 +198,10 @@ export default function AppNavigator({ user }: { user: any }) {
       </Stack.Screen>
 
       <Stack.Screen 
-        name="Home" 
-        options={{ headerShown: false }}
-      >
-        {(props) => <TabNavigator {...props} user={user} />}
-      </Stack.Screen>
-
-      <Stack.Screen 
-        name="Chats" 
-        options={{ headerShown: false }}
-      >
-        {(props) => <TabNavigator {...props} user={user} />}
-      </Stack.Screen>
-
-      <Stack.Screen 
-        name="Sell" 
-        options={{ headerShown: false }}
-      >
-        {(props) => <TabNavigator {...props} user={user} />}
-      </Stack.Screen>
-
-      <Stack.Screen 
         name="SellPart" 
         options={{ title: 'Sell Spare Part' }}
       >
         {(props) => <SellPartScreen {...props} user={user} />}
-      </Stack.Screen>
-
-      <Stack.Screen 
-        name="Profile" 
-        options={{ headerShown: false }}
-      >
-        {(props) => <TabNavigator {...props} user={user} />}
       </Stack.Screen>
 
       <Stack.Screen 
@@ -241,7 +213,7 @@ export default function AppNavigator({ user }: { user: any }) {
 
       <Stack.Screen 
         name="ChatRoom" 
-        options={{ title: 'Conversation' }}
+        options={{ headerShown: false }}
       >
         {(props) => <ChatRoomScreen {...props} user={user} />}
       </Stack.Screen>
@@ -275,13 +247,6 @@ export default function AppNavigator({ user }: { user: any }) {
         component={AllCategoriesScreen}
         options={{ headerShown: false }}
       />
-
-      <Stack.Screen 
-        name="MyAds" 
-        options={{ headerShown: false }}
-      >
-        {(props) => <MyAdsScreen {...props} user={user} />}
-      </Stack.Screen>
     </Stack.Navigator>
 
   );

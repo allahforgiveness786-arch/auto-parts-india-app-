@@ -12,6 +12,7 @@ import {
   Linking,
   Platform,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import {
   Text,
@@ -88,6 +89,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
   // Check if current user has admin rights
   const isAdmin =
     currentAuthUser?.email === SUPPORT_EMAIL ||
+    currentAuthUser?.email === 'www.allahforgiveness877@gmail.com' ||
     profileData?.role === 'admin' ||
     profileData?.role === 'superadmin';
 
@@ -168,8 +170,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
           // User's own listings
           const own = list.filter((it: any) =>
             it.sellerId === activeUid ||
-            it.userId === activeUid ||
-            it.sellerEmail === currentAuthUser?.email
+            it.userId === activeUid
           );
           setMyListings(own);
         }, () => {
@@ -525,60 +526,61 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
   const soldAdsCount = myListings.filter((p) => Boolean(p.sold)).length;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* 👤 Top Account / Profile Section */}
-      <Surface style={styles.header} elevation={3}>
-        <View style={styles.avatarContainer}>
-          <TouchableOpacity
-            onPress={() => setIsPopupModalVisible(true)}
-            activeOpacity={0.8}
-            style={styles.avatarTouch}
-            disabled={uploadingPhoto}
-          >
-            <Image
-              key={`avatar-${cacheBuster}`}
-              source={{ uri: displayPhotoUrl }}
-              style={styles.avatarImage}
-              resizeMode="cover"
-              onError={() => setAvatarLoadError(true)}
-              onLoadStart={() => setAvatarLoadError(false)}
-            />
-            {uploadingPhoto && (
-              <View style={styles.avatarLoadingOverlay}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              </View>
-            )}
-          </TouchableOpacity>
-          {!uploadingPhoto && (
+      <Surface style={styles.header} elevation={0}>
+        <View style={styles.headerRow}>
+          <View style={styles.avatarContainer}>
             <TouchableOpacity
-              style={styles.cameraIconBadge}
-              onPress={handleUpdateProfilePhoto}
-              activeOpacity={0.7}
+              onPress={() => setIsPopupModalVisible(true)}
+              activeOpacity={0.8}
+              style={styles.avatarTouch}
+              disabled={uploadingPhoto}
             >
-              <Icon source="camera" size={14} color="#FFFFFF" />
+              <Image
+                key={`avatar-${cacheBuster}`}
+                source={{ uri: displayPhotoUrl }}
+                style={styles.avatarImage}
+                resizeMode="cover"
+                onError={() => setAvatarLoadError(true)}
+                onLoadStart={() => setAvatarLoadError(false)}
+              />
+              {uploadingPhoto && (
+                <View style={styles.avatarLoadingOverlay}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                </View>
+              )}
             </TouchableOpacity>
-          )}
-        </View>
+            {!uploadingPhoto && (
+              <TouchableOpacity
+                style={styles.cameraIconBadge}
+                onPress={handleUpdateProfilePhoto}
+                activeOpacity={0.7}
+              >
+                <Icon source="camera" size={12} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
 
-        <View style={styles.userInfoBlock}>
-          <Text style={styles.name}>{displayName}</Text>
-          <Text style={styles.email}>{userEmail}</Text>
-          {profileData?.phone ? (
-            <Text style={styles.phoneText}>📞 {profileData.phone}</Text>
-          ) : null}
-          {profileData?.location ? (
-            <Text style={styles.locationText}>📍 {profileData.location}</Text>
-          ) : null}
+          <View style={styles.userInfoBlock}>
+            <Text style={styles.name}>{displayName}</Text>
+            <Text style={styles.email}>{userEmail}</Text>
+            {profileData?.phone ? (
+              <Text style={styles.phoneText}>📞 {profileData.phone}</Text>
+            ) : null}
+            {profileData?.location ? (
+              <Text style={styles.locationText}>📍 {profileData.location}</Text>
+            ) : null}
+            <TouchableOpacity
+              style={styles.editProfileBtn}
+              onPress={() => setIsEditProfileModalOpen(true)}
+              activeOpacity={0.8}
+            >
+              <Icon source="pencil-outline" size={14} color="#334155" />
+              <Text style={styles.editProfileBtnText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <TouchableOpacity
-          style={styles.editProfileBtn}
-          onPress={() => setIsEditProfileModalOpen(true)}
-          activeOpacity={0.8}
-        >
-          <Icon source="pencil-outline" size={14} color="#FFFFFF" />
-          <Text style={styles.editProfileBtnText}>Edit Profile</Text>
-        </TouchableOpacity>
       </Surface>
 
       {/* Main Navigation Tabs */}
@@ -693,7 +695,9 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 left={(props) => <List.Icon {...props} icon="format-list-bulleted" color="#1565FF" />}
                 right={(props) => (
                   <View style={styles.itemRightRow}>
-                    <Badge style={styles.countBadge}>{myListings.length}</Badge>
+                    {myListings.length > 0 && (
+                      <Badge style={styles.countBadge}>{myListings.length}</Badge>
+                    )}
                     <List.Icon {...props} icon="chevron-right" />
                   </View>
                 )}
@@ -711,7 +715,9 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 left={(props) => <List.Icon {...props} icon="check-decagram" color="#10B981" />}
                 right={(props) => (
                   <View style={styles.itemRightRow}>
-                    <Badge style={[styles.countBadge, { backgroundColor: '#10B981' }]}>{activeAdsCount}</Badge>
+                    {activeAdsCount > 0 && (
+                      <Badge style={[styles.countBadge, { backgroundColor: '#10B981' }]}>{activeAdsCount}</Badge>
+                    )}
                     <List.Icon {...props} icon="chevron-right" />
                   </View>
                 )}
@@ -729,7 +735,9 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 left={(props) => <List.Icon {...props} icon="tag-check" color="#F59E0B" />}
                 right={(props) => (
                   <View style={styles.itemRightRow}>
-                    <Badge style={[styles.countBadge, { backgroundColor: '#F59E0B' }]}>{soldAdsCount}</Badge>
+                    {soldAdsCount > 0 && (
+                      <Badge style={[styles.countBadge, { backgroundColor: '#F59E0B' }]}>{soldAdsCount}</Badge>
+                    )}
                     <List.Icon {...props} icon="chevron-right" />
                   </View>
                 )}
@@ -747,7 +755,9 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 left={(props) => <List.Icon {...props} icon="heart" color="#EF4444" />}
                 right={(props) => (
                   <View style={styles.itemRightRow}>
-                    <Badge style={[styles.countBadge, { backgroundColor: '#EF4444' }]}>{savedParts.length}</Badge>
+                    {savedParts.length > 0 && (
+                      <Badge style={[styles.countBadge, { backgroundColor: '#EF4444' }]}>{savedParts.length}</Badge>
+                    )}
                     <List.Icon {...props} icon="chevron-right" />
                   </View>
                 )}
@@ -762,21 +772,13 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 left={(props) => <List.Icon {...props} icon="clock-outline" color="#8B5CF6" />}
                 right={(props) => (
                   <View style={styles.itemRightRow}>
-                    <Badge style={[styles.countBadge, { backgroundColor: '#8B5CF6' }]}>{recentlyViewed.length}</Badge>
+                    {recentlyViewed.length > 0 && (
+                      <Badge style={[styles.countBadge, { backgroundColor: '#8B5CF6' }]}>{recentlyViewed.length}</Badge>
+                    )}
                     <List.Icon {...props} icon="chevron-right" />
                   </View>
                 )}
                 onPress={() => setActiveTab('recent')}
-                style={styles.listItem}
-              />
-
-              {/* My Chats */}
-              <List.Item
-                title="My Chats"
-                description="Conversations with buyers and sellers"
-                left={(props) => <List.Icon {...props} icon="chat-processing-outline" color="#0EA5E9" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => navigation.navigate('ChatsTab')}
                 style={styles.listItem}
               />
 
@@ -868,16 +870,6 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 style={styles.listItem}
               />
 
-              {/* Report a Problem */}
-              <List.Item
-                title="Report a Problem"
-                description="Submit issue, spam ad, or technical bug"
-                left={(props) => <List.Icon {...props} icon="alert-octagon-outline" color="#F43F5E" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => setReportModalVisible(true)}
-                style={styles.listItem}
-              />
-
               {/* Contact Support */}
               <List.Item
                 title="Contact Support"
@@ -916,7 +908,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
             </TouchableOpacity>
 
             <Text style={styles.versionText}>
-              Auto Parts India App v2.4.0 • Built with Firebase Realtime Sync
+              Auto Parts India App v2.4.0
             </Text>
           </View>
         )}
@@ -1490,9 +1482,9 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
               <View style={styles.securityOption}>
                 <Icon source="account-lock" size={24} color="#1565FF" />
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.securityTitle}>Google & Firebase Authentication</Text>
+                  <Text style={styles.securityTitle}>Secure Authentication</Text>
                   <Text style={styles.securityDesc}>
-                    Your sign-in credentials are authenticated through Google OAuth & Firebase.
+                    Your sign-in credentials are authenticated securely.
                   </Text>
                 </View>
               </View>
@@ -1534,7 +1526,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
         visible={showLanguageModal}
         onDismiss={() => setShowLanguageModal(false)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -1544,26 +1536,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    alignItems: 'center',
-    paddingVertical: 22,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 8,
   },
   avatarTouch: {
     position: 'relative',
-    borderRadius: 44,
+    borderRadius: 34,
   },
   avatarImage: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 3,
-    borderColor: '#1565FF',
-    backgroundColor: '#1E293B',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F1F5F9',
   },
   avatarLoadingOverlay: {
     position: 'absolute',
@@ -1571,61 +1568,62 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 41,
+    borderRadius: 34,
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   cameraIconBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: -2,
+    right: -2,
     backgroundColor: '#1565FF',
-    borderRadius: 14,
-    width: 28,
-    height: 28,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#0F172A',
+    borderColor: '#FFFFFF',
   },
   userInfoBlock: {
-    alignItems: 'center',
+    flex: 1,
+    alignItems: 'flex-start',
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#0F172A',
   },
   email: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#64748B',
     marginTop: 2,
   },
   phoneText: {
-    fontSize: 11,
-    color: '#CBD5E1',
+    fontSize: 12,
+    color: '#64748B',
     marginTop: 2,
   },
   locationText: {
-    fontSize: 11,
-    color: '#CBD5E1',
+    fontSize: 12,
+    color: '#64748B',
     marginTop: 1,
   },
   editProfileBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    paddingHorizontal: 14,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     marginTop: 10,
-    gap: 6,
+    gap: 4,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   editProfileBtnText: {
-    color: '#FFFFFF',
+    color: '#334155',
     fontSize: 11,
     fontWeight: '700',
   },

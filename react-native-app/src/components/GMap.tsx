@@ -119,16 +119,8 @@ const GMap: React.FC<GMapProps> = ({
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <style>
-        body { padding: 0; margin: 0; background-color: #0B1220; }
+        body { padding: 0; margin: 0; background-color: #F1F5F9; }
         #map { width: 100vw; height: 100vh; }
-        
-        /* Dark Mode for Map Tiles */
-        .leaflet-layer,
-        .leaflet-control-zoom-in,
-        .leaflet-control-zoom-out,
-        .leaflet-control-attribution {
-          filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-        }
         
         /* Custom Marker */
         .custom-marker {
@@ -195,7 +187,7 @@ const GMap: React.FC<GMapProps> = ({
             ref={webViewRef}
             originWhitelist={['*']}
             source={{ html: mapHtml }}
-            style={{ flex: 1, backgroundColor: '#0B1220' }}
+            style={{ flex: 1, backgroundColor: '#F1F5F9' }}
             scrollEnabled={false}
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}

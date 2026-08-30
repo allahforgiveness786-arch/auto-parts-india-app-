@@ -70,9 +70,8 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
               const sellerEmail = (part.sellerEmail || '').toLowerCase();
 
               const matchesId = currentUid && sellerId && (sellerId === currentUid || String(sellerId) === String(currentUid));
-              const matchesEmail = currentEmail && sellerEmail && sellerEmail === currentEmail;
 
-              return Boolean(matchesId || matchesEmail);
+              return Boolean(matchesId);
             });
 
             // Sort by most recently updated/created first
@@ -119,8 +118,7 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
             const sellerId = data.sellerId || data.userId || data.ownerId;
             const sellerEmail = (data.sellerEmail || '').toLowerCase();
             const matchesId = currentUid && sellerId && (sellerId === currentUid || String(sellerId) === String(currentUid));
-            const matchesEmail = currentEmail && sellerEmail && sellerEmail === currentEmail;
-            if (matchesId || matchesEmail) {
+            if (matchesId) {
               list.push({ id: doc.id, ...data });
             }
           }
