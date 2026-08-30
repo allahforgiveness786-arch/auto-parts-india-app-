@@ -14,7 +14,9 @@ import {
   Alert,
   Animated,
   Easing,
-  TextInput
+  TextInput,
+  KeyboardAvoidingView,
+  Platform
 } from "react-native";
 import { 
   Searchbar, 
