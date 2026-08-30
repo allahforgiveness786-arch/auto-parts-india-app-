@@ -1,15 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Linking, TouchableOpacity, Image, ActivityIndicator, FlatList, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Linking, TouchableOpacity, Image, ActivityIndicator, FlatList, Alert, Platform, Dimensions, SafeAreaView } from 'react-native';
 import { Text, Surface, Button, Icon, ActivityIndicator as PaperActivityIndicator } from 'react-native-paper';
 import { getFirebaseAuth, getFirebaseFirestore, getCurrentUser } from '../services/firebase';
+import ImageView from 'react-native-image-viewing';
+import { UserProfilePopupModal } from '../components/UserProfilePopupModal';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function SellerProfileScreen({ route, navigation }: any) {
   const { seller, sellerId: paramSellerId, sellerName: paramSellerName } = route.params || {};
   const sellerId = seller?.id || paramSellerId;
-  const sellerName = seller?.name || paramSellerName || 'Automotive Seller';
-  const sellerPhoto = seller?.photoURL || seller?.profilePhoto || null;
-  const sellerLocation = seller?.location || seller?.district || 'India';
+  const initialSellerName = seller?.name || paramSellerName || 'Automotive Seller';
+  const initialSellerPhoto = seller?.photoURL || seller?.profilePhoto || null;
+  const initialSellerLocation = seller?.location || seller?.district || 'India';
+
+  const [sellerName, setSellerName] = useState(initialSellerName);
+  const [sellerPhoto, setSellerPhoto] = useState<string | null>(initialSellerPhoto);
+  const [sellerLocation, setSellerLocation] = useState(initialSellerLocation);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
 
   const [activeListings, setActiveListings] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -32,7 +42,25 @@ export default function SellerProfileScreen({ route, navigation }: any) {
         const db = getFirebaseFirestore();
         if (!db || typeof db.collection !== 'function') return;
 
-        // 1. Fetch seller listings
+        // 1. Fetch user doc for up-to-date profile picture & details
+        try {
+          const userDoc = await db.collection('users').doc(sellerId).get();
+          const exists = typeof (userDoc as any).exists === 'function' ? (userDoc as any).exists() : Boolean(userDoc.exists);
+          if (exists && isMounted) {
+            const userData = userDoc.data();
+            if (userData?.photoURL || userData?.profilePhoto) {
+              setSellerPhoto(userData.photoURL || userData.profilePhoto);
+            }
+            if (userData?.displayName || userData?.name) {
+              setSellerName(userData.displayName || userData.name);
+            }
+            if (userData?.location) {
+              setSellerLocation(userData.location);
+            }
+          }
+        } catch (_) {}
+
+        // 2. Fetch seller listings
         const q = db.collection('spareParts').where('sellerId', '==', sellerId);
         const listingsSnap = await q.get();
         const items: any[] = [];
@@ -40,7 +68,7 @@ export default function SellerProfileScreen({ route, navigation }: any) {
           items.push({ id: d.id, ...d.data() });
         });
 
-        // 2. Fetch followers & following counts
+        // 3. Fetch followers & following counts
         const followersQ = db.collection('follows').where('followingId', '==', sellerId);
         const followingQ = db.collection('follows').where('followerId', '==', sellerId);
         const reviewsQ = db.collection('sellerReviews').where('sellerId', '==', sellerId);
@@ -50,7 +78,7 @@ export default function SellerProfileScreen({ route, navigation }: any) {
           reviewsQ.get()
         ]);
 
-        // 3. Check follow status if logged in
+        // 4. Check follow status if logged in
         let followingStatus = false;
         if (currentUser?.uid && currentUser.uid !== sellerId) {
           const followDoc = await db.collection('follows').doc(`${currentUser.uid}_${sellerId}`).get();
@@ -138,8 +166,12 @@ export default function SellerProfileScreen({ route, navigation }: any) {
       {/* 1. Compact Header Card */}
       <Surface style={styles.headerCard} elevation={1}>
         <View style={styles.profileRow}>
-          {/* Max 64px avatar */}
-          <View style={styles.avatarWrap}>
+          {/* Max 64px avatar with social media popup tap capability */}
+          <TouchableOpacity 
+            style={styles.avatarWrap} 
+            activeOpacity={0.8}
+            onPress={() => setIsProfilePopupOpen(true)}
+          >
             {sellerPhoto ? (
               <Image source={{ uri: sellerPhoto }} style={styles.avatarImg} />
             ) : (
@@ -149,7 +181,10 @@ export default function SellerProfileScreen({ route, navigation }: any) {
                 </Text>
               </View>
             )}
-          </View>
+            <View style={styles.avatarZoomBadge}>
+              <Icon source="magnify" size={12} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
 
           {/* Streamlined single column info */}
           <View style={styles.infoCol}>
@@ -243,8 +278,9 @@ export default function SellerProfileScreen({ route, navigation }: any) {
                 onPress={() => navigation.navigate('ProductDetail', { part })}
               >
                 <Image
-                  source={{ uri: part.imageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=300' }}
+                  source={{ uri: part.imageUrl || part.images?.[0] || part.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=300' }}
                   style={styles.partImage}
+                  resizeMode="cover"
                 />
                 <View style={styles.partInfo}>
                   <Text style={styles.partTitle} numberOfLines={2}>{part.title}</Text>
@@ -256,6 +292,13 @@ export default function SellerProfileScreen({ route, navigation }: any) {
           </View>
         )}
       </View>
+
+      {/* User Profile Popup Modal showing only photo with tap outside / back button close */}
+      <UserProfilePopupModal
+        visible={isProfilePopupOpen}
+        onDismiss={() => setIsProfilePopupOpen(false)}
+        userPhoto={sellerPhoto}
+      />
     </ScrollView>
   );
 }
@@ -276,10 +319,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    overflow: 'hidden',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    position: 'relative',
     borderWidth: 2,
     borderColor: '#1565FF',
     backgroundColor: '#0B1220',
@@ -287,13 +330,56 @@ const styles = StyleSheet.create({
   avatarImg: {
     width: '100%',
     height: '100%',
+    borderRadius: 30,
   },
   avatarFallback: {
     width: '100%',
     height: '100%',
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1E293B',
+  },
+  avatarZoomBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#1565FF',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  viewerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? 24 : 10,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  viewerCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewerTitleWrap: {
+    alignItems: 'center',
+  },
+  viewerTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  viewerSubTitle: {
+    color: '#94A3B8',
+    fontSize: 12,
   },
   avatarInitials: {
     color: '#FFFFFF',
@@ -414,8 +500,8 @@ const styles = StyleSheet.create({
   },
   partImage: {
     width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#0F172A',
+    aspectRatio: 1.15,
+    backgroundColor: '#F1F5F9',
   },
   partInfo: {
     padding: 8,

@@ -1,4 +1,5 @@
-import firestore from '@react-native-firebase/firestore';
+import { getFirebaseFirestore as db } from './firebase';
+import firestoreModule from '@react-native-firebase/firestore';
 
 import { Platform, PermissionsAndroid, Alert } from "react-native";
 import notifee, { AndroidImportance, EventType } from "@notifee/react-native";
@@ -121,24 +122,24 @@ export async function saveFcmTokenToFirestore(userId: string): Promise<string | 
     console.log('[FCM] Generated FCM Token:', token.substring(0, 15) + '...');
 
     if (true) {
-      const userRef = firestore().collection('users').doc(userId);
+      const userRef = db().collection('users').doc(userId);
       await userRef.update({
         fcmToken: token,
-        fcmTokenLastUpdated: firestore.FieldValue.serverTimestamp(),
+        fcmTokenLastUpdated: firestoreModule.FieldValue.serverTimestamp(),
         platform: Platform.OS,
       }).catch(async () => {
         await userRef.set({
           fcmToken: token,
-          fcmTokenLastUpdated: firestore.FieldValue.serverTimestamp(),
+          fcmTokenLastUpdated: firestoreModule.FieldValue.serverTimestamp(),
           platform: Platform.OS,
         }, { merge: true });
       });
 
       const safeDocId = token.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
-      const tokenRef = firestore().collection('users').doc(userId).collection('fcmTokens').doc(safeDocId);
+      const tokenRef = db().collection('users').doc(userId).collection('fcmTokens').doc(safeDocId);
       await tokenRef.set({
         token: token,
-        createdAt: firestore.FieldValue.serverTimestamp(),
+        createdAt: firestoreModule.FieldValue.serverTimestamp(),
         platform: Platform.OS,
       }, { merge: true }).catch(() => null);
     }
@@ -164,17 +165,17 @@ export async function removeFcmTokenFromFirestore(userId: string): Promise<void>
     }
 
     if (token && true) {
-      const userRef = firestore().collection('users').doc(userId);
+      const userRef = db().collection('users').doc(userId);
       await userRef.update({
         fcmToken: null,
-        fcmTokenLastUpdated: firestore.FieldValue.serverTimestamp(),
+        fcmTokenLastUpdated: firestoreModule.FieldValue.serverTimestamp(),
       }).catch(() => null);
 
       const safeDocId = token.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
-      const tokenRef = firestore().collection('users').doc(userId).collection('fcmTokens').doc(safeDocId);
+      const tokenRef = db().collection('users').doc(userId).collection('fcmTokens').doc(safeDocId);
       await tokenRef.set({
         revoked: true,
-        revokedAt: firestore.FieldValue.serverTimestamp(),
+        revokedAt: firestoreModule.FieldValue.serverTimestamp(),
       }, { merge: true }).catch(() => null);
     }
 
@@ -255,10 +256,10 @@ export function setupFcmListeners(userId?: string): () => void {
     unsubscribeTokenRefresh = msg.onTokenRefresh(async (newToken: string) => {
       console.log('[FCM] Token refreshed:', newToken.substring(0, 15) + '...');
       if (userId && true) {
-        const userRef = firestore().collection('users').doc(userId);
+        const userRef = db().collection('users').doc(userId);
         await userRef.update({
           fcmToken: newToken,
-          fcmTokenLastUpdated: firestore.FieldValue.serverTimestamp(),
+          fcmTokenLastUpdated: firestoreModule.FieldValue.serverTimestamp(),
         }).catch(() => null);
       }
     });

@@ -7,6 +7,7 @@ import {
   RefreshControl,
   Image,
   StatusBar,
+  Alert,
 } from 'react-native';
 import {
   Text,
@@ -286,8 +287,8 @@ export default function ChatsScreen({ navigation, user: initialUser }: any) {
               >
                 <Text
                   style={[
-                    styles.roleTagText,
-                    isUserBuyer ? styles.sellerTagText : styles.buyerTagText,
+                    { fontSize: 10, fontWeight: '700' },
+                    { color: isUserBuyer ? '#3B82F6' : '#10B981' },
                   ]}
                 >
                   {partnerRole}

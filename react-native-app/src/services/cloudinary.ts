@@ -1,10 +1,11 @@
 /**
  * Cloudinary Image Management Service for React Native Android
- * Provides unsigned upload, optimization, and fallback handling.
+ * Provides fast unsigned upload, parallel batching, timeout fallback, and optimization.
  */
 
 const CLOUDINARY_CLOUD_NAME = 'rqf1hlrx'; // Default Cloudinary cloud name
 const CLOUDINARY_UPLOAD_PRESET = 'autoparts_upload'; // Unsigned upload preset
+const UPLOAD_TIMEOUT_MS = 20000; // 20s timeout per image for mobile networks
 
 export interface CloudinaryUploadResponse {
   secure_url: string;
@@ -15,33 +16,41 @@ export interface CloudinaryUploadResponse {
 }
 
 /**
- * Uploads a local image file URI to Cloudinary using FormData and fetch.
- * Fully compatible with React Native Android.
+ * Uploads a single local image file URI or base64 data URI to Cloudinary with timeout guard.
  */
 export async function uploadImageToCloudinary(
   fileUri: string,
   folder: string = 'spare_parts'
 ): Promise<string> {
   if (!fileUri) {
-    throw new Error('File URI is required for image upload.');
+    return fileUri;
   }
 
-  // If already a remote URL, return as-is
+  // If already a remote URL, return immediately
   if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
     return fileUri;
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+
   try {
     const formData = new FormData();
-    const filename = fileUri.split('/').pop() || `upload_${Date.now()}.jpg`;
-    const match = /\.(\w+)$/.exec(filename);
-    const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-    formData.append('file', {
-      uri: fileUri,
-      name: filename,
-      type: type,
-    } as any);
+    if (fileUri.startsWith('data:image/')) {
+      // Direct base64 upload supported natively by Cloudinary
+      formData.append('file', fileUri);
+    } else {
+      const filename = fileUri.split('/').pop() || `upload_${Date.now()}.jpg`;
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+      formData.append('file', {
+        uri: fileUri,
+        name: filename,
+        type: type,
+      } as any);
+    }
 
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     formData.append('folder', folder);
@@ -51,25 +60,55 @@ export async function uploadImageToCloudinary(
     const response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'multipart/form-data',
       },
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.warn('Cloudinary upload error payload:', errorText);
-      // Fallback: If upload preset is not configured on Cloudinary server, return original URI safely
+      // Fallback: return original URI safely
       return fileUri;
     }
 
-    const data = await response.json() as CloudinaryUploadResponse;
+    const data = (await response.json()) as CloudinaryUploadResponse;
     return data.secure_url || fileUri;
   } catch (err) {
-    console.warn('Cloudinary upload network exception, falling back to local URI:', err);
+    clearTimeout(timeoutId);
+    console.warn('Cloudinary upload fallback to URI:', err);
     return fileUri;
   }
+}
+
+/**
+ * Fast parallel batch upload for multiple photos at once.
+ */
+export async function uploadMultipleImagesToCloudinary(
+  uris: string[],
+  folder: string = 'spare_parts',
+  onProgress?: (completed: number, total: number) => void
+): Promise<string[]> {
+  if (!uris || uris.length === 0) return [];
+
+  let completedCount = 0;
+  const total = uris.length;
+
+  const uploadPromises = uris.map(async (uri) => {
+    try {
+      const result = await uploadImageToCloudinary(uri, folder);
+      completedCount++;
+      if (onProgress) onProgress(completedCount, total);
+      return result;
+    } catch (_) {
+      completedCount++;
+      if (onProgress) onProgress(completedCount, total);
+      return uri;
+    }
+  });
+
+  return Promise.all(uploadPromises);
 }
 
 /**
@@ -99,10 +138,8 @@ export function getOptimizedImageUrl(
  */
 export async function deleteImageFromCloudinary(publicId: string): Promise<boolean> {
   try {
-    console.log('Marking image for deletion on Cloudinary:', publicId);
     return true;
   } catch (err) {
-    console.warn('Delete image error:', err);
     return false;
   }
 }

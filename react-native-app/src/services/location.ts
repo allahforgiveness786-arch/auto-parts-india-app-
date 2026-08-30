@@ -1,6 +1,20 @@
 import { PermissionsAndroid, Platform, Linking } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { INDIAN_STATES_AND_DISTRICTS } from '../data/indianLocations';
+
+export const USER_SAVED_LOCATION_KEY = '@autoparts_user_selected_location';
+
+export interface UserSavedLocation {
+  city: string;
+  state?: string;
+  district?: string;
+  area?: string;
+  lat?: number;
+  lng?: number;
+  isGPS?: boolean;
+  timestamp?: number;
+}
 
 export interface LatLng {
   lat: number;
@@ -28,6 +42,55 @@ export interface GeocodeResult {
   displayName: string;
   latitude: number;
   longitude: number;
+}
+
+// In-memory cache for fast reverse geocoding
+const reverseGeocodeCache = new Map<string, GeocodedLocation>();
+
+/**
+ * Saves user selected/detected location to persistent AsyncStorage
+ */
+export async function saveUserLocation(loc: Partial<UserSavedLocation>): Promise<void> {
+  try {
+    const payload: UserSavedLocation = {
+      city: loc.city || 'All India',
+      state: loc.state,
+      district: loc.district,
+      area: loc.area,
+      lat: loc.lat,
+      lng: loc.lng,
+      isGPS: loc.isGPS ?? false,
+      timestamp: Date.now(),
+    };
+    await AsyncStorage.setItem(USER_SAVED_LOCATION_KEY, JSON.stringify(payload));
+  } catch (err) {
+    console.warn('Error saving user location to AsyncStorage:', err);
+  }
+}
+
+/**
+ * Gets user saved location from persistent AsyncStorage
+ */
+export async function getUserSavedLocation(): Promise<UserSavedLocation | null> {
+  try {
+    const data = await AsyncStorage.getItem(USER_SAVED_LOCATION_KEY);
+    if (!data) return null;
+    return JSON.parse(data) as UserSavedLocation;
+  } catch (err) {
+    console.warn('Error retrieving user location from AsyncStorage:', err);
+    return null;
+  }
+}
+
+/**
+ * Clears user saved location from persistent AsyncStorage
+ */
+export async function clearUserSavedLocation(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(USER_SAVED_LOCATION_KEY);
+  } catch (err) {
+    console.warn('Error clearing user location:', err);
+  }
 }
 
 // Master District Coordinates Table for fallback and auto-centering
@@ -255,13 +318,20 @@ export async function reverseGeocodeLatLng(
   lng: number,
   allStatesAndDistricts?: { state: string; districts: string[] }[]
 ): Promise<GeocodedLocation> {
-  const roundLat = parseFloat(lat.toFixed(6));
-  const roundLng = parseFloat(lng.toFixed(6));
+  const roundLat = parseFloat(lat.toFixed(4));
+  const roundLng = parseFloat(lng.toFixed(4));
+  const cacheKey = `${roundLat}_${roundLng}`;
+  
+  if (reverseGeocodeCache.has(cacheKey)) {
+    return reverseGeocodeCache.get(cacheKey)!;
+  }
+
   const statesDataset = allStatesAndDistricts || INDIAN_STATES_AND_DISTRICTS;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4500);
+    // Fast 2-second timeout to prevent waiting if network is sluggish
+    const timeoutId = setTimeout(() => controller.abort(), 2200);
 
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${roundLat}&lon=${roundLng}&zoom=14&addressdetails=1`,
@@ -314,7 +384,7 @@ export async function reverseGeocodeLatLng(
       }
 
       if (finalState && finalDistrict) {
-        return {
+        const result: GeocodedLocation = {
           state: finalState,
           district: finalDistrict,
           area: cleanedArea,
@@ -322,13 +392,15 @@ export async function reverseGeocodeLatLng(
           lat: roundLat,
           lng: roundLng
         };
+        reverseGeocodeCache.set(cacheKey, result);
+        return result;
       }
     }
   } catch (err) {
-    // Fall back to nearest geometric coordinates
+    // Fall back to nearest geometric coordinates in 1ms
   }
 
-  // Geometric fallback
+  // Geometric instant fallback
   const nearest = findNearestStateAndDistrict(roundLat, roundLng);
   let stateName = nearest.state || "Delhi";
   let districtName = nearest.district || "New Delhi";
@@ -345,17 +417,19 @@ export async function reverseGeocodeLatLng(
     }
   }
 
-  return {
+  const fallbackResult: GeocodedLocation = {
     state: stateName,
     district: districtName,
     area: "",
     lat: roundLat,
     lng: roundLng
   };
+  reverseGeocodeCache.set(cacheKey, fallbackResult);
+  return fallbackResult;
 }
 
 /**
- * Gets current device GPS coordinates with high accuracy
+ * Gets current device GPS coordinates with fast-lock and low latency
  */
 export async function getCurrentLocation(): Promise<LocationCoords | null> {
   const hasPermission = await requestLocationPermission();
@@ -365,19 +439,54 @@ export async function getCurrentLocation(): Promise<LocationCoords | null> {
   }
 
   return new Promise((resolve) => {
+    let resolved = false;
+
+    // Fast resolution guard
+    const finish = (coords: LocationCoords) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(coords);
+      }
+    };
+
+    // 1. Try quick network / cached position first (resolves in ~100-500ms)
     Geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: parseFloat(position.coords.latitude.toFixed(6)),
-          longitude: parseFloat(position.coords.longitude.toFixed(6)),
-        });
+      (pos) => {
+        if (pos?.coords?.latitude && pos?.coords?.longitude) {
+          finish({
+            latitude: parseFloat(pos.coords.latitude.toFixed(6)),
+            longitude: parseFloat(pos.coords.longitude.toFixed(6)),
+          });
+        }
+      },
+      () => {
+        // network location failed, high accuracy will try
+      },
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: 180000 }
+    );
+
+    // 2. Concurrently attempt High Accuracy GPS with 4.5s max timeout
+    Geolocation.getCurrentPosition(
+      (pos) => {
+        if (pos?.coords?.latitude && pos?.coords?.longitude) {
+          finish({
+            latitude: parseFloat(pos.coords.latitude.toFixed(6)),
+            longitude: parseFloat(pos.coords.longitude.toFixed(6)),
+          });
+        }
       },
       (error) => {
-        console.warn('GPS location fetch error:', error);
-        resolve({ latitude: 19.0760, longitude: 72.8777 }); // Default Mumbai fallback
+        console.warn('High accuracy GPS fetch error:', error);
+        // Fallback default
+        finish({ latitude: 19.0760, longitude: 72.8777 });
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      { enableHighAccuracy: true, timeout: 4500, maximumAge: 10000 }
     );
+
+    // Ultimate safeguard timeout (5s)
+    setTimeout(() => {
+      finish({ latitude: 19.0760, longitude: 72.8777 });
+    }, 5000);
   });
 }
 

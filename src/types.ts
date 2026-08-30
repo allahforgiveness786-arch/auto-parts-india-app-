@@ -341,3 +341,13 @@ export interface Follow {
 }
 
 
+
+export interface TopCategory {
+  id: string;
+  name: string;
+  icon: string;
+  iconColor: string;
+  isActive: boolean;
+  order: number;
+  createdAt?: any;
+}

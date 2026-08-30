@@ -5,6 +5,8 @@ import GMap from '../components/GMap';
 import { EditListingModal } from '../components/EditListingModal';
 import RatingModal from '../components/RatingModal';
 import { ImageGalleryModal } from '../components/ImageGalleryModal';
+import { UserProfilePopupModal } from '../components/UserProfilePopupModal';
+import ImageView from 'react-native-image-viewing';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { useFavorites } from '../services/favorites';
 import { 
@@ -22,6 +24,8 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
   const [galleryVisible, setGalleryVisible] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [profilePopupVisible, setProfilePopupVisible] = useState(false);
+  const [profileViewerVisible, setProfileViewerVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const user = initialUser || getCurrentUser();
   const { favorites, toggleFavorite } = useFavorites();
@@ -214,7 +218,7 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
           }}
         >
           <Image 
-            source={{ uri: part.imageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800' }} 
+            source={{ uri: part.imageUrl || part.images?.[0] || part.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800' }} 
             style={styles.image} 
           />
           <View style={styles.galleryBadge}>
@@ -310,14 +314,77 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
         <Card style={styles.sellerCard}>
           <Card.Title
             title={part.contactName || part.sellerEmail || 'Verified Parts Dealer'}
-            subtitle={`📍 ${distanceInfo.text} • Verified Vendor`}
-            left={(props) => <Avatar.Icon {...props} icon="account" style={{ backgroundColor: "#1565FF" }} />}
+            subtitle={`📍 ${distanceInfo.text} • Tap photo to view popup`}
+            left={(props) => {
+              const sPhoto = part.sellerPhotoURL || part.sellerPhoto || part.sellerAvatar || part.photoURL;
+              return (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => setProfilePopupVisible(true)}
+                  style={{ position: 'relative' }}
+                >
+                  {sPhoto ? (
+                    <Image
+                      source={{ uri: sPhoto }}
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        borderWidth: 2,
+                        borderColor: '#1565FF',
+                      }}
+                    />
+                  ) : (
+                    <Avatar.Icon {...props} icon="account" size={48} style={{ backgroundColor: "#1565FF" }} />
+                  )}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: -1,
+                      right: -1,
+                      backgroundColor: '#1565FF',
+                      borderRadius: 8,
+                      width: 16,
+                      height: 16,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 1.5,
+                      borderColor: '#FFFFFF',
+                    }}
+                  >
+                    <IconButton icon="magnify" size={10} iconColor="#FFFFFF" style={{ margin: 0, padding: 0 }} />
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
             right={(props) => (
-              <IconButton 
-                {...props} 
-                icon="chevron-right" 
-                onPress={() => navigation.navigate('SellerProfile', { seller: { name: part.contactName, location: part.location, sellerId: part.sellerId || part.userId } })} 
-              />
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingRight: 8 }}
+                onPress={() => {
+                  const sId = part.sellerId || part.userId || part.ownerId || 'seller';
+                  const sName = part.contactName || part.sellerName || part.sellerEmail || 'Automotive Seller';
+                  const sLoc = part.location || part.district || part.state || 'India';
+                  const sPhoto = part.sellerPhotoURL || part.sellerPhoto || part.sellerAvatar || part.photoURL || null;
+                  navigation.navigate('SellerProfile', {
+                    seller: {
+                      id: sId,
+                      sellerId: sId,
+                      name: sName,
+                      sellerName: sName,
+                      location: sLoc,
+                      photoURL: sPhoto,
+                      profilePhoto: sPhoto,
+                      phone: part.contactPhone || part.phone,
+                    },
+                    sellerId: sId,
+                    sellerName: sName,
+                  });
+                }}
+              >
+                <Text style={{ fontSize: 12, color: '#1565FF', fontWeight: 'bold' }}>View Profile</Text>
+                <IconButton {...props} icon="chevron-right" iconColor="#1565FF" />
+              </TouchableOpacity>
             )}
           />
         </Card>
@@ -429,10 +496,16 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
       {/* Image Gallery Modal */}
       <ImageGalleryModal
         visible={galleryVisible}
-        onClose={() => setGalleryVisible(false)}
-        images={part.imageUrls && part.imageUrls.length > 0 ? part.imageUrls : [part.imageUrl]}
+        onDismiss={() => setGalleryVisible(false)}
+        part={part}
         initialIndex={galleryIndex}
-        title={part.title}
+      />
+
+      {/* User Profile Popup Modal showing only photo with tap outside / back button close */}
+      <UserProfilePopupModal
+        visible={profilePopupVisible}
+        onDismiss={() => setProfilePopupVisible(false)}
+        userPhoto={part.sellerPhotoURL || part.sellerPhoto || part.sellerAvatar || part.photoURL || null}
       />
     </ScrollView>
   );

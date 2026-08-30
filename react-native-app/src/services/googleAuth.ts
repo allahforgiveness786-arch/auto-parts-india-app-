@@ -1,6 +1,7 @@
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import firebaseAuth, { GoogleAuthProvider, firebase } from '@react-native-firebase/auth';
+import firebaseAuth, { GoogleAuthProvider } from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import firebase from '@react-native-firebase/app';
 import { setCurrentAuthUser, getFirebaseFirestore } from './firebase';
 
 // Web Client ID and API Key from google-services.json
@@ -43,7 +44,7 @@ export async function signInWithGoogleNative() {
     try {
       let authInstance: any = null;
       if (typeof firebaseAuth === 'function') {
-        try { authInstance = firebaseAuth(); } catch (_) {}
+        try { authInstance = (firebaseAuth as any)(); } catch (_) {}
       }
       if (!authInstance && (firebaseAuth as any)?.default && typeof (firebaseAuth as any).default === 'function') {
         try { authInstance = (firebaseAuth as any).default(); } catch (_) {}

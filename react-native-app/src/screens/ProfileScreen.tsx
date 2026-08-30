@@ -31,6 +31,8 @@ import { EditListingModal } from '../components/EditListingModal';
 import { INITIAL_SPARE_PARTS } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageSelectorModal } from '../components/LanguageSelectorModal';
+import ImageView from 'react-native-image-viewing';
+import { UserProfilePopupModal } from '../components/UserProfilePopupModal';
 
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250';
 
@@ -44,6 +46,9 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
 
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [isPopupModalVisible, setIsPopupModalVisible] = useState(false);
+  const [isProfilePhotoModalVisible, setIsProfilePhotoModalVisible] = useState(false);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
   const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   // Listings & Saved state
@@ -166,8 +171,23 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
       if (!selectedUri) return;
 
       setUploadingPhoto(true);
+      // Instant local preview for immediate visual feedback
+      setProfileData((prev) =>
+        prev
+          ? { ...prev, photoURL: selectedUri }
+          : {
+              id: activeUid,
+              email: currentAuthUser.email || '',
+              name: currentAuthUser.displayName || '',
+              displayName: currentAuthUser.displayName || '',
+              photoURL: selectedUri,
+              role: 'buyer',
+            }
+      );
+
       const uploadedUrl = await uploadImageToCloudinary(selectedUri, 'avatars');
 
+      // 1. Update Firebase Auth Profile
       try {
         const authInst = getFirebaseAuth();
         if (authInst?.currentUser && typeof authInst.currentUser.updateProfile === 'function') {
@@ -175,6 +195,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
         }
       } catch (_) {}
 
+      // 2. Update Firestore User Document
       try {
         const db = getFirebaseFirestore();
         if (db && typeof db.collection === 'function') {
@@ -185,6 +206,27 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
         }
       } catch (_) {}
 
+      // 3. Propagate updated photo across user's active spare parts
+      try {
+        const db = getFirebaseFirestore();
+        if (db && typeof db.collection === 'function') {
+          const userSnap = await db
+            .collection('spareParts')
+            .where('sellerId', '==', activeUid)
+            .get();
+          userSnap.forEach((docSnap: any) => {
+            docSnap.ref
+              .update({
+                sellerPhotoURL: uploadedUrl,
+                sellerPhoto: uploadedUrl,
+                sellerAvatar: uploadedUrl,
+              })
+              .catch(() => {});
+          });
+        }
+      } catch (_) {}
+
+      setProfileData((prev) => (prev ? { ...prev, photoURL: uploadedUrl } : null));
       setCacheBuster(Date.now());
       Alert.alert('Success', 'Profile photo updated successfully!');
     } catch (err: any) {
@@ -314,7 +356,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
     );
   };
 
-  const rawPhoto = profileData?.photoURL || currentAuthUser?.photoURL;
+  const rawPhoto = !avatarLoadError ? (profileData?.photoURL || currentAuthUser?.photoURL) : null;
   const displayPhotoUrl = rawPhoto
     ? `${rawPhoto}${rawPhoto.includes('?') ? '&' : '?'}t=${cacheBuster}`
     : DEFAULT_AVATAR;
@@ -334,7 +376,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
       <Surface style={styles.header} elevation={3}>
         <View style={styles.avatarContainer}>
           <TouchableOpacity
-            onPress={handleUpdateProfilePhoto}
+            onPress={() => setIsPopupModalVisible(true)}
             activeOpacity={0.8}
             style={styles.avatarTouch}
             disabled={uploadingPhoto}
@@ -344,17 +386,24 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
               source={{ uri: displayPhotoUrl }}
               style={styles.avatarImage}
               resizeMode="cover"
+              onError={() => setAvatarLoadError(true)}
+              onLoadStart={() => setAvatarLoadError(false)}
             />
-            {uploadingPhoto ? (
+            {uploadingPhoto && (
               <View style={styles.avatarLoadingOverlay}>
                 <ActivityIndicator size="small" color="#FFFFFF" />
               </View>
-            ) : (
-              <View style={styles.cameraIconBadge}>
-                <Icon source="camera" size={14} color="#FFFFFF" />
-              </View>
             )}
           </TouchableOpacity>
+          {!uploadingPhoto && (
+            <TouchableOpacity 
+              style={styles.cameraIconBadge}
+              onPress={handleUpdateProfilePhoto}
+              activeOpacity={0.7}
+            >
+              <Icon source="camera" size={14} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
         </View>
 
         <Text style={styles.name}>{displayName}</Text>
@@ -467,6 +516,25 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 onPress={() => navigation.navigate('Notifications')}
                 style={styles.listItem}
               />
+              
+              <Divider style={{ marginVertical: 8 }} />
+              <List.Subheader style={styles.sectionHeader}>Account Settings</List.Subheader>
+              <List.Item
+                title="Privacy & Security"
+                description="Manage data guidelines and delete account"
+                left={(props) => <List.Icon {...props} icon="shield-lock" color="#6366F1" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => Alert.alert('Privacy & Security', 'Manage your account security settings here.')}
+                style={styles.listItem}
+              />
+              <List.Item
+                title="Help & Support"
+                description="Get direct help, support emails & FAQs"
+                left={(props) => <List.Icon {...props} icon="help-circle" color="#0EA5E9" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => Alert.alert('Help & Support', 'Contact us at support@autopartsindia.com')}
+                style={styles.listItem}
+              />
             </List.Section>
 
             <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
@@ -502,7 +570,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                 <Surface key={part.id} style={styles.listingCard} elevation={2}>
                   <View style={styles.listingCardRow}>
                     <Image
-                      source={{ uri: part.imageUrl || part.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=200' }}
+                      source={{ uri: part.imageUrl || part.images?.[0] || part.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=200' }}
                       style={styles.listingImg}
                       resizeMode="cover"
                     />
@@ -572,7 +640,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
                   onPress={() => navigation.navigate('ProductDetail', { part })}
                 >
                   <Image
-                    source={{ uri: part.imageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=200' }}
+                    source={{ uri: part.imageUrl || part.images?.[0] || part.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=200' }}
                     style={styles.savedImg}
                     resizeMode="cover"
                   />
@@ -588,6 +656,13 @@ export default function ProfileScreen({ navigation, route, user: initialUser, in
           </View>
         )}
       </ScrollView>
+
+      {/* User Profile Popup Modal showing only photo with tap outside / back button close */}
+      <UserProfilePopupModal
+        visible={isPopupModalVisible}
+        onDismiss={() => setIsPopupModalVisible(false)}
+        userPhoto={displayPhotoUrl}
+      />
 
       {/* Edit Profile Details Modal */}
       <Modal

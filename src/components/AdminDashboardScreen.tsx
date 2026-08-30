@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
   Shield, Users, Tag, PlusCircle, Trash2, Megaphone, 
-  Settings, Ban, CheckCircle, Search, Edit2, Check, X,
+  List, Settings, Ban, CheckCircle, Search, Edit2, Check, X,
   MapPin, Car, Plus, AlertCircle, RefreshCw, Globe,
   Sparkles, Download, Star, ShieldCheck, CheckCircle2,
   XCircle, RotateCcw, Eye, UserCheck, CheckSquare, Square,
@@ -9,18 +9,20 @@ import {
   Clock, Flag, Layers, Image as ImageIcon, ArrowUp, ArrowDown,
   ToggleLeft, ToggleRight, EyeOff, Upload
 } from "lucide-react";
-import { User, SparePart, AppVersionConfig, Banner } from "../types";
+import { User, SparePart, AppVersionConfig, Banner, TopCategory } from "../types";
 import { 
   fetchAllUsers, subscribeToUsers, toggleUserBlockStatus, sendAnnouncement,
   fetchMetadataConfig, saveMetadataConfig, deleteSparePartListing,
   updateSparePartListing, fetchAppVersionConfig, updateAppVersionConfig,
   deleteUserAccount, updateAdminUserProfile, fetchAnnouncementsHistory,
   deleteAnnouncement, updateAnnouncement, AnnouncementItem,
-  subscribeToBanners, createBanner, updateBanner, deleteBanner, reorderBanners
+  subscribeToBanners, createBanner, updateBanner, deleteBanner, reorderBanners,
+  subscribeToTopCategories, createTopCategory, updateTopCategory, deleteTopCategory, reorderTopCategories
 } from "../lib/firebase";
 import EditListingModal from "./EditListingModal";
 import SellerProfileView from "./SellerProfileView";
 import AdminTaxonomyCMS from "./AdminTaxonomyCMS";
+import AdminTopCategoriesCMS from "./AdminTopCategoriesCMS";
 import { compressImageFile } from "../utils/imageCompressor";
 
 interface AdminDashboardScreenProps {
@@ -37,9 +39,24 @@ export default function AdminDashboardScreen({
   onBackToApp
 }: AdminDashboardScreenProps) {
   // Navigation tabs inside Admin Panel
-  const [activeTab, setActiveTab] = useState<"users" | "listings" | "banners" | "metadata" | "announcements" | "version">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "listings" | "banners" | "top_categories" | "metadata" | "announcements" | "version">("users");
 
   // Banner Management State
+  
+  // Top Categories State
+  const [topCategories, setTopCategories] = useState<TopCategory[]>([]);
+  const [loadingTopCategories, setLoadingTopCategories] = useState(true);
+
+  // Top Categories Fetch
+  useEffect(() => {
+    setLoadingTopCategories(true);
+    const unsub = subscribeToTopCategories((loaded) => {
+      setTopCategories(loaded);
+      setLoadingTopCategories(false);
+    });
+    return () => unsub();
+  }, []);
+
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
   const [bannerModalOpen, setBannerModalOpen] = useState(false);
@@ -1063,6 +1080,18 @@ export default function AdminDashboardScreen({
         </button>
 
         <button
+          onClick={() => { setActiveTab("top_categories"); setSearchTerm(""); }}
+          className={`px-3 py-3 text-xs font-black tracking-tight border-b-2 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === "top_categories" 
+              ? "border-[#0056D2] text-[#0056D2]" 
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <List size={16} />
+          Top Categories ({topCategories.length})
+        </button>
+
+        <button
           onClick={() => { setActiveTab("metadata"); setSearchTerm(""); }}
           className={`px-3 py-3 text-xs font-black tracking-tight border-b-2 transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === "metadata" 
@@ -1874,6 +1903,17 @@ export default function AdminDashboardScreen({
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        
+        {/* TAB: TOP CATEGORIES MANAGEMENT */}
+        {activeTab === "top_categories" && (
+          <div className="pb-6">
+            <AdminTopCategoriesCMS
+              topCategories={topCategories}
+              showToast={showToast}
+            />
           </div>
         )}
 

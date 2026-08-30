@@ -7,6 +7,9 @@ export interface UserProfile {
   displayName?: string;
   photoURL?: string;
   phone?: string;
+  location?: string;
+  state?: string;
+  district?: string;
   role?: 'admin' | 'seller' | 'buyer';
   fcmToken?: string | null;
   fcmTokenLastUpdated?: any;

@@ -30,12 +30,14 @@ import {
   openNativeGalleryMultiple,
   promptImageSourceDialog,
 } from '../services/imagePickerService';
-import { uploadImageToCloudinary } from '../services/cloudinary';
+import { uploadImageToCloudinary, uploadMultipleImagesToCloudinary } from '../services/cloudinary';
 import {
   getCurrentLocation,
   reverseGeocodeLatLng,
   getApproxCoordinates,
   GeocodedLocation,
+  saveUserLocation,
+  getUserSavedLocation,
 } from '../services/location';
 import { getFirebaseFirestore, getCurrentUser, getFirestoreInstance } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
@@ -245,6 +247,17 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         setContactPhone(activeUser.phone || activeUser.phoneNumber);
       }
     }
+
+    // Pre-populate saved location if available
+    getUserSavedLocation().then((saved) => {
+      if (saved) {
+        if (saved.state && !selectedState) setSelectedState(saved.state);
+        if (saved.district && !selectedDistrict) setSelectedDistrict(saved.district);
+        if (saved.area && !selectedArea) setSelectedArea(saved.area);
+        if (saved.lat) setLat(saved.lat);
+        if (saved.lng) setLng(saved.lng);
+      }
+    }).catch(() => {});
 
     // Check user active ads count in Firestore
     const db = getFirestoreInstance();
@@ -505,6 +518,15 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         if (geocoded?.state) setSelectedState(geocoded.state);
         if (geocoded?.district) setSelectedDistrict(geocoded.district);
         if (geocoded?.area) setSelectedArea(geocoded.area);
+        await saveUserLocation({
+          city: geocoded?.district || geocoded?.state || 'Chennai',
+          district: geocoded?.district,
+          state: geocoded?.state,
+          area: geocoded?.area,
+          lat: coords.latitude,
+          lng: coords.longitude,
+          isGPS: true,
+        });
       }
     } catch (err: any) {
       console.warn('GPS detection error:', err);
@@ -554,30 +576,19 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
-    setUploadProgress('Preparing photo upload...');
+    setUploadProgress('Uploading photos in parallel...');
 
     try {
-      // 1. Upload images to Cloudinary
-      const finalImageUrls: string[] = [];
-      const totalImages = uploadedImages.length;
-
-      for (let i = 0; i < totalImages; i++) {
-        const uri = uploadedImages[i];
-        if (!uri.startsWith('http://') && !uri.startsWith('https://')) {
-          setUploadProgress(`Uploading photo ${i + 1} of ${totalImages}...`);
-          try {
-            const uploadedUrl = await uploadImageToCloudinary(uri, 'spare_parts');
-            finalImageUrls.push(uploadedUrl || uri);
-          } catch (uploadErr) {
-            console.warn(`Photo ${i + 1} Cloudinary upload fallback:`, uploadErr);
-            finalImageUrls.push(uri);
-          }
-        } else {
-          finalImageUrls.push(uri);
+      // 1. Fast parallel batch upload for all images at once
+      const finalImageUrls = await uploadMultipleImagesToCloudinary(
+        uploadedImages,
+        'spare_parts',
+        (completed, total) => {
+          setUploadProgress(`Uploading photos (${completed}/${total})...`);
         }
-      }
+      );
 
-      setUploadProgress('Saving ad to marketplace across India...');
+      setUploadProgress('Saving ad across India...');
 
       let finalLat = lat;
       let finalLng = lng;
@@ -613,13 +624,15 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         longitude: finalLng,
         contactName: contactName.trim(),
         contactPhone: contactPhone.trim(),
-        imageUrl: finalImageUrls[0] || '',
-        imageUrls: finalImageUrls,
-        images: finalImageUrls,
+        imageUrl: finalImageUrls[0] || uploadedImages[0] || '',
+        imageUrls: finalImageUrls.length > 0 ? finalImageUrls : uploadedImages,
+        images: finalImageUrls.length > 0 ? finalImageUrls : uploadedImages,
         sellerId: activeUser?.uid || 'guest-seller',
         ownerId: activeUser?.uid || 'guest-seller',
         sellerEmail: activeUser?.email || '',
         sellerPhoto: activeUser?.photoURL || activeUser?.profilePhoto || '',
+        sellerPhotoURL: activeUser?.photoURL || activeUser?.profilePhoto || '',
+        sellerAvatar: activeUser?.photoURL || activeUser?.profilePhoto || '',
         sellerName: contactName.trim() || activeUser?.displayName || 'Auto Seller',
         sold: false,
         status: 'active',
@@ -630,14 +643,11 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
 
       const db = getFirestoreInstance();
       if (db) {
-        try {
-          await db.collection('products/listings/items').add(listingData);
-        } catch (dbErr) {
-          console.warn('Error saving to products/listings/items:', dbErr);
-        }
-        try {
-          await db.collection('spareParts').add(listingData);
-        } catch (_) {}
+        // Parallel non-blocking write
+        await Promise.all([
+          db.collection('products/listings/items').add(listingData).catch(() => null),
+          db.collection('spareParts').add(listingData).catch(() => null),
+        ]);
       }
 
       setUploadProgress(null);
@@ -647,7 +657,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         setShowSuccessScreen(false);
         resetForm();
         navigation.navigate('HomeTab');
-      }, 2200);
+      }, 1000);
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to post ad. Please check internet connection.');
     } finally {
@@ -697,11 +707,11 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
   if (isLimitReached) {
     return (
       <View style={styles.limitContainer}>
-        <View style={styles.topHeader}>
+        <View style={styles.nativeHeader}>
           <BrandLogo size="sm" variant="icon" theme="dark" showTagline={false} />
           <View style={{ marginLeft: 10 }}>
-            <Text style={styles.headerTitle}>Sell Spare Part</Text>
-            <Text style={styles.headerSub}>Post ads across India</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF' }}>Sell Spare Part</Text>
+            <Text style={{ fontSize: 12, color: '#94A3B8' }}>Post ads across India</Text>
           </View>
         </View>
 
@@ -755,7 +765,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         return availableModels.filter((m) => m.toLowerCase().includes(q));
       case 'category':
         return availableCategories.filter((c) =>
-          c.toLowerCase().includes(q) || translateDynamic(c, language).toLowerCase().includes(q)
+          c.toLowerCase().includes(q) || translateDynamic(c).toLowerCase().includes(q)
         );
       case 'partName':
         return availablePartNames.filter((p) => p.toLowerCase().includes(q));
@@ -861,7 +871,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
               <View style={styles.photoGrid}>
                 {uploadedImages.map((uri, index) => (
                   <View key={`${uri}-${index}`} style={styles.photoTile}>
-                    <Image source={{ uri }} style={styles.photoImage} />
+                    <Image source={{ uri }} style={styles.photoImage} resizeMode="cover" />
                     {index === 0 && (
                       <View style={styles.coverPill}>
                         <Text style={styles.coverPillText}>COVER</Text>
@@ -919,26 +929,32 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
           <Text style={styles.nativeSectionTitle}>Part details</Text>
           <Text style={styles.nativeSectionHint}>Tell buyers exactly what you are selling</Text>
 
-          <View style={styles.segmentRow}>
-            {CONDITION_OPTIONS.slice(0, 2).map((opt) => (
-              <TouchableOpacity
-                key={opt.id}
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>CATEGORY *</Text>
+            <TouchableOpacity
+              style={[
+                styles.nativePicker,
+                submittedAttempt && !category && styles.fieldError,
+              ]}
+              onPress={() => {
+                setPickerSearchQuery('');
+                setPickerModalType('category');
+              }}
+            >
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="shape-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text
                 style={[
-                  styles.segmentButton,
-                  condition === opt.id && styles.segmentButtonActive,
+                  styles.pickerValue,
+                  !category && styles.pickerPlaceholder,
                 ]}
-                onPress={() => setCondition(opt.id as any)}
+                numberOfLines={1}
               >
-                <Text
-                  style={[
-                    styles.segmentText,
-                    condition === opt.id && styles.segmentTextActive,
-                  ]}
-                >
-                  {opt.id === 'Brand New' ? 'New' : 'Used'}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                {category ? translateDynamic(category) : 'Select part category'}
+              </Text>
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.nativeField}>
@@ -965,34 +981,6 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
                 numberOfLines={1}
               >
                 {partName || (category ? 'Select spare part' : 'Select category first')}
-              </Text>
-              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.nativeField}>
-            <Text style={styles.fieldLabel}>CATEGORY *</Text>
-            <TouchableOpacity
-              style={[
-                styles.nativePicker,
-                submittedAttempt && !category && styles.fieldError,
-              ]}
-              onPress={() => {
-                setPickerSearchQuery('');
-                setPickerModalType('category');
-              }}
-            >
-              <View style={styles.fieldIconCircle}>
-                <IconButton icon="shape-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
-              </View>
-              <Text
-                style={[
-                  styles.pickerValue,
-                  !category && styles.pickerPlaceholder,
-                ]}
-                numberOfLines={1}
-              >
-                {category ? translateDynamic(category, language) : 'Select part category'}
               </Text>
               <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
             </TouchableOpacity>
@@ -1395,7 +1383,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
                     }}
                   >
                     <Text style={[styles.modalItemText, isSelected && styles.modalItemTextSelected]}>
-                      {pickerModalType === 'category' ? translateDynamic(item, language) : item}
+                      {pickerModalType === 'category' ? translateDynamic(item) : item}
                     </Text>
                     {isSelected && (
                       <IconButton icon="check" size={19} iconColor="#2563EB" style={{ margin: 0 }} />

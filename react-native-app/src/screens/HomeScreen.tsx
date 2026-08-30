@@ -31,7 +31,14 @@ import {
 } from 'react-native-paper';
 import { getFirebaseFirestore } from '../services/firebase';
 import { useFavorites } from '../services/favorites';
-import { getCurrentLocation, reverseGeocodeOSM } from '../services/location';
+import { 
+  getCurrentLocation, 
+  reverseGeocodeLatLng, 
+  reverseGeocodeOSM,
+  saveUserLocation,
+  getUserSavedLocation
+} from '../services/location';
+import { INDIAN_STATES_AND_DISTRICTS } from '../data/indianLocations';
 import BrandLogo from '../components/BrandLogo';
 import { INITIAL_SPARE_PARTS } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
@@ -82,6 +89,10 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
   };
 
   const isNew = (item.condition || '').toLowerCase().includes('new');
+  const [imgError, setImgError] = useState(false);
+  const primaryUri = !imgError && (item.imageUrl || item.images?.[0] || item.imageUrls?.[0])
+    ? (item.imageUrl || item.images?.[0] || item.imageUrls?.[0])
+    : 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400';
 
   return (
     <Animated.View
@@ -97,12 +108,13 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
         onPress={() => navigation.navigate('ProductDetail', { part: item })}
         style={styles.card}
       >
-        {/* Top Image Container */}
+        {/* Top Image Container with adaptive auto-fit */}
         <View style={styles.imageContainer}>
           <Image 
-            source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }} 
+            source={{ uri: primaryUri }} 
             style={styles.cardImage} 
             resizeMode="cover"
+            onError={() => setImgError(true)}
           />
 
           {/* Condition Badge (Used: Green, New: Blue) */}
@@ -195,9 +207,12 @@ export default function HomeScreen({ navigation, user }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCity, setSelectedCity] = useState('All India');
+  const [isDetectingGPS, setIsDetectingGPS] = useState(false);
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [parts, setParts] = useState<any[]>([]);
+  const [topCategories, setTopCategories] = useState<any[]>([]);
   const [promoBanners, setPromoBanners] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -207,6 +222,62 @@ export default function HomeScreen({ navigation, user }: any) {
   const [inAppNotification, setInAppNotification] = useState<InAppNotificationData | null>(null);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [updateConfig, setUpdateConfig] = useState<any>(null);
+
+  // 1. Persistent Location Loader: Remember chosen/detected location permanently across app restarts
+  useEffect(() => {
+    const loadSavedLocation = async () => {
+      try {
+        const saved = await getUserSavedLocation();
+        if (saved && saved.city) {
+          setSelectedCity(saved.city);
+        }
+      } catch (err) {
+        console.warn('Error reading saved user location:', err);
+      }
+    };
+    loadSavedLocation();
+  }, []);
+
+  const handleSelectCity = async (
+    cityName: string,
+    extra?: { state?: string; district?: string; area?: string; lat?: number; lng?: number; isGPS?: boolean }
+  ) => {
+    setSelectedCity(cityName);
+    setShowLocationModal(false);
+    setLocationSearchQuery('');
+    await saveUserLocation({
+      city: cityName,
+      district: extra?.district,
+      state: extra?.state,
+      area: extra?.area,
+      lat: extra?.lat,
+      lng: extra?.lng,
+      isGPS: !!extra?.isGPS,
+    });
+  };
+
+  const handleGPSDetect = async () => {
+    setIsDetectingGPS(true);
+    try {
+      const coords = await getCurrentLocation();
+      if (coords) {
+        const geo = await reverseGeocodeLatLng(coords.latitude, coords.longitude);
+        const chosenCity = geo.district || geo.area || geo.state || 'Chennai';
+        await handleSelectCity(chosenCity, {
+          state: geo.state,
+          district: geo.district,
+          area: geo.area,
+          lat: coords.latitude,
+          lng: coords.longitude,
+          isGPS: true,
+        });
+      }
+    } catch (err) {
+      console.warn('Fast GPS detection error:', err);
+    } finally {
+      setIsDetectingGPS(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -259,15 +330,45 @@ export default function HomeScreen({ navigation, user }: any) {
     { id: 'More', name: 'More', icon: 'apps', iconColor: '#0F172A' },
   ];
 
-  const cities = [
-    'All India', 'Delhi', 'Mumbai', 'Bangalore', 'Pune', 
-    'Chennai', 'Hyderabad', 'Kolkata', 'Ahmedabad', 'Jaipur'
+  const popularCities = [
+    'All India', 'Chennai', 'Coimbatore', 'Karur', 'Pallapatti', 
+    'Madurai', 'Trichy', 'Salem', 'Tiruppur', 'Erode',
+    'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur'
   ];
+
+  const allIndianDistricts = React.useMemo(() => {
+    const list: string[] = [];
+    INDIAN_STATES_AND_DISTRICTS.forEach((s) => {
+      s.districts.forEach((d) => {
+        if (!list.includes(d)) list.push(d);
+      });
+    });
+    return list.sort((a, b) => a.localeCompare(b));
+  }, []);
+
+  const filteredLocationsList = React.useMemo(() => {
+    const q = locationSearchQuery.toLowerCase().trim();
+    if (!q) {
+      return popularCities;
+    }
+    const matched = allIndianDistricts.filter((d) => d.toLowerCase().includes(q));
+    const matchedStates = INDIAN_STATES_AND_DISTRICTS
+      .filter((s) => s.state.toLowerCase().includes(q))
+      .map((s) => s.state);
+    const combined = Array.from(new Set([...matched, ...matchedStates]));
+    if ('all india'.includes(q)) {
+      combined.unshift('All India');
+    }
+    return combined.slice(0, 35);
+  }, [locationSearchQuery, allIndianDistricts]);
 
   useEffect(() => {
     setLoading(true);
+
     let unsubscribeParts = () => {};
     let unsubscribeBanners = () => {};
+    let unsubscribeTopCategories = () => {};
+
 
     try {
       const db = getFirebaseFirestore();
@@ -293,12 +394,12 @@ export default function HomeScreen({ navigation, user }: any) {
         setRefreshing(false);
       });
 
+      
       const qBanners = db.collection('banners').orderBy('order', 'asc');
       unsubscribeBanners = qBanners.onSnapshot((snapshot: any) => {
         const list: any[] = [];
         snapshot.forEach((doc: any) => {
           const data = doc.data();
-          // Filter active on client side to avoid composite index requirement
           if (data.active !== false && data.activeStatus !== false) {
             list.push({ id: doc.id, ...data });
           }
@@ -308,6 +409,22 @@ export default function HomeScreen({ navigation, user }: any) {
       }, (err: any) => {
         console.warn('Notice from banners listener:', err);
       });
+
+      const qTopCat = db.collection('topCategories').orderBy('order', 'asc');
+      unsubscribeTopCategories = qTopCat.onSnapshot((snapshot: any) => {
+        const list: any[] = [];
+        snapshot.forEach((doc: any) => {
+          const data = doc.data();
+          if (data.isActive !== false) {
+            list.push({ id: doc.id, ...data });
+          }
+        });
+        list.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+        setTopCategories(list);
+      }, (err: any) => {
+        console.warn('Notice from top categories listener:', err);
+      });
+
 
     } catch (queryErr) {
       console.warn('Failed to query Firestore:', queryErr);
@@ -319,6 +436,7 @@ export default function HomeScreen({ navigation, user }: any) {
     return () => {
       try { unsubscribeParts(); } catch (_) {}
       try { unsubscribeBanners(); } catch (_) {}
+      try { unsubscribeTopCategories(); } catch (_) {}
     };
   }, []);
 
@@ -448,37 +566,67 @@ export default function HomeScreen({ navigation, user }: any) {
           showsHorizontalScrollIndicator={false} 
           contentContainerStyle={styles.categoryList}
         >
-          {categoryItems.map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            return (
+          
+          {topCategories.length > 0 ? (
+            <>
+              {topCategories.slice(0, 5).map((cat: any) => {
+                const isSelected = selectedCategory === cat.name;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+                    onPress={() => setSelectedCategory(cat.name)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.categoryIconWrap, { backgroundColor: cat.iconColor + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
+                      <Icon source={cat.icon || 'apps'} size={24} color={isSelected ? '#FFFFFF' : cat.iconColor} />
+                    </View>
+                    <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]} numberOfLines={1}>
+                      {cat.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
               <TouchableOpacity
-                key={cat.id}
-                activeOpacity={0.8}
-                onPress={() => setSelectedCategory(isSelected ? 'All' : cat.id)}
-                style={[
-                  styles.categoryCard,
-                  isSelected && styles.categoryCardSelected
-                ]}
+                style={styles.categoryCard}
+                onPress={() => navigation.navigate('AllCategories', { categories: topCategories })}
+                activeOpacity={0.7}
               >
-                <View style={styles.categoryIconWrap}>
-                  <Icon 
-                    source={cat.icon} 
-                    color={isSelected ? '#0066FF' : cat.iconColor} 
-                    size={28} 
-                  />
+                <View style={[styles.categoryIconWrap, { backgroundColor: '#0F172A15' }]}>
+                  <Icon source="apps" size={24} color="#0F172A" />
                 </View>
-                <Text 
-                  numberOfLines={1} 
-                  style={[
-                    styles.categoryName,
-                    isSelected && styles.categoryNameSelected
-                  ]}
-                >
-                  {cat.name}
+                <Text style={styles.categoryName} numberOfLines={1}>
+                  More
                 </Text>
               </TouchableOpacity>
-            );
-          })}
+            </>
+          ) : (
+            categoryItems.map((cat) => {
+              const isSelected = selectedCategory === cat.name;
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+                  onPress={() => {
+                    if (cat.id === 'More') {
+                      navigation.navigate('AllCategories', { categories: categoryItems });
+                    } else {
+                      setSelectedCategory(cat.name);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.categoryIconWrap, { backgroundColor: cat.iconColor + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
+                    <Icon source={cat.icon} size={24} color={isSelected ? '#FFFFFF' : cat.iconColor} />
+                  </View>
+                  <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]} numberOfLines={1}>
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })
+          )}
+
         </ScrollView>
 
         {/* Latest Parts Section Header */}
@@ -538,7 +686,13 @@ export default function HomeScreen({ navigation, user }: any) {
           promoBanners.map((banner, index) => (
             <TouchableOpacity 
               key={banner.id || index} 
-              style={[styles.bottomBanner, { marginTop: index === 0 ? 0 : 16 }]}
+              style={{
+                marginHorizontal: 14,
+                marginTop: index === 0 ? 0 : 16,
+                borderRadius: 14,
+                overflow: 'hidden',
+                backgroundColor: '#08142C',
+              }}
               activeOpacity={banner.targetLink ? 0.85 : 1}
               onPress={() => {
                 if (banner.targetLink) {
@@ -546,35 +700,52 @@ export default function HomeScreen({ navigation, user }: any) {
                 }
               }}
             >
-              <View style={[styles.bannerLeft, { flex: banner.imageUrl ? 0.65 : 1 }]}>
-                {banner.tag ? (
-                   <View style={{ backgroundColor: '#10B981', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 8 }}>
-                     <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
-                   </View>
-                ) : null}
-                <Text style={styles.bannerTitle}>{banner.title}</Text>
-                <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text>
-                {banner.targetLink ? (
-                  <View style={[styles.bannerBtn, { alignSelf: 'flex-start' }]}>
-                    <Text style={styles.bannerBtnText}>View Offer</Text>
-                    <Icon source="chevron-right" size={16} color="#0F172A" />
-                  </View>
-                ) : null}
-              </View>
               {banner.imageUrl ? (
-                <View style={[styles.bannerRight, { flex: 0.35 }]}>
+                <View>
                   <Image 
                     source={{ uri: banner.imageUrl }}
-                    style={styles.bannerImage}
+                    style={{ width: '100%', height: 140 }}
                     resizeMode="cover"
                   />
+                  {banner.tag ? (
+                    <View style={{ position: 'absolute', top: 12, left: 12, backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
+                    </View>
+                  ) : null}
+                  {(banner.title || banner.subtitle) ? (
+                    <View style={{ padding: 14, backgroundColor: '#08142C' }}>
+                      {banner.title ? <Text style={styles.bannerTitle}>{banner.title}</Text> : null}
+                      {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
+                    </View>
+                  ) : null}
                 </View>
-              ) : null}
+              ) : (
+                <View style={{ padding: 16 }}>
+                  {banner.tag ? (
+                    <View style={{ backgroundColor: '#10B981', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginBottom: 8 }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
+                    </View>
+                  ) : null}
+                  {banner.title ? <Text style={styles.bannerTitle}>{banner.title}</Text> : null}
+                  {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
+                </View>
+              )}
             </TouchableOpacity>
           ))
         ) : (
-          <View style={styles.bottomBanner}>
-            <View style={styles.bannerLeft}>
+          <View style={{
+            marginHorizontal: 14,
+            marginTop: 0,
+            borderRadius: 14,
+            overflow: 'hidden',
+            backgroundColor: '#08142C',
+          }}>
+            <Image 
+              source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=600' }}
+              style={{ width: '100%', height: 140 }}
+              resizeMode="cover"
+            />
+            <View style={{ padding: 16, backgroundColor: '#08142C' }}>
               <Text style={styles.bannerTitle}>Sell Your Parts</Text>
               <Text style={styles.bannerSubtitle}>
                 Quickly list and reach thousands of buyers across India
@@ -594,65 +765,116 @@ export default function HomeScreen({ navigation, user }: any) {
                 <Icon source="chevron-right" size={16} color="#0F172A" />
               </TouchableOpacity>
             </View>
-            <View style={styles.bannerRight}>
-              <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }}
-                style={styles.bannerImage}
-                resizeMode="cover"
-              />
-            </View>
           </View>
         )}
       </ScrollView>
 
       {/* Location Selector Modal */}
       <Modal visible={showLocationModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <TouchableOpacity 
+            style={{ flex: 1 }} 
+            activeOpacity={1} 
+            onPress={() => setShowLocationModal(false)} 
+          />
+          <View style={[styles.modalContent, { maxHeight: '85%' }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Select Location</Text>
-              <TouchableOpacity onPress={() => setShowLocationModal(false)}>
+              <View>
+                <Text style={styles.modalTitle}>Select Location</Text>
+                <Text style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
+                  Current: <Text style={{ fontWeight: '700', color: '#0F172A' }}>{selectedCity}</Text>
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => setShowLocationModal(false)}
+                style={{ padding: 4 }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Icon source="close" size={22} color="#64748B" />
               </TouchableOpacity>
             </View>
-            <Divider style={{ marginVertical: 12 }} />
-            
+
+            {/* GPS Auto-Detect Button */}
             <TouchableOpacity 
-              style={styles.gpsLocationBtn}
-              onPress={async () => {
-                const coords = await getCurrentLocation();
-                if (coords) {
-                  const geo = await reverseGeocodeOSM(coords.latitude, coords.longitude);
-                  if (geo?.city) {
-                    setSelectedCity(geo.city);
-                  }
-                }
-                setShowLocationModal(false);
-              }}
+              style={[styles.gpsLocationBtn, isDetectingGPS && { opacity: 0.75 }]}
+              onPress={handleGPSDetect}
+              disabled={isDetectingGPS}
+              activeOpacity={0.8}
             >
-              <Icon source="crosshairs-gps" size={18} color="#0066FF" />
-              <Text style={styles.gpsLocationText}>
-                Detect Current Location (GPS)
-              </Text>
+              {isDetectingGPS ? (
+                <ActivityIndicator size={18} color="#0066FF" />
+              ) : (
+                <Icon source="crosshairs-gps" size={18} color="#0066FF" />
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.gpsLocationText}>
+                  {isDetectingGPS ? 'Detecting your location...' : 'Detect Current Location (GPS)'}
+                </Text>
+                <Text style={{ fontSize: 10.5, color: '#3B82F6', marginTop: 1 }}>
+                  Fast auto-detection using device sensors
+                </Text>
+              </View>
             </TouchableOpacity>
 
-            {cities.map((city) => (
-              <TouchableOpacity
-                key={city}
-                style={styles.locationItem}
-                onPress={() => {
-                  setSelectedCity(city);
-                  setShowLocationModal(false);
-                }}
-              >
-                <Text style={[styles.locationItemText, selectedCity === city && styles.locationItemTextActive]}>
-                  {city}
-                </Text>
-                {selectedCity === city && <Icon source="check" size={18} color="#0066FF" />}
-              </TouchableOpacity>
-            ))}
+            {/* Location Search Bar */}
+            <View style={styles.locationSearchBox}>
+              <Icon source="magnify" size={18} color="#94A3B8" />
+              <RNTextInput
+                value={locationSearchQuery}
+                onChangeText={setLocationSearchQuery}
+                placeholder="Search city, district, or state..."
+                placeholderTextColor="#94A3B8"
+                style={styles.locationSearchInput}
+                autoCorrect={false}
+              />
+              {locationSearchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setLocationSearchQuery('')}>
+                  <Icon source="close-circle" size={16} color="#94A3B8" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <Divider style={{ marginVertical: 8 }} />
+
+            <ScrollView 
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              style={{ maxHeight: 320 }}
+            >
+              {filteredLocationsList.map((city) => {
+                const isSelected = selectedCity.toLowerCase() === city.toLowerCase();
+                return (
+                  <TouchableOpacity
+                    key={city}
+                    style={[styles.locationItem, isSelected && styles.locationItemHighlight]}
+                    onPress={() => handleSelectCity(city)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <Icon 
+                        source={city === 'All India' ? 'map-outline' : 'map-marker-outline'} 
+                        size={18} 
+                        color={isSelected ? '#0066FF' : '#64748B'} 
+                      />
+                      <Text style={[styles.locationItemText, isSelected && styles.locationItemTextActive]}>
+                        {city}
+                      </Text>
+                    </View>
+                    {isSelected && <Icon source="check-circle" size={18} color="#0066FF" />}
+                  </TouchableOpacity>
+                );
+              })}
+              {filteredLocationsList.length === 0 && (
+                <View style={{ padding: 24, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 13, color: '#64748B' }}>No matching location found</Text>
+                </View>
+              )}
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Filter Modal */}
@@ -950,8 +1172,9 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-    height: 124,
-    backgroundColor: '#0F172A',
+    height: 134,
+    backgroundColor: '#F1F5F9',
+    overflow: 'hidden',
   },
   cardImage: {
     width: '100%',
@@ -1169,13 +1392,36 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 13,
   },
+  locationSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    height: 42,
+    marginVertical: 6,
+    gap: 8,
+  },
+  locationSearchInput: {
+    flex: 1,
+    fontSize: 13.5,
+    color: '#0F172A',
+    paddingVertical: 0,
+  },
   locationItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
+  },
+  locationItemHighlight: {
+    backgroundColor: '#EFF6FF',
   },
   locationItemText: {
     color: '#0F172A',

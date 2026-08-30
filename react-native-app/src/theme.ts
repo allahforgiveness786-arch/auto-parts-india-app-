@@ -3,7 +3,7 @@ import { MD3LightTheme, configureFonts } from 'react-native-paper';
 export const theme = {
   ...MD3LightTheme,
   isV3: true,
-  version: 3,
+  version: 3 as any,
   fonts: MD3LightTheme?.fonts || {},
   colors: {
     ...(MD3LightTheme?.colors || {}),

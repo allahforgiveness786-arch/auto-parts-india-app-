@@ -17,6 +17,7 @@ import AdminScreen from '../screens/AdminScreen';
 import SplashScreen from '../screens/SplashScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import SearchScreen from '../screens/SearchScreen';
+import AllCategoriesScreen from '../screens/AllCategoriesScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -157,8 +158,6 @@ export default function AppNavigator({ user }: { user: any }) {
         headerTitleStyle: { fontWeight: 'bold' },
         presentation: 'card',
         animation: 'slide_from_right',
-        sheetAllowedDetents: 'large' as any,
-        sheetLargestUndimmedDetent: 'all' as any,
       }}
     >
       <Stack.Screen 
@@ -252,7 +251,14 @@ export default function AppNavigator({ user }: { user: any }) {
         component={SearchScreen}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen 
+        name="AllCategories" 
+        component={AllCategoriesScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
+
   );
 }
 

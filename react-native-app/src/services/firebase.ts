@@ -1,6 +1,7 @@
 
 import { getApp as getAppInternal } from '@react-native-firebase/app';
-import authModule, { firebase } from '@react-native-firebase/auth';
+import authModule from '@react-native-firebase/auth';
+import firebase from '@react-native-firebase/app';
 import firestoreModule from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { INITIAL_SPARE_PARTS } from '../data/mockData';
@@ -53,7 +54,7 @@ export function getFirebaseAuth(): any {
   try {
     let inst: any = null;
     if (typeof authModule === 'function') {
-      try { inst = authModule(); } catch (_) {}
+      try { inst = (authModule as any)(); } catch (_) {}
     }
     if (!inst && (authModule as any)?.default && typeof (authModule as any).default === 'function') {
       try { inst = (authModule as any).default(); } catch (_) {}
@@ -304,10 +305,19 @@ async function writeCloudDoc(collPath: string, docId: string, data: any, isMerge
     }
 
     const patchUrl = `${firestoreBaseUrl}/${targetPath}/${docId}?key=${FIREBASE_API_KEY}`;
-    await fetch(patchUrl, {
+    
+    // Background cloud sync with 5s timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    fetch(patchUrl, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields }),
+      signal: controller.signal,
+    }).then(() => clearTimeout(timeoutId)).catch((err) => {
+      clearTimeout(timeoutId);
+      console.warn(`[Firestore Cloud] Background write sync notice for ${collPath}/${docId}:`, err);
     });
   } catch (err) {
     console.warn(`[Firestore Cloud] Write error to ${collPath}/${docId}:`, err);
@@ -332,9 +342,13 @@ async function deleteCloudDoc(collPath: string, docId: string): Promise<void> {
       await AsyncStorage.setItem(STORAGE_KEY_PREFIX + collPath, JSON.stringify(cloudCache[collPath]));
       await AsyncStorage.setItem(STORAGE_KEY_PREFIX + targetPath, JSON.stringify(cloudCache[targetPath]));
     } catch (_) {}
-    await fetch(`${firestoreBaseUrl}/${targetPath}/${docId}?key=${FIREBASE_API_KEY}`, {
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    fetch(`${firestoreBaseUrl}/${targetPath}/${docId}?key=${FIREBASE_API_KEY}`, {
       method: 'DELETE',
-    });
+      signal: controller.signal,
+    }).then(() => clearTimeout(timeoutId)).catch(() => clearTimeout(timeoutId));
   } catch (err) {
     console.warn(`[Firestore Cloud] Delete error for ${collPath}/${docId}:`, err);
   }

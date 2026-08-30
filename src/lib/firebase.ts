@@ -4604,3 +4604,43 @@ export async function fetchUserFollowCounts(userId: string): Promise<{ followers
 
 
 
+
+// --- TOP CATEGORIES API ---
+
+export function subscribeToTopCategories(callback: (categories: any[]) => void): () => void {
+  const q = query(collection(db, "topCategories"), orderBy("order", "asc"));
+  return onSnapshot(q, (snapshot) => {
+    const categories: any[] = [];
+    snapshot.forEach((docSnap) => {
+      categories.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    callback(categories);
+  });
+}
+
+export async function createTopCategory(data: any): Promise<void> {
+  const categoriesRef = collection(db, "topCategories");
+  await addDoc(categoriesRef, {
+    ...data,
+    createdAt: serverTimestamp()
+  });
+}
+
+export async function updateTopCategory(id: string, data: any): Promise<void> {
+  const docRef = doc(db, "topCategories", id);
+  await updateDoc(docRef, data);
+}
+
+export async function deleteTopCategory(id: string): Promise<void> {
+  const docRef = doc(db, "topCategories", id);
+  await deleteDoc(docRef);
+}
+
+export async function reorderTopCategories(items: {id: string, order: number}[]): Promise<void> {
+  const batch = writeBatch(db);
+  items.forEach((item) => {
+    const docRef = doc(db, "topCategories", item.id);
+    batch.update(docRef, { order: item.order });
+  });
+  await batch.commit();
+}

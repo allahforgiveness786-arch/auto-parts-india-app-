@@ -156,6 +156,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
 
   const renderPartItem = ({ item }: { item: any }) => {
     const isFav = favorites.includes(item.id);
+    const primaryUri = item.imageUrl || item.images?.[0] || item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400';
     return (
       <TouchableOpacity
         style={styles.card}
@@ -164,7 +165,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
       >
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: item.imageUrl || item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }}
+            source={{ uri: primaryUri }}
             style={styles.cardImage}
             resizeMode="cover"
           />
@@ -551,9 +552,10 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: 130,
+    height: 134,
     backgroundColor: '#F1F5F9',
     position: 'relative',
+    overflow: 'hidden',
   },
   cardImage: {
     width: '100%',
