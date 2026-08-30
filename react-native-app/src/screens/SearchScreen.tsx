@@ -16,13 +16,14 @@ import { Icon, Surface, Chip, useTheme, ActivityIndicator } from 'react-native-p
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { INITIAL_SPARE_PARTS } from '../data/mockData';
 import { getFirebaseFirestore } from '../services/firebase';
+import { matchesCategoryFilter } from '../utils/categoryMatcher';
 
 export default function SearchScreen({ navigation, route, user }: any) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
 
   const [searchQuery, setSearchQuery] = useState(route?.params?.initialQuery || '');
-  const [selectedCategory, setSelectedCategory] = useState(route?.params?.initialCategory || 'All Categories');
+  const [selectedCategory, setSelectedCategory] = useState(route?.params?.initialCategory || route?.params?.selectedCategory || 'All Categories');
   const [selectedBrand, setSelectedBrand] = useState(route?.params?.initialBrand || 'All Brands');
   const [selectedCondition, setSelectedCondition] = useState('All Conditions');
   const [selectedState, setSelectedState] = useState('All States');
@@ -30,10 +31,11 @@ export default function SearchScreen({ navigation, route, user }: any) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const [parts, setParts] = useState<any[]>(INITIAL_SPARE_PARTS);
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  const categories = [
+  const defaultCategories = [
     'All Categories',
     'Engine & Mechanical',
     'Body & Exterior',
@@ -42,6 +44,38 @@ export default function SearchScreen({ navigation, route, user }: any) {
     'Interior & Wheels',
     'Wiring & Harnesses'
   ];
+
+  // Fetch top categories dynamically from Firestore
+  React.useEffect(() => {
+    try {
+      const db = getFirebaseFirestore();
+      if (db && typeof db.collection === 'function') {
+        const unsub = db.collection('topCategories')
+          .orderBy('order', 'asc')
+          .onSnapshot((snapshot: any) => {
+            const names: string[] = [];
+            snapshot.forEach((doc: any) => {
+              const data = doc.data();
+              if (data.isActive !== false && data.name) {
+                names.push(data.name);
+              }
+            });
+            setDynamicCategories(names);
+          }, () => {});
+        return () => unsub?.();
+      }
+    } catch (_) {}
+  }, []);
+
+  const categories = useMemo(() => {
+    const combined = ['All Categories', ...dynamicCategories];
+    defaultCategories.forEach((cat) => {
+      if (!combined.includes(cat)) {
+        combined.push(cat);
+      }
+    });
+    return Array.from(new Set(combined));
+  }, [dynamicCategories]);
 
   const popularBrands = [
     'All Brands',
@@ -63,7 +97,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
     'Audi'
   ];
 
-  const conditions = ['All Conditions', 'Brand New', 'Like New', 'Used (Good)', 'Reconditioned'];
+  const conditions = ['All Conditions', 'New', 'Used'];
   const states = [
     'All States',
     'Tamil Nadu',
@@ -134,14 +168,19 @@ export default function SearchScreen({ navigation, route, user }: any) {
         }
       }
 
-      if (selectedCategory !== 'All Categories' && part.category !== selectedCategory) {
-        return false;
+      if (selectedCategory !== 'All Categories' && selectedCategory !== 'All') {
+        if (!matchesCategoryFilter(part, selectedCategory)) {
+          return false;
+        }
       }
       if (selectedBrand !== 'All Brands' && part.carBrand !== selectedBrand) {
         return false;
       }
-      if (selectedCondition !== 'All Conditions' && part.condition !== selectedCondition) {
-        return false;
+      if (selectedCondition !== 'All Conditions') {
+        const isNewSelected = selectedCondition === 'New';
+        const isPartNew = (part.condition || '').toLowerCase().includes('new');
+        if (isNewSelected && !isPartNew) return false;
+        if (!isNewSelected && isPartNew) return false;
       }
       if (selectedState !== 'All States' && part.state !== selectedState && part.location !== selectedState) {
         return false;
@@ -160,7 +199,8 @@ export default function SearchScreen({ navigation, route, user }: any) {
     return (
       <TouchableOpacity
         style={styles.card}
-        activeOpacity={0.88}
+        activeOpacity={0.75}
+        delayPressIn={0}
         onPress={() => navigation.navigate('ProductDetail', { part: item })}
       >
         <View style={styles.imageContainer}>
@@ -174,6 +214,9 @@ export default function SearchScreen({ navigation, route, user }: any) {
           </View>
           <TouchableOpacity
             style={styles.favBtn}
+            activeOpacity={0.7}
+            delayPressIn={0}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={(e) => {
               e.stopPropagation();
               toggleFavorite(item.id);
@@ -252,13 +295,15 @@ export default function SearchScreen({ navigation, route, user }: any) {
 
       {/* Categories quick horizontal pill list */}
       <View style={styles.categoriesBar}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsScroll}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.pillsScroll}>
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat;
             return (
               <TouchableOpacity
                 key={cat}
                 style={[styles.pill, isSelected && styles.pillActive]}
+                activeOpacity={0.75}
+                delayPressIn={0}
                 onPress={() => setSelectedCategory(cat)}
               >
                 <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
@@ -279,18 +324,24 @@ export default function SearchScreen({ navigation, route, user }: any) {
           <Text style={styles.sortLabel}>Sort:</Text>
           <TouchableOpacity
             style={[styles.sortBtn, sortBy === 'newest' && styles.sortBtnActive]}
+            activeOpacity={0.75}
+            delayPressIn={0}
             onPress={() => setSortBy('newest')}
           >
             <Text style={[styles.sortBtnText, sortBy === 'newest' && styles.sortBtnTextActive]}>Latest</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sortBtn, sortBy === 'price_low' && styles.sortBtnActive]}
+            activeOpacity={0.75}
+            delayPressIn={0}
             onPress={() => setSortBy('price_low')}
           >
             <Text style={[styles.sortBtnText, sortBy === 'price_low' && styles.sortBtnTextActive]}>Price: Low</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sortBtn, sortBy === 'price_high' && styles.sortBtnActive]}
+            activeOpacity={0.75}
+            delayPressIn={0}
             onPress={() => setSortBy('price_high')}
           >
             <Text style={[styles.sortBtnText, sortBy === 'price_high' && styles.sortBtnTextActive]}>High</Text>
@@ -304,7 +355,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
           <Icon source="car-off" size={48} color="#94A3B8" />
           <Text style={styles.emptyTitle}>No matching spare parts</Text>
           <Text style={styles.emptySubtitle}>Try changing your search terms or filters</Text>
-          <TouchableOpacity style={styles.resetBtn} onPress={resetFilters}>
+          <TouchableOpacity style={styles.resetBtn} activeOpacity={0.75} delayPressIn={0} onPress={resetFilters}>
             <Text style={styles.resetBtnText}>Reset All Filters</Text>
           </TouchableOpacity>
         </View>
@@ -316,6 +367,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
           numColumns={2}
           columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         />
       )}

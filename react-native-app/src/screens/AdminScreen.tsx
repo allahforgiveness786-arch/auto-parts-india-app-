@@ -25,11 +25,12 @@ const { width } = Dimensions.get('window');
 
 export default function AdminScreen({ navigation }: any) {
   // Navigation tabs
-  const [tab, setTab] = useState<'overview' | 'listings' | 'users' | 'banners' | 'taxonomy' | 'announcements' | 'version'>('overview');
+  const [tab, setTab] = useState<'overview' | 'listings' | 'users' | 'banners' | 'topCategories' | 'taxonomy' | 'announcements' | 'version'>('overview');
 
   // Core Data States
   const [listings, setListings] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const [topCategories, setTopCategories] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +65,17 @@ export default function AdminScreen({ navigation }: any) {
   const [savingBanner, setSavingBanner] = useState(false);
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
 
+  // Top Category Add / Edit Modal State
+  const [topCategoryModalVisible, setTopCategoryModalVisible] = useState(false);
+  const [editingTopCategory, setEditingTopCategory] = useState<any | null>(null);
+  const [topCategoryName, setTopCategoryName] = useState('');
+  const [topCategoryIcon, setTopCategoryIcon] = useState('car-cog');
+  const [topCategoryImageUrl, setTopCategoryImageUrl] = useState('');
+  const [topCategoryOrder, setTopCategoryOrder] = useState('0');
+  const [topCategoryActive, setTopCategoryActive] = useState(true);
+  const [savingTopCategory, setSavingTopCategory] = useState(false);
+  const [uploadingTopCatImage, setUploadingTopCatImage] = useState(false);
+
   // Announcement Form State
   const [annTitle, setAnnTitle] = useState('');
   const [annText, setAnnText] = useState('');
@@ -91,18 +103,18 @@ export default function AdminScreen({ navigation }: any) {
 
   if (!isAuthorizedAdmin) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#002F34', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(239, 68, 68, 0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
           <Icon source="shield-alert" size={40} color="#EF4444" />
         </View>
-        <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 8 }}>
+        <Text style={{ color: '#0F172A', fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 8 }}>
           Restricted Admin Access
         </Text>
-        <Text style={{ color: '#94A3B8', fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 24, maxWidth: 320 }}>
-          This Admin Console is strictly restricted to authorized administrator (<Text style={{ color: '#38BDF8', fontWeight: 'bold' }}>wwwautoparts2@gmail.com</Text>). Current account: <Text style={{ color: '#F87171' }}>{currentUser?.email || 'Guest / Not logged in'}</Text>.
+        <Text style={{ color: '#64748B', fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 24, maxWidth: 320 }}>
+          This Admin Console is strictly restricted to authorized administrator (<Text style={{ color: '#1565FF', fontWeight: 'bold' }}>wwwautoparts2@gmail.com</Text>). Current account: <Text style={{ color: '#DC2626' }}>{currentUser?.email || 'Guest / Not logged in'}</Text>.
         </Text>
         <TouchableOpacity
-          style={{ backgroundColor: '#FF7A00', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+          style={{ backgroundColor: '#1565FF', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}
           onPress={() => {
             if (navigation.canGoBack()) {
               navigation.goBack();
@@ -163,6 +175,21 @@ export default function AdminScreen({ navigation }: any) {
         }
       );
 
+      // 2b. Listen to Top Categories
+      let unsubTopCategories = () => {};
+      const qTopCat = db.collection('topCategories');
+      unsubTopCategories = qTopCat.onSnapshot(
+        (snap: any) => {
+          const list: any[] = [];
+          snap.forEach((d: any) => list.push({ id: d.id, ...d.data() }));
+          list.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+          setTopCategories(list);
+        },
+        (err: any) => {
+          console.warn('[Admin] TopCategories snapshot error:', err);
+        }
+      );
+
       // 3. Listen to Users
       const qUsers = db.collection('users');
       unsubUsers = qUsers.onSnapshot(
@@ -198,6 +225,7 @@ export default function AdminScreen({ navigation }: any) {
     return () => {
       try { unsubListings(); } catch (_) {}
       try { unsubBanners(); } catch (_) {}
+      try { unsubTopCategories(); } catch (_) {}
       try { unsubUsers(); } catch (_) {}
       try { unsubAnnouncements(); } catch (_) {}
     };
@@ -562,6 +590,116 @@ export default function AdminScreen({ navigation }: any) {
   };
 
   // -------------------------------------------------------------
+  // Top Categories Actions
+  // -------------------------------------------------------------
+  const handleOpenAddTopCategory = () => {
+    setEditingTopCategory(null);
+    setTopCategoryName('');
+    setTopCategoryIcon('car-cog');
+    setTopCategoryImageUrl('');
+    setTopCategoryActive(true);
+    setTopCategoryOrder(String(topCategories.length));
+    setTopCategoryModalVisible(true);
+  };
+
+  const handleOpenEditTopCategory = (cat: any) => {
+    setEditingTopCategory(cat);
+    setTopCategoryName(cat.name || '');
+    setTopCategoryIcon(cat.icon || 'car-cog');
+    setTopCategoryImageUrl(cat.imageUrl || '');
+    setTopCategoryActive(cat.active !== false);
+    setTopCategoryOrder(String(typeof cat.order === 'number' ? cat.order : 0));
+    setTopCategoryModalVisible(true);
+  };
+
+  const handlePickTopCatImage = async () => {
+    try {
+      const res = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
+      if (res.assets && res.assets[0]?.uri) {
+        setUploadingTopCatImage(true);
+        const uploadedUrl = await uploadImageToCloudinary(res.assets[0].uri, 'categories');
+        setTopCategoryImageUrl(uploadedUrl);
+      }
+    } catch (err) {
+      console.warn('[Admin] Top Category image pick error:', err);
+    } finally {
+      setUploadingTopCatImage(false);
+    }
+  };
+
+  const handleSaveTopCategory = async () => {
+    if (!topCategoryName.trim()) {
+      Alert.alert('Validation', 'Please enter a category name.');
+      return;
+    }
+
+    setSavingTopCategory(true);
+    try {
+      const db = getFirebaseFirestore();
+      if (!db) return;
+
+      const payload = {
+        name: topCategoryName.trim(),
+        icon: topCategoryIcon.trim() || 'car-cog',
+        imageUrl: topCategoryImageUrl.trim(),
+        active: topCategoryActive,
+        order: parseInt(topCategoryOrder, 10) || 0,
+        updatedAt: Date.now(),
+      };
+
+      if (editingTopCategory) {
+        await db.collection('topCategories').doc(editingTopCategory.id).update(payload);
+        Alert.alert('Success', 'Top Category updated successfully!');
+      } else {
+        await db.collection('topCategories').add({
+          ...payload,
+          createdAt: Date.now(),
+        });
+        Alert.alert('Success', 'New Top Category created successfully!');
+      }
+      setTopCategoryModalVisible(false);
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to save Top Category.');
+    } finally {
+      setSavingTopCategory(false);
+    }
+  };
+
+  const handleToggleTopCategoryActive = async (cat: any) => {
+    try {
+      const db = getFirebaseFirestore();
+      if (!db) return;
+      const newActive = cat.active === false;
+      await db.collection('topCategories').doc(cat.id).update({
+        active: newActive,
+        updatedAt: Date.now(),
+      });
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to toggle category status.');
+    }
+  };
+
+  const handleDeleteTopCategory = (cat: any) => {
+    Alert.alert('Delete Category', `Permanently delete "${cat.name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const db = getFirebaseFirestore();
+            if (!db) return;
+            await db.collection('topCategories').doc(cat.id).delete();
+            Alert.alert('Deleted', 'Top Category deleted successfully.');
+          } catch (err: any) {
+            Alert.alert('Error', err.message || 'Failed to delete category.');
+          }
+        },
+      },
+    ]);
+  };
+
+  // -------------------------------------------------------------
   // Announcements Broadcast Actions
   // -------------------------------------------------------------
   const handleSendAnnouncement = async () => {
@@ -773,7 +911,7 @@ export default function AdminScreen({ navigation }: any) {
             <Icon
               source={isSelected ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
               size={22}
-              color={isSelected ? '#002F34' : '#94A3B8'}
+              color={isSelected ? '#1565FF' : '#94A3B8'}
             />
           </TouchableOpacity>
 
@@ -918,8 +1056,8 @@ export default function AdminScreen({ navigation }: any) {
               setEditModalVisible(true);
             }}
           >
-            <Icon source="pencil-outline" size={15} color="#002F34" />
-            <Text style={[styles.toolBtnText, { color: '#002F34' }]}>Edit</Text>
+            <Icon source="pencil-outline" size={15} color="#1565FF" />
+            <Text style={[styles.toolBtnText, { color: '#1565FF' }]}>Edit</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -957,7 +1095,7 @@ export default function AdminScreen({ navigation }: any) {
           onPress={() => (navigation ? navigation.goBack() : null)}
           activeOpacity={0.7}
         >
-          <Icon source="arrow-left" size={16} color="#002F34" />
+          <Icon source="arrow-left" size={16} color="#0F172A" />
           <Text style={styles.exitBtnText}>Exit</Text>
         </TouchableOpacity>
       </View>
@@ -974,6 +1112,7 @@ export default function AdminScreen({ navigation }: any) {
             { id: 'listings', label: `Listings (${listings.length})`, icon: 'car-multiple' },
             { id: 'users', label: `Users (${users.length})`, icon: 'account-group-outline' },
             { id: 'banners', label: `Banners (${banners.length})`, icon: 'image-multiple-outline' },
+            { id: 'topCategories', label: `Top Categories (${topCategories.length})`, icon: 'grid-large' },
             { id: 'taxonomy', label: 'Taxonomy CMS', icon: 'shape-outline' },
             { id: 'announcements', label: `Broadcast (${announcements.length})`, icon: 'bullhorn-outline' },
             { id: 'version', label: 'App Update', icon: 'cellphone-arrow-down' },
@@ -1006,7 +1145,7 @@ export default function AdminScreen({ navigation }: any) {
       {/* 3. Main Dynamic Content */}
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#002F34" />
+          <ActivityIndicator size="large" color="#1565FF" />
           <Text style={styles.loadingText}>Syncing Marketplace Cloud Database...</Text>
         </View>
       ) : tab === 'overview' ? (
@@ -1020,9 +1159,9 @@ export default function AdminScreen({ navigation }: any) {
           <Text style={styles.sectionHeaderTitle}>MARKETPLACE METRICS</Text>
 
           <View style={styles.metricsGrid}>
-            <View style={[styles.metricCard, { borderLeftColor: '#002F34' }]}>
+            <View style={[styles.metricCard, { borderLeftColor: '#1565FF' }]}>
               <View style={styles.metricIconWrap}>
-                <Icon source="tag-multiple" size={22} color="#002F34" />
+                <Icon source="tag-multiple" size={22} color="#1565FF" />
               </View>
               <Text style={styles.metricValue}>{listings.length}</Text>
               <Text style={styles.metricLabel}>Total Ad Listings</Text>
@@ -1217,7 +1356,7 @@ export default function AdminScreen({ navigation }: any) {
                 <Icon
                   source={isAllSelected ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
                   size={20}
-                  color="#002F34"
+                  color="#1565FF"
                 />
                 <Text style={styles.bulkSelectText}>
                   {isAllSelected ? 'Deselect All' : `Select All (${filteredListings.length})`}
@@ -1257,10 +1396,10 @@ export default function AdminScreen({ navigation }: any) {
           {/* User Count Status Bar */}
           <View style={styles.userBannerBar}>
             <View style={styles.userBannerIconWrap}>
-              <Icon source="account-group" size={20} color="#002F34" />
+              <Icon source="account-group" size={20} color="#1565FF" />
             </View>
             <Text style={styles.userBannerText}>
-              Total Registered Users: <Text style={{ fontWeight: '800', color: '#002F34' }}>{users.length}</Text>
+              Total Registered Users: <Text style={{ fontWeight: '800', color: '#0F172A' }}>{users.length}</Text>
             </Text>
           </View>
 
@@ -1297,7 +1436,7 @@ export default function AdminScreen({ navigation }: any) {
                     <Icon
                       source={isSuper ? 'shield-crown' : 'account'}
                       size={24}
-                      color={isSuper ? '#EAB308' : '#002F34'}
+                      color={isSuper ? '#EAB308' : '#1565FF'}
                     />
                   </View>
 
@@ -1348,7 +1487,7 @@ export default function AdminScreen({ navigation }: any) {
                           style={[styles.userActionIconBtn, { backgroundColor: '#F1F5F9' }]}
                           onPress={() => handleOpenEditUser(item)}
                         >
-                          <Icon source="pencil-outline" size={16} color="#002F34" />
+                          <Icon source="pencil-outline" size={16} color="#1565FF" />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -1399,7 +1538,7 @@ export default function AdminScreen({ navigation }: any) {
                   {b.imageUrl ? (
                     <Image source={{ uri: b.imageUrl }} style={styles.bannerCardImg} resizeMode="cover" />
                   ) : (
-                    <View style={[styles.bannerCardImg, { backgroundColor: '#002F34' }]} />
+                    <View style={[styles.bannerCardImg, { backgroundColor: '#1565FF' }]} />
                   )}
 
                   <View style={styles.bannerTagOverlay}>
@@ -1454,8 +1593,8 @@ export default function AdminScreen({ navigation }: any) {
                       style={[styles.bannerActionBtn, { backgroundColor: '#F1F5F9' }]}
                       onPress={() => handleOpenEditBanner(b)}
                     >
-                      <Icon source="pencil-outline" size={14} color="#002F34" />
-                      <Text style={[styles.bannerActionBtnText, { color: '#002F34' }]}>Edit</Text>
+                      <Icon source="pencil-outline" size={14} color="#1565FF" />
+                      <Text style={[styles.bannerActionBtnText, { color: '#1565FF' }]}>Edit</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1478,6 +1617,120 @@ export default function AdminScreen({ navigation }: any) {
             )}
           </ScrollView>
         </View>
+      ) : tab === 'topCategories' ? (
+        /* TAB 3B: TOP CATEGORIES MANAGEMENT */
+        <View style={{ flex: 1 }}>
+          <View style={styles.bannerHeaderRow}>
+            <View>
+              <Text style={styles.sectionHeaderTitle}>TOP HOME CATEGORIES</Text>
+              <Text style={styles.sectionHeaderSubtitle}>
+                {topCategories.length} categories on home screen grid
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addBannerNativeBtn}
+              onPress={handleOpenAddTopCategory}
+            >
+              <Icon source="plus-circle" size={16} color="#FFFFFF" />
+              <Text style={styles.addBannerBtnText}>Add Category</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.listContent}>
+            {topCategories.map((cat, index) => (
+              <View key={cat.id || index} style={styles.nativeCategoryAdminCard}>
+                <View style={styles.categoryAdminIconWrap}>
+                  {cat.imageUrl ? (
+                    <Image
+                      source={{ uri: cat.imageUrl }}
+                      style={styles.categoryAdminImg}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Icon source={cat.icon || 'car-cog'} size={28} color="#1565FF" />
+                  )}
+                </View>
+
+                <View style={styles.categoryAdminInfoCol}>
+                  <View style={styles.categoryAdminNameRow}>
+                    <Text style={styles.categoryAdminNameText}>{cat.name}</Text>
+                    <View
+                      style={[
+                        styles.catStatusPill,
+                        { backgroundColor: cat.active !== false ? '#DCFCE7' : '#F1F5F9' },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.catStatusText,
+                          { color: cat.active !== false ? '#15803D' : '#64748B' },
+                        ]}
+                      >
+                        {cat.active !== false ? 'Active' : 'Hidden'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.categoryAdminMetaText}>
+                    Icon: {cat.icon || 'car-cog'} • Order: {cat.order || 0}
+                  </Text>
+                  {cat.imageUrl ? (
+                    <Text style={styles.categoryAdminImageBadge} numberOfLines={1}>
+                      Custom Image Photo Attached
+                    </Text>
+                  ) : null}
+
+                  <View style={styles.categoryAdminActionsRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.bannerActionBtn,
+                        { backgroundColor: cat.active !== false ? '#DCFCE7' : '#F1F5F9' },
+                      ]}
+                      onPress={() => handleToggleTopCategoryActive(cat)}
+                    >
+                      <Icon
+                        source={cat.active !== false ? 'check-circle' : 'eye-off'}
+                        size={14}
+                        color={cat.active !== false ? '#15803D' : '#64748B'}
+                      />
+                      <Text
+                        style={[
+                          styles.bannerActionBtnText,
+                          { color: cat.active !== false ? '#15803D' : '#64748B' },
+                        ]}
+                      >
+                        {cat.active !== false ? 'Active' : 'Disabled'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.bannerActionBtn, { backgroundColor: '#F1F5F9' }]}
+                      onPress={() => handleOpenEditTopCategory(cat)}
+                    >
+                      <Icon source="pencil-outline" size={14} color="#1565FF" />
+                      <Text style={[styles.bannerActionBtnText, { color: '#1565FF' }]}>Edit</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.bannerActionBtn, { backgroundColor: '#FEE2E2' }]}
+                      onPress={() => handleDeleteTopCategory(cat)}
+                    >
+                      <Icon source="trash-can-outline" size={14} color="#DC2626" />
+                      <Text style={[styles.bannerActionBtnText, { color: '#DC2626' }]}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+
+            {topCategories.length === 0 && (
+              <View style={styles.centerContainer}>
+                <Icon source="shape-outline" size={48} color="#94A3B8" />
+                <Text style={styles.emptyText}>No top categories configured yet.</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
       ) : tab === 'taxonomy' ? (
         /* TAB 4: TAXONOMY CMS */
         <AdminTaxonomyCMS />
@@ -1488,7 +1741,7 @@ export default function AdminScreen({ navigation }: any) {
           <View style={styles.nativeFormCard}>
             <View style={styles.formHeaderRow}>
               <View style={styles.formIconCircle}>
-                <Icon source="bullhorn" size={20} color="#002F34" />
+                <Icon source="bullhorn" size={20} color="#1565FF" />
               </View>
               <View style={{ marginLeft: 10, flex: 1 }}>
                 <Text style={styles.formTitle}>Broadcast Push Announcement</Text>
@@ -1504,7 +1757,7 @@ export default function AdminScreen({ navigation }: any) {
               onChangeText={setAnnTitle}
               mode="outlined"
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={styles.formInput}
             />
 
@@ -1516,7 +1769,7 @@ export default function AdminScreen({ navigation }: any) {
               multiline
               numberOfLines={3}
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={[styles.formInput, { minHeight: 80, marginTop: 10 }]}
             />
 
@@ -1575,7 +1828,7 @@ export default function AdminScreen({ navigation }: any) {
           <View style={styles.nativeFormCard}>
             <View style={styles.formHeaderRow}>
               <View style={styles.formIconCircle}>
-                <Icon source="cellphone-arrow-down" size={20} color="#002F34" />
+                <Icon source="cellphone-arrow-down" size={20} color="#1565FF" />
               </View>
               <View style={{ marginLeft: 10, flex: 1 }}>
                 <Text style={styles.formTitle}>OTA & App Update Configuration</Text>
@@ -1592,7 +1845,7 @@ export default function AdminScreen({ navigation }: any) {
                 onChangeText={setLatestVersion}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#002F34"
+                activeOutlineColor="#1565FF"
                 style={[styles.formInput, { flex: 1, marginRight: 6 }]}
               />
               <TextInput
@@ -1601,7 +1854,7 @@ export default function AdminScreen({ navigation }: any) {
                 onChangeText={setMinVersion}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#002F34"
+                activeOutlineColor="#1565FF"
                 style={[styles.formInput, { flex: 1, marginLeft: 6 }]}
               />
             </View>
@@ -1627,7 +1880,7 @@ export default function AdminScreen({ navigation }: any) {
               onChangeText={setApkUrl}
               mode="outlined"
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={[styles.formInput, { marginTop: 10 }]}
             />
 
@@ -1637,7 +1890,7 @@ export default function AdminScreen({ navigation }: any) {
               onChangeText={setReleaseDate}
               mode="outlined"
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={[styles.formInput, { marginTop: 10 }]}
             />
 
@@ -1649,7 +1902,7 @@ export default function AdminScreen({ navigation }: any) {
               multiline
               numberOfLines={4}
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={[styles.formInput, { minHeight: 80, marginTop: 10 }]}
             />
 
@@ -1708,7 +1961,7 @@ export default function AdminScreen({ navigation }: any) {
               onChangeText={setEditUserName}
               mode="outlined"
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={styles.modalInput}
             />
 
@@ -1719,7 +1972,7 @@ export default function AdminScreen({ navigation }: any) {
               mode="outlined"
               keyboardType="phone-pad"
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={styles.modalInput}
             />
 
@@ -1729,7 +1982,7 @@ export default function AdminScreen({ navigation }: any) {
               onChangeText={setEditUserDistrict}
               mode="outlined"
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={styles.modalInput}
             />
 
@@ -1739,7 +1992,7 @@ export default function AdminScreen({ navigation }: any) {
               onChangeText={setEditUserState}
               mode="outlined"
               outlineColor="#E2E8F0"
-              activeOutlineColor="#002F34"
+              activeOutlineColor="#1565FF"
               style={styles.modalInput}
             />
 
@@ -1747,7 +2000,7 @@ export default function AdminScreen({ navigation }: any) {
               <Button onPress={() => setEditingUser(null)}>Cancel</Button>
               <Button
                 mode="contained"
-                buttonColor="#002F34"
+                buttonColor="#1565FF"
                 textColor="#FFFFFF"
                 onPress={handleSaveUserEdit}
                 loading={savingUser}
@@ -1785,7 +2038,7 @@ export default function AdminScreen({ navigation }: any) {
                 onChangeText={setBannerTitle}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#002F34"
+                activeOutlineColor="#1565FF"
                 style={styles.modalInput}
               />
 
@@ -1795,7 +2048,7 @@ export default function AdminScreen({ navigation }: any) {
                 onChangeText={setBannerSubtitle}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#002F34"
+                activeOutlineColor="#1565FF"
                 style={styles.modalInput}
               />
 
@@ -1805,7 +2058,7 @@ export default function AdminScreen({ navigation }: any) {
                 onChangeText={setBannerTag}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#002F34"
+                activeOutlineColor="#1565FF"
                 style={styles.modalInput}
               />
 
@@ -1815,7 +2068,7 @@ export default function AdminScreen({ navigation }: any) {
                 onChangeText={setBannerTargetLink}
                 mode="outlined"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#002F34"
+                activeOutlineColor="#1565FF"
                 style={styles.modalInput}
               />
 
@@ -1826,13 +2079,13 @@ export default function AdminScreen({ navigation }: any) {
                 mode="outlined"
                 keyboardType="numeric"
                 outlineColor="#E2E8F0"
-                activeOutlineColor="#002F34"
+                activeOutlineColor="#1565FF"
                 style={styles.modalInput}
               />
 
               {/* Banner Image Picker */}
               <View style={styles.bannerPickerBox}>
-                <Text style={styles.bannerPickerLabel}>Banner Image *</Text>
+                <Text style={styles.bannerPickerLabel}>Banner Image * (16:9 ratio recommended)</Text>
                 {bannerImageUrl ? (
                   <Image source={{ uri: bannerImageUrl }} style={styles.previewBannerImg} resizeMode="cover" />
                 ) : null}
@@ -1856,7 +2109,7 @@ export default function AdminScreen({ navigation }: any) {
                   onChangeText={setBannerImageUrl}
                   mode="outlined"
                   outlineColor="#E2E8F0"
-                  activeOutlineColor="#002F34"
+                  activeOutlineColor="#1565FF"
                   style={[styles.modalInput, { marginTop: 8 }]}
                 />
               </View>
@@ -1876,13 +2129,129 @@ export default function AdminScreen({ navigation }: any) {
               <Button onPress={() => setBannerModalVisible(false)}>Cancel</Button>
               <Button
                 mode="contained"
-                buttonColor="#002F34"
+                buttonColor="#1565FF"
                 textColor="#FFFFFF"
                 onPress={handleSaveBanner}
                 loading={savingBanner}
                 disabled={savingBanner}
               >
                 Save Banner
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL 3B: Add / Edit Top Category Modal */}
+      {/* ------------------------------------------------------------- */}
+      <Modal
+        visible={topCategoryModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTopCategoryModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitleText}>
+                {editingTopCategory ? 'Edit Top Category' : 'Add New Top Category'}
+              </Text>
+              <IconButton icon="close" size={20} onPress={() => setTopCategoryModalVisible(false)} />
+            </View>
+
+            <ScrollView style={{ maxHeight: 420 }}>
+              <TextInput
+                label="Category Display Name *"
+                value={topCategoryName}
+                onChangeText={setTopCategoryName}
+                mode="outlined"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#1565FF"
+                style={styles.modalInput}
+                placeholder="e.g. Engine & Motors"
+              />
+
+              <TextInput
+                label="Vector Icon Name (Material Community Icon)"
+                value={topCategoryIcon}
+                onChangeText={setTopCategoryIcon}
+                mode="outlined"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#1565FF"
+                style={styles.modalInput}
+                placeholder="e.g. car-cog, lightning-bolt, car-seat"
+              />
+
+              <TextInput
+                label="Display Order (0, 1, 2...)"
+                value={topCategoryOrder}
+                onChangeText={setTopCategoryOrder}
+                mode="outlined"
+                keyboardType="numeric"
+                outlineColor="#E2E8F0"
+                activeOutlineColor="#1565FF"
+                style={styles.modalInput}
+              />
+
+              {/* Photo Image Upload for Category */}
+              <View style={styles.bannerPickerBox}>
+                <Text style={styles.bannerPickerLabel}>Category Photo Image (Optional)</Text>
+                {topCategoryImageUrl ? (
+                  <Image
+                    source={{ uri: topCategoryImageUrl }}
+                    style={styles.previewCatImg}
+                    resizeMode="cover"
+                  />
+                ) : null}
+
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                  <Button
+                    mode="outlined"
+                    icon="camera"
+                    onPress={handlePickTopCatImage}
+                    loading={uploadingTopCatImage}
+                    disabled={uploadingTopCatImage}
+                    style={{ flex: 1 }}
+                  >
+                    Upload Category Photo
+                  </Button>
+                </View>
+
+                <TextInput
+                  label="Or Direct Image URL"
+                  value={topCategoryImageUrl}
+                  onChangeText={setTopCategoryImageUrl}
+                  mode="outlined"
+                  outlineColor="#E2E8F0"
+                  activeOutlineColor="#1565FF"
+                  style={[styles.modalInput, { marginTop: 8 }]}
+                  placeholder="https://..."
+                />
+              </View>
+
+              <View style={[styles.switchNativeRow, { marginVertical: 8 }]}>
+                <Text style={styles.switchLabel}>Show on Home Screen</Text>
+                <Switch
+                  value={topCategoryActive}
+                  onValueChange={setTopCategoryActive}
+                  trackColor={{ false: '#CBD5E1', true: '#10B981' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalBtnRow}>
+              <Button onPress={() => setTopCategoryModalVisible(false)}>Cancel</Button>
+              <Button
+                mode="contained"
+                buttonColor="#1565FF"
+                textColor="#FFFFFF"
+                onPress={handleSaveTopCategory}
+                loading={savingTopCategory}
+                disabled={savingTopCategory}
+              >
+                Save Category
               </Button>
             </View>
           </View>
@@ -1898,7 +2267,7 @@ export default function AdminScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F4F5',
+    backgroundColor: '#FFFFFF',
   },
   adminTopHeader: {
     backgroundColor: '#FFFFFF',
@@ -1922,7 +2291,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#002F34',
+    backgroundColor: '#1565FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
@@ -1930,13 +2299,13 @@ const styles = StyleSheet.create({
   adminMainTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#002F34',
+    color: '#0F172A',
     letterSpacing: 0.5,
   },
   livePulsePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6F4EA',
+    backgroundColor: '#DCFCE7',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -1947,12 +2316,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#137333',
+    backgroundColor: '#16A34A',
   },
   pulseText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#137333',
+    color: '#15803D',
   },
   adminSubTitle: {
     fontSize: 11,
@@ -1962,7 +2331,7 @@ const styles = StyleSheet.create({
   exitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -1971,7 +2340,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   exitBtnText: {
-    color: '#002F34',
+    color: '#0F172A',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -1997,13 +2366,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   nativeTabPillActive: {
-    backgroundColor: '#002F34',
-    borderColor: '#002F34',
+    backgroundColor: '#1565FF',
+    borderColor: '#1565FF',
   },
   nativeTabPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#475569',
+    color: '#64748B',
   },
   nativeTabPillTextActive: {
     color: '#FFFFFF',
@@ -2011,6 +2380,7 @@ const styles = StyleSheet.create({
   overviewScroll: {
     padding: 12,
     paddingBottom: 40,
+    backgroundColor: '#FFFFFF',
   },
   sectionHeaderTitle: {
     fontSize: 12,
@@ -2032,6 +2402,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderLeftWidth: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   metricIconWrap: {
     marginBottom: 8,
@@ -2039,7 +2414,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#002F34',
+    color: '#0F172A',
   },
   metricLabel: {
     fontSize: 11,
@@ -2059,6 +2434,11 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   shortcutIconCircle: {
     width: 40,
@@ -2071,7 +2451,7 @@ const styles = StyleSheet.create({
   shortcutTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#0F172A',
   },
   shortcutSub: {
     fontSize: 11,
@@ -2085,6 +2465,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   snapshotHeader: {
     flexDirection: 'row',
@@ -2098,12 +2483,12 @@ const styles = StyleSheet.create({
   snapshotTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#0F172A',
   },
   viewAllText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#002F34',
+    color: '#1565FF',
   },
   snapshotItemRow: {
     flexDirection: 'row',
@@ -2121,7 +2506,7 @@ const styles = StyleSheet.create({
   snapshotItemTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#002F34',
+    color: '#0F172A',
   },
   snapshotItemSub: {
     fontSize: 11,
@@ -2151,18 +2536,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   filterChipActive: {
-    backgroundColor: '#002F34',
-    borderColor: '#002F34',
+    backgroundColor: '#1565FF',
+    borderColor: '#1565FF',
   },
   filterChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: '#64748B',
   },
   filterChipTextActive: {
     color: '#FFFFFF',
@@ -2187,7 +2572,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 38,
     fontSize: 13,
-    color: '#002F34',
+    color: '#0F172A',
     marginLeft: 6,
   },
   bulkActionBar: {
@@ -2196,9 +2581,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: '#EFF6FF',
     borderBottomWidth: 1,
-    borderBottomColor: '#BAE6FD',
+    borderBottomColor: '#BFDBFE',
   },
   bulkSelectBtn: {
     flexDirection: 'row',
@@ -2208,7 +2593,7 @@ const styles = StyleSheet.create({
   bulkSelectText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#1565FF',
   },
   bulkDeleteBtn: {
     flexDirection: 'row',
@@ -2227,6 +2612,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 12,
     paddingBottom: 40,
+    backgroundColor: '#FFFFFF',
   },
   nativeListingCard: {
     backgroundColor: '#FFFFFF',
@@ -2235,10 +2621,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   selectedListingCard: {
-    borderColor: '#002F34',
-    backgroundColor: '#F8FAFC',
+    borderColor: '#1565FF',
+    backgroundColor: '#F0F7FF',
   },
   trashListingCard: {
     opacity: 0.75,
@@ -2303,7 +2694,7 @@ const styles = StyleSheet.create({
   cardPrice: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#002F34',
+    color: '#0F172A',
   },
   statusTagPill: {
     paddingHorizontal: 6,
@@ -2325,7 +2716,7 @@ const styles = StyleSheet.create({
   },
   vehiclePillText: {
     fontSize: 11,
-    color: '#002F34',
+    color: '#1565FF',
     fontWeight: '700',
   },
   metaRow: {
@@ -2378,7 +2769,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -2396,6 +2787,11 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   blockedUserCard: {
     backgroundColor: '#FEF2F2',
@@ -2416,7 +2812,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#0F172A',
   },
   superAdminPill: {
     backgroundColor: '#FEF08A',
@@ -2474,7 +2870,7 @@ const styles = StyleSheet.create({
   addBannerNativeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#002F34',
+    backgroundColor: '#1565FF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -2492,9 +2888,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   bannerImageWrap: {
-    height: 120,
+    aspectRatio: 16 / 9,
     width: '100%',
     position: 'relative',
     backgroundColor: '#E2E8F0',
@@ -2538,7 +2939,7 @@ const styles = StyleSheet.create({
   bannerTitleText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#0F172A',
   },
   bannerSubText: {
     fontSize: 12,
@@ -2547,7 +2948,7 @@ const styles = StyleSheet.create({
   },
   bannerTargetLinkText: {
     fontSize: 11,
-    color: '#0284C7',
+    color: '#1565FF',
     marginTop: 4,
   },
   bannerActionsBar: {
@@ -2576,6 +2977,11 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   formHeaderRow: {
     flexDirection: 'row',
@@ -2586,14 +2992,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E0F2FE',
+    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   formTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#0F172A',
   },
   formSubtitle: {
     fontSize: 11,
@@ -2604,7 +3010,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   nativePrimarySubmitBtn: {
-    backgroundColor: '#002F34',
+    backgroundColor: '#1565FF',
     borderRadius: 8,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -2625,6 +3031,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   annHeaderRow: {
     flexDirection: 'row',
@@ -2635,7 +3046,7 @@ const styles = StyleSheet.create({
   annItemTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#0F172A',
   },
   annItemDate: {
     fontSize: 10,
@@ -2667,7 +3078,7 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#002F34',
+    color: '#0F172A',
   },
   switchSubLabel: {
     fontSize: 10,
@@ -2684,6 +3095,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -2694,7 +3110,7 @@ const styles = StyleSheet.create({
   modalTitleText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#002F34',
+    color: '#0F172A',
   },
   modalInput: {
     backgroundColor: '#FFFFFF',
@@ -2712,26 +3128,105 @@ const styles = StyleSheet.create({
   bannerPickerLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#002F34',
+    color: '#0F172A',
     marginBottom: 4,
   },
   previewBannerImg: {
     width: '100%',
-    height: 100,
+    aspectRatio: 16 / 9,
     borderRadius: 8,
     marginBottom: 6,
+  },
+  previewCatImg: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  nativeCategoryAdminCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  categoryAdminIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  categoryAdminImg: {
+    width: '100%',
+    height: '100%',
+  },
+  categoryAdminInfoCol: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  categoryAdminNameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  categoryAdminNameText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  catStatusPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  catStatusText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  categoryAdminMetaText: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  categoryAdminImageBadge: {
+    fontSize: 10,
+    color: '#1565FF',
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  categoryAdminActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    backgroundColor: '#FFFFFF',
   },
   loadingText: {
     marginTop: 12,
     fontSize: 13,
     fontWeight: '700',
-    color: '#002F34',
+    color: '#0F172A',
   },
   emptyText: {
     marginTop: 8,

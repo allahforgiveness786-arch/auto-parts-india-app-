@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, StatusBar, Platform, Image } from 'react-native';
 import { Text, Icon, Appbar } from 'react-native-paper';
 
 export default function AllCategoriesScreen({ navigation, route }: any) {
@@ -7,17 +7,26 @@ export default function AllCategoriesScreen({ navigation, route }: any) {
 
   const renderItem = ({ item }: { item: any }) => {
     if (item.name === 'More') return null;
+    const hasImageUrl = Boolean(item.imageUrl && item.imageUrl.startsWith('http'));
 
     return (
       <TouchableOpacity
         style={styles.categoryCard}
         onPress={() => {
-          navigation.navigate('HomeTab', { screen: 'Home', params: { selectedCategory: item.name } });
+          navigation.navigate('MainTabs', { screen: 'HomeTab', params: { selectedCategory: item.name } });
         }}
         activeOpacity={0.7}
       >
-        <View style={[styles.iconContainer, { backgroundColor: (item.iconColor || '#0F172A') + '15' }]}>
-          <Icon source={item.icon || 'apps'} size={32} color={item.iconColor || '#0F172A'} />
+        <View style={[styles.iconContainer, { backgroundColor: (item.iconColor || '#1565FF') + '15' }]}>
+          {hasImageUrl ? (
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={{ width: 36, height: 36, borderRadius: 8 }}
+              resizeMode="contain"
+            />
+          ) : (
+            <Icon source={item.icon || 'apps'} size={32} color={item.iconColor || '#1565FF'} />
+          )}
         </View>
         <Text style={styles.categoryLabel}>{item.name}</Text>
       </TouchableOpacity>

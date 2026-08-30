@@ -73,7 +73,7 @@ export default function RatingModal({
         onClose();
       }, 1500);
     } catch (err: any) {
-      Alert.alert('Error', 'Failed to submit review. Please try again.');
+      Alert.alert('Unable to Submit', 'Could not submit your review right now. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

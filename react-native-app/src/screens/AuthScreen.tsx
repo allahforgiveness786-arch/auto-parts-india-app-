@@ -25,7 +25,7 @@ export default function AuthScreen({ navigation }: any) {
     try {
       const user = await signInWithGoogleNative();
       if (!user || !user.uid) {
-        throw new Error('Authentication failed: Could not establish a secure Firebase session.');
+        throw new Error('Unable to complete sign-in. Please try again.');
       }
       navigation.reset({
         index: 0,
@@ -33,9 +33,9 @@ export default function AuthScreen({ navigation }: any) {
       });
     } catch (err: any) {
       console.warn('[AuthScreen] Google Sign-In failed:', err);
-      const msg = err?.message || 'Google Authentication failed. Please check your internet and Firebase SHA-1 setup.';
+      const msg = err?.message || 'Unable to sign in with Google. Please check your internet connection and try again.';
       setErrorMessage(msg);
-      Alert.alert('Authentication Failed', msg);
+      Alert.alert('Sign In', msg);
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function AuthScreen({ navigation }: any) {
             {loading ? (
               <View style={styles.btnRow}>
                 <ActivityIndicator color="#0F172A" size="small" />
-                <Text style={styles.googleBtnText}>Authenticating with Firebase...</Text>
+                <Text style={styles.googleBtnText}>Signing in...</Text>
               </View>
             ) : (
               <View style={styles.btnRow}>
@@ -108,11 +108,11 @@ export default function AuthScreen({ navigation }: any) {
             </View>
             <View style={styles.badgeRow}>
               <Icon source="message-text-outline" size={16} color="#38BDF8" />
-              <Text style={styles.badgeText}>Direct End-to-End Chat</Text>
+              <Text style={styles.badgeText}>Direct In-App Chat</Text>
             </View>
             <View style={styles.badgeRow}>
               <Icon source="lock-check-outline" size={16} color="#38BDF8" />
-              <Text style={styles.badgeText}>Official Firebase OAuth 2.0</Text>
+              <Text style={styles.badgeText}>Fast & Secure Sign-In</Text>
             </View>
           </View>
         </View>
@@ -156,7 +156,7 @@ export default function AuthScreen({ navigation }: any) {
                 {legalModal === 'terms' ? (
                   `Welcome to Auto Parts India.\n\n1. Acceptance of Terms: By accessing or using this app, you agree to be bound by these terms.\n\n2. Marketplace Platform: Auto Parts India connects buyers and sellers of automotive components. We do not manufacture or inspect the parts listed by third-party sellers.\n\n3. User Conduct: Users must list only genuine parts with accurate descriptions and pricing. Fraudulent listings or harassment will result in account termination.\n\n4. Transactions: All financial deals and shipping arrangements are between buyer and seller directly.`
                 ) : (
-                  `Auto Parts India Privacy Policy\n\n1. Information We Collect: We collect your name, email address, and profile details provided via Google Sign-In.\n\n2. How We Use Information: To facilitate communication between buyers and sellers, provide notifications, and maintain account security.\n\n3. Data Security: Your information is stored securely via Firebase Cloud Firestore. We do not sell your personal data to any third parties.`
+                  `Auto Parts India Privacy Policy\n\n1. Information We Collect: We collect your name, email address, and profile details provided via Google Sign-In.\n\n2. How We Use Information: To facilitate communication between buyers and sellers, provide notifications, and maintain account security.\n\n3. Data Security: Your information is stored securely with industry-standard encryption. We do not sell your personal data to any third parties.`
                 )}
               </Text>
             </ScrollView>

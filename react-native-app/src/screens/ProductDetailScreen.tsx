@@ -9,6 +9,7 @@ import { UserProfilePopupModal } from '../components/UserProfilePopupModal';
 import ImageView from 'react-native-image-viewing';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { useFavorites } from '../services/favorites';
+import { addRecentlyViewedPart } from '../services/recentlyViewed';
 import { 
   getCurrentLocation, 
   formatLocationBadgeWithDistance, 
@@ -41,6 +42,7 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
   useEffect(() => {
     if (initialPart?.id) {
       setPart(initialPart);
+      addRecentlyViewedPart(initialPart);
       
       let unsub = () => {};
       try {
@@ -421,7 +423,7 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
             <View style={styles.actionRow}>
               <Button 
                 mode="contained" 
-                icon="message" 
+                icon="message-text" 
                 onPress={handleChat} 
                 style={[styles.actionBtn, { flex: 1, marginRight: 8 }]}
                 buttonColor="#1565FF"
@@ -430,11 +432,12 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
                 Chat
               </Button>
               <Button 
-                mode="outlined" 
+                mode="contained" 
                 icon="phone" 
                 onPress={handleCall} 
                 style={[styles.actionBtn, { flex: 1 }]}
-                textColor="#1565FF"
+                buttonColor="#0B1220"
+                textColor="#FFFFFF"
               >
                 Call Seller
               </Button>
@@ -442,26 +445,11 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
 
             <View style={styles.secondaryActionRow}>
               <Button
-                mode="contained-tonal"
-                icon="whatsapp"
-                onPress={() => {
-                  const phoneClean = (part.contactPhone || '').replace(/[^0-9]/g, '');
-                  const waUrl = phoneClean 
-                    ? `https://wa.me/91${phoneClean.slice(-10)}?text=Hi, I am interested in your listing: ${encodeURIComponent(part.title)} on Auto Parts India.`
-                    : `https://wa.me/?text=Hi, I am interested in your listing: ${encodeURIComponent(part.title)}`;
-                  Linking.openURL(waUrl).catch(() => Alert.alert('Notice', 'Unable to open WhatsApp'));
-                }}
-                style={{ flex: 1, marginRight: 8, backgroundColor: '#DCFCE7' }}
-                textColor="#15803D"
-              >
-                WhatsApp
-              </Button>
-              <Button
                 mode="outlined"
-                icon="star"
+                icon="star-outline"
                 onPress={() => setRatingModalVisible(true)}
-                style={{ flex: 1, borderColor: '#F59E0B' }}
-                textColor="#D97706"
+                style={{ flex: 1, borderColor: '#CBD5E1', backgroundColor: '#F8FAFC' }}
+                textColor="#475569"
               >
                 Rate Seller
               </Button>
@@ -499,6 +487,9 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
         onDismiss={() => setGalleryVisible(false)}
         part={part}
         initialIndex={galleryIndex}
+        onChat={handleChat}
+        onCall={handleCall}
+        isOwner={isOwner}
       />
 
       {/* User Profile Popup Modal showing only photo with tap outside / back button close */}

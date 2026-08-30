@@ -11,6 +11,9 @@ interface ImageGalleryModalProps {
   part: SparePart | null;
   initialIndex?: number;
   onDismiss: () => void;
+  onChat?: () => void;
+  onCall?: () => void;
+  isOwner?: boolean;
 }
 
 export const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
@@ -18,6 +21,9 @@ export const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
   part,
   initialIndex = 0,
   onDismiss,
+  onChat,
+  onCall,
+  isOwner = false,
 }) => {
   const images: string[] = [];
   if (part) {
@@ -62,20 +68,36 @@ export const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
         </SafeAreaView>
       )}
       FooterComponent={() => 
-        part ? (
-          <SafeAreaView style={styles.footerOverlay} pointerEvents="none">
-            <View style={styles.partInfoRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.partTitle} numberOfLines={1}>
-                  {part.title}
-                </Text>
-                <Text style={styles.partSub}>
-                  {part.carBrand} {part.carModel} • {part.condition}
-                </Text>
-              </View>
-              <Text style={styles.partPrice}>
-                ₹{Number(part.price || 0).toLocaleString('en-IN')}
-              </Text>
+        part && !isOwner && (onChat || onCall) ? (
+          <SafeAreaView style={styles.footerOverlay}>
+            <View style={styles.actionBtnRow}>
+              {onChat && (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.chatBtn}
+                  onPress={() => {
+                    onDismiss();
+                    setTimeout(() => {
+                      onChat();
+                    }, 100);
+                  }}
+                >
+                  <Icon source="message-text" size={19} color="#FFFFFF" />
+                  <Text style={styles.chatBtnText}>Chat</Text>
+                </TouchableOpacity>
+              )}
+              {onCall && (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.callBtn}
+                  onPress={() => {
+                    onCall();
+                  }}
+                >
+                  <Icon source="phone" size={19} color="#0B1220" />
+                  <Text style={styles.callBtnText}>Call</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </SafeAreaView>
         ) : <View />
@@ -117,37 +139,55 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   footerOverlay: {
-    
-    marginBottom: Platform.OS === 'ios' ? 40 : 24,
+    marginBottom: Platform.OS === 'ios' ? 40 : 28,
     left: 16,
     right: 16,
-    backgroundColor: 'rgba(15, 23, 42, 0.92)',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#334155',
     zIndex: 9999,
     width: SCREEN_WIDTH - 32,
   },
-  partInfoRow: {
+  actionBtnRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
   },
-  partTitle: {
+  chatBtn: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#1565FF',
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  chatBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
   },
-  partSub: {
-    color: '#94A3B8',
-    fontSize: 12,
-    marginTop: 2,
+  callBtn: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
-  partPrice: {
-    color: '#10B981',
-    fontSize: 18,
-    fontWeight: '800',
-    marginLeft: 8,
+  callBtnText: {
+    color: '#0B1220',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

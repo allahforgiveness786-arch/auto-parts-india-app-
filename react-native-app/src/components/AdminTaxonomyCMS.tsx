@@ -102,7 +102,7 @@ export const AdminTaxonomyCMS: React.FC = () => {
       setSaving(true);
       const db = getFirestoreInstance();
       if (!db) {
-        Alert.alert('Notice', 'Firebase Firestore not available.');
+        Alert.alert('Notice', 'Unable to connect to the server.');
         return;
       }
       await db.collection('taxonomy').doc('data').set({
@@ -110,9 +110,9 @@ export const AdminTaxonomyCMS: React.FC = () => {
         categories,
         updatedAt: Date.now(),
       });
-      Alert.alert('Success', 'Taxonomy CMS configuration saved to Cloud successfully!');
+      Alert.alert('Success', 'Settings saved successfully!');
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to save configuration');
+      Alert.alert('Error', err.message || 'Failed to save settings.');
     } finally {
       setSaving(false);
     }
@@ -285,9 +285,9 @@ export const AdminTaxonomyCMS: React.FC = () => {
                     <View style={styles.brandTitleRow}>
                       <IconButton icon="car" size={20} iconColor="#1565FF" style={{ margin: 0 }} />
                       <Text style={styles.cmsCardTitle}>{b.name}</Text>
-                      <Chip style={styles.countChip} textStyle={{ fontSize: 10 }}>
-                        {b.models.length} models
-                      </Chip>
+                      <View style={styles.countChip}>
+                        <Text style={styles.countChipText}>{b.models.length} models</Text>
+                      </View>
                     </View>
                     <View style={{ flexDirection: 'row' }}>
                       <IconButton
@@ -313,8 +313,9 @@ export const AdminTaxonomyCMS: React.FC = () => {
                       <Chip
                         key={m}
                         style={styles.modelChip}
-                        textStyle={{ fontSize: 11, color: '#E2E8F0' }}
+                        textStyle={{ fontSize: 11, color: '#1E293B', fontWeight: '600' }}
                         onClose={() => handleDeleteModel(bIdx, m)}
+                        closeIconColor="#64748B"
                       >
                         {m}
                       </Chip>
@@ -332,11 +333,11 @@ export const AdminTaxonomyCMS: React.FC = () => {
                 <Surface key={`cat-${c.id}-${cIdx}`} style={styles.cmsCard} elevation={2}>
                   <View style={styles.cmsCardHeader}>
                     <View style={styles.brandTitleRow}>
-                      <IconButton icon="shape-outline" size={20} iconColor="#8B5CF6" style={{ margin: 0 }} />
+                      <IconButton icon="shape-outline" size={20} iconColor="#7C3AED" style={{ margin: 0 }} />
                       <Text style={styles.cmsCardTitle}>{c.name}</Text>
-                      <Chip style={styles.countChip} textStyle={{ fontSize: 10 }}>
-                        {c.subcategories.length} subparts
-                      </Chip>
+                      <View style={styles.countChip}>
+                        <Text style={styles.countChipText}>{c.subcategories.length} subparts</Text>
+                      </View>
                     </View>
                     <IconButton
                       icon="delete-outline"
@@ -351,7 +352,7 @@ export const AdminTaxonomyCMS: React.FC = () => {
                       <Chip
                         key={s}
                         style={styles.modelChip}
-                        textStyle={{ fontSize: 11, color: '#E2E8F0' }}
+                        textStyle={{ fontSize: 11, color: '#1E293B', fontWeight: '600' }}
                       >
                         {s}
                       </Chip>
@@ -369,24 +370,24 @@ export const AdminTaxonomyCMS: React.FC = () => {
                 <Surface key={st.state} style={styles.cmsCard} elevation={2}>
                   <View style={styles.cmsCardHeader}>
                     <View style={styles.brandTitleRow}>
-                      <IconButton icon="map-marker-outline" size={20} iconColor="#10B981" style={{ margin: 0 }} />
+                      <IconButton icon="map-marker-outline" size={20} iconColor="#34D399" style={{ margin: 0 }} />
                       <Text style={styles.cmsCardTitle}>{st.state}</Text>
-                      <Chip style={styles.countChip} textStyle={{ fontSize: 10 }}>
-                        {st.districts.length} districts
-                      </Chip>
+                      <View style={styles.countChip}>
+                        <Text style={styles.countChipText}>{st.districts.length} districts</Text>
+                      </View>
                     </View>
                   </View>
 
                   <View style={styles.chipsWrap}>
                     {st.districts.slice(0, 12).map((d) => (
-                      <Chip key={d} style={styles.locChip} textStyle={{ fontSize: 10, color: '#94A3B8' }}>
-                        {d}
-                      </Chip>
+                      <View key={d} style={styles.locPill}>
+                        <Text style={styles.locPillText}>{d}</Text>
+                      </View>
                     ))}
                     {st.districts.length > 12 && (
-                      <Chip style={styles.locChip} textStyle={{ fontSize: 10, color: '#6366F1' }}>
-                        +{st.districts.length - 12} more
-                      </Chip>
+                      <View style={styles.locPillMore}>
+                        <Text style={styles.locPillMoreText}>+{st.districts.length - 12} more</Text>
+                      </View>
                     )}
                   </View>
                 </Surface>
@@ -499,16 +500,18 @@ export const AdminTaxonomyCMS: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   tabRow: {
     flexDirection: 'row',
-    backgroundColor: '#1E293B',
-    padding: 6,
+    backgroundColor: '#F1F5F9',
+    padding: 4,
     borderRadius: 12,
     marginHorizontal: 16,
     marginTop: 12,
     gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   tabBtn: {
     flex: 1,
@@ -522,7 +525,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: '#64748B',
   },
   tabTextActive: {
     color: '#FFFFFF',
@@ -553,32 +556,48 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   cmsCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   cmsCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   brandTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     flex: 1,
   },
   cmsCardTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F172A',
   },
   countChip: {
-    backgroundColor: '#0F172A',
-    height: 24,
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  countChipText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1D4ED8',
   },
   chipsWrap: {
     flexDirection: 'row',
@@ -586,17 +605,39 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   modelChip: {
-    backgroundColor: '#0F172A',
-    borderColor: '#334155',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
     borderWidth: 1,
   },
-  locChip: {
-    backgroundColor: '#0F172A',
-    height: 24,
+  locPill: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  locPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  locPillMore: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  locPillMoreText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#1D4ED8',
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -604,21 +645,26 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#1E293B',
-    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   modalHeader: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F172A',
     marginBottom: 14,
   },
   modalInput: {
     marginBottom: 12,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   modalBtnRow: {
     flexDirection: 'row',

@@ -93,7 +93,7 @@ export const MapLocationModal: React.FC<MapLocationModalProps> = ({
       }
     } catch (e) {
       console.warn('GPS detection notice:', e);
-      Alert.alert('GPS Notice', 'Unable to retrieve precise GPS coordinates. Please select your district or tap on the map.');
+      Alert.alert('Location Notice', 'Could not detect your current location. Please choose your city or tap on the map.');
     } finally {
       setIsDetectingGPS(false);
     }

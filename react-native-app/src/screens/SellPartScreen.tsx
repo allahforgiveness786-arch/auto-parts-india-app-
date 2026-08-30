@@ -163,10 +163,8 @@ const DEFAULT_CATEGORY_PARTS: Record<string, string[]> = {
 };
 
 const CONDITION_OPTIONS = [
-  { id: 'Brand New', label: 'Brand New', icon: '✨' },
-  { id: 'Like New', label: 'Like New', icon: '👍' },
-  { id: 'Used (Good)', label: 'Used (Good)', icon: '🔧' },
-  { id: 'For Scrap/Spares', label: 'For Scrap/Spares', icon: '♻' },
+  { id: 'New', label: 'New' },
+  { id: 'Used', label: 'Used' },
 ] as const;
 
 function formatIndianCurrency(numStr: string | number): string {
@@ -188,7 +186,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
   const [carVariant, setCarVariant] = useState('');
   const [category, setCategory] = useState('');
   const [partName, setPartName] = useState('');
-  const [condition, setCondition] = useState<'Brand New' | 'Like New' | 'Used (Good)' | 'For Scrap/Spares'>('Brand New');
+  const [condition, setCondition] = useState<'New' | 'Used'>('Used');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
 
@@ -929,32 +927,31 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
           <Text style={styles.nativeSectionTitle}>Part details</Text>
           <Text style={styles.nativeSectionHint}>Tell buyers exactly what you are selling</Text>
 
-          <View style={styles.nativeField}>
-            <Text style={styles.fieldLabel}>CATEGORY *</Text>
-            <TouchableOpacity
-              style={[
-                styles.nativePicker,
-                submittedAttempt && !category && styles.fieldError,
-              ]}
-              onPress={() => {
-                setPickerSearchQuery('');
-                setPickerModalType('category');
-              }}
-            >
-              <View style={styles.fieldIconCircle}>
-                <IconButton icon="shape-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
-              </View>
-              <Text
-                style={[
-                  styles.pickerValue,
-                  !category && styles.pickerPlaceholder,
-                ]}
-                numberOfLines={1}
-              >
-                {category ? translateDynamic(category) : 'Select part category'}
-              </Text>
-              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
-            </TouchableOpacity>
+          {/* Condition Segmented Control (New / Used) */}
+          <View style={styles.conditionSegmentContainer}>
+            {CONDITION_OPTIONS.map((opt) => {
+              const active = condition === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.conditionTab,
+                    active && styles.conditionTabActive,
+                  ]}
+                  onPress={() => setCondition(opt.id as 'New' | 'Used')}
+                >
+                  <Text
+                    style={[
+                      styles.conditionTabText,
+                      active && styles.conditionTabTextActive,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           <View style={styles.nativeField}>
@@ -981,6 +978,34 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
                 numberOfLines={1}
               >
                 {partName || (category ? 'Select spare part' : 'Select category first')}
+              </Text>
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>CATEGORY *</Text>
+            <TouchableOpacity
+              style={[
+                styles.nativePicker,
+                submittedAttempt && !category && styles.fieldError,
+              ]}
+              onPress={() => {
+                setPickerSearchQuery('');
+                setPickerModalType('category');
+              }}
+            >
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="shape-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text
+                style={[
+                  styles.pickerValue,
+                  !category && styles.pickerPlaceholder,
+                ]}
+                numberOfLines={1}
+              >
+                {category ? translateDynamic(category) : 'Select part category'}
               </Text>
               <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
             </TouchableOpacity>
@@ -1078,7 +1103,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
           </View>
         </View>
 
-        {/* PRICE + CONDITION */}
+        {/* PRICE */}
         <View style={styles.nativeSection}>
           <Text style={styles.nativeSectionTitle}>Price & condition</Text>
 
@@ -1092,24 +1117,6 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
               placeholderTextColor="#94A3B8"
               style={styles.priceInput}
             />
-          </View>
-
-          <Text style={[styles.fieldLabel, { marginTop: 14 }]}>CONDITION *</Text>
-          <View style={styles.conditionCompactRow}>
-            {CONDITION_OPTIONS.map((opt) => {
-              const active = condition === opt.id;
-              return (
-                <TouchableOpacity
-                  key={opt.id}
-                  style={[styles.conditionChip, active && styles.conditionChipActive]}
-                  onPress={() => setCondition(opt.id as any)}
-                >
-                  <Text style={[styles.conditionChipText, active && styles.conditionChipTextActive]}>
-                    {opt.icon} {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
           </View>
         </View>
 
@@ -1786,30 +1793,35 @@ const styles = StyleSheet.create({
     marginLeft: 9,
     paddingVertical: 0,
   },
-  conditionCompactRow: {
-    gap: 7,
+  conditionSegmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#EEF2F6',
+    borderRadius: 14,
+    padding: 4,
+    marginTop: 14,
+    marginBottom: 4,
   },
-  conditionChip: {
-    minHeight: 39,
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: '#DDE2EA',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 11,
+  conditionTab: {
+    flex: 1,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 1,
+    borderRadius: 11,
   },
-  conditionChipActive: {
-    backgroundColor: '#0B1220',
-    borderColor: '#0B1220',
+  conditionTabActive: {
+    backgroundColor: '#0B1426',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  conditionChipText: {
-    color: '#475569',
-    fontSize: 10.5,
+  conditionTabText: {
+    color: '#64748B',
+    fontSize: 14,
     fontWeight: '700',
   },
-  conditionChipTextActive: {
+  conditionTabTextActive: {
     color: '#FFFFFF',
     fontWeight: '800',
   },

@@ -48,6 +48,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { LanguageSelectorModal } from '../components/LanguageSelectorModal';
 import { UpdateDialogModal } from '../components/UpdateDialogModal';
 import { InAppNotification, InAppNotificationData } from '../components/InAppNotification';
+import { matchesCategoryFilter } from '../utils/categoryMatcher';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -75,22 +76,6 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
     ]).start();
   }, []);
 
-  const onPressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onPressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 4,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const isNew = (item.condition || '').toLowerCase().includes('new');
   const [imgError, setImgError] = useState(false);
   const primaryUri = !imgError && (item.imageUrl || item.images?.[0] || item.imageUrls?.[0])
@@ -101,13 +86,12 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
     <Animated.View
       style={{
         opacity: fadeAnim,
-        transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+        transform: [{ translateY: slideAnim }],
       }}
     >
       <TouchableOpacity
-        activeOpacity={0.92}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
+        activeOpacity={0.8}
+        delayPressIn={0}
         onPress={() => navigation.navigate('ProductDetail', { part: item })}
         style={styles.card}
       >
@@ -130,7 +114,9 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
           {/* Favorite Heart Button */}
           <TouchableOpacity
             style={styles.favoriteButton}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
+            delayPressIn={0}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={(e) => {
               e.stopPropagation?.();
               onToggleFavorite?.(item.id);
@@ -161,54 +147,19 @@ function AnimatedPartCard({ item, index, navigation, isFavorited, onToggleFavori
           <Text style={styles.price}>
             ₹{item.price?.toLocaleString('en-IN')}
           </Text>
-
-          {/* Quick Action Contact Buttons */}
-          <View style={styles.cardQuickActions}>
-            <TouchableOpacity
-              style={styles.waPill}
-              activeOpacity={0.8}
-              onPress={(e) => {
-                e.stopPropagation?.();
-                const phoneClean = (item.contactPhone || '').replace(/[^0-9]/g, '');
-                const waUrl = phoneClean
-                  ? `https://wa.me/91${phoneClean.slice(-10)}?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)} on Auto Parts India.`
-                  : `https://wa.me/?text=Hi, I am interested in your listing: ${encodeURIComponent(item.title)}`;
-                Linking.openURL(waUrl).catch(() => Alert.alert('Notice', 'Unable to open WhatsApp'));
-              }}
-            >
-              <Icon source="whatsapp" size={14} color="#15803D" />
-              <Text style={styles.waPillText}>WhatsApp</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.callPill}
-              activeOpacity={0.8}
-              onPress={(e) => {
-                e.stopPropagation?.();
-                if (item.contactPhone) {
-                  Linking.openURL(`tel:${item.contactPhone}`);
-                } else {
-                  Alert.alert('Notice', 'Phone number not available for this listing.');
-                }
-              }}
-            >
-              <Icon source="phone" size={14} color="#0066FF" />
-              <Text style={styles.callPillText}>Call</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
-export default function HomeScreen({ navigation, user }: any) {
+export default function HomeScreen({ navigation, route, user }: any) {
   const { favorites, toggleFavorite } = useFavorites();
   const [taxonomyCategories, setTaxonomyCategories] = useState<string[]>([]);
   const { t } = useLanguage();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(route?.params?.selectedCategory || 'All');
   const [selectedCity, setSelectedCity] = useState('All India');
   const [isDetectingGPS, setIsDetectingGPS] = useState(false);
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
@@ -225,6 +176,13 @@ export default function HomeScreen({ navigation, user }: any) {
   const [inAppNotification, setInAppNotification] = useState<InAppNotificationData | null>(null);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [updateConfig, setUpdateConfig] = useState<any>(null);
+
+  // Sync selectedCategory when passed via navigation params (e.g. from AllCategories screen)
+  useEffect(() => {
+    if (route?.params?.selectedCategory) {
+      setSelectedCategory(route.params.selectedCategory);
+    }
+  }, [route?.params?.selectedCategory]);
 
   // 1. Persistent Location Loader: Remember chosen/detected location permanently across app restarts
   useEffect(() => {
@@ -418,7 +376,7 @@ export default function HomeScreen({ navigation, user }: any) {
         const list: any[] = [];
         snapshot.forEach((doc: any) => {
           const data = doc.data();
-          if (data.isActive !== false) {
+          if (data.active !== false && data.isActive !== false) {
             list.push({ id: doc.id, ...data });
           }
         });
@@ -451,18 +409,20 @@ export default function HomeScreen({ navigation, user }: any) {
   };
 
   const filteredParts = parts.filter((part) => {
-    const queryLower = searchQuery.toLowerCase();
-    const matchesSearch = !searchQuery || 
+    const queryLower = searchQuery.toLowerCase().trim();
+    const matchesSearch = !queryLower || 
       part.title?.toLowerCase().includes(queryLower) ||
       part.carBrand?.toLowerCase().includes(queryLower) ||
       part.carModel?.toLowerCase().includes(queryLower) ||
-      part.category?.toLowerCase().includes(queryLower);
+      part.category?.toLowerCase().includes(queryLower) ||
+      part.subCategory?.toLowerCase().includes(queryLower) ||
+      part.location?.toLowerCase().includes(queryLower);
 
-    const matchesCategory = selectedCategory === 'All' || selectedCategory === 'More' || 
-      (part.category && part.category.toLowerCase().includes(selectedCategory.toLowerCase().split(' ')[0]));
+    const matchesCategory = matchesCategoryFilter(part, selectedCategory);
     
     const matchesCity = selectedCity === 'All India' || !part.location || 
-      part.location.toLowerCase().includes(selectedCity.toLowerCase());
+      part.location.toLowerCase().includes(selectedCity.toLowerCase()) ||
+      (part.state && part.state.toLowerCase().includes(selectedCity.toLowerCase()));
 
     const partPrice = Number(part.price || part.partPrice) || 0;
     const isAboveMin = minPrice ? partPrice >= Number(minPrice) : true;
@@ -546,6 +506,7 @@ export default function HomeScreen({ navigation, user }: any) {
 
       <ScrollView 
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066FF']} />
@@ -555,6 +516,9 @@ export default function HomeScreen({ navigation, user }: any) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <TouchableOpacity 
+            delayPressIn={0}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={() => {
               setSelectedCategory('All');
             }}
@@ -567,22 +531,37 @@ export default function HomeScreen({ navigation, user }: any) {
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.categoryList}
         >
-          
           {topCategories.length > 0 ? (
             <>
-              {topCategories.slice(0, 5).map((cat: any) => {
-                const isSelected = selectedCategory === cat.name;
+              {topCategories.map((cat: any) => {
+                const isSelected = selectedCategory.toLowerCase() === (cat.name || '').toLowerCase();
+                const hasImageUrl = Boolean(cat.imageUrl && cat.imageUrl.startsWith('http'));
                 return (
                   <TouchableOpacity
                     key={cat.id}
                     style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
-                    onPress={() => setSelectedCategory(cat.name)}
+                    onPress={() => {
+                      if (isSelected) {
+                        setSelectedCategory('All');
+                      } else {
+                        setSelectedCategory(cat.name);
+                      }
+                    }}
                     activeOpacity={0.7}
                   >
-                    <View style={[styles.categoryIconWrap, { backgroundColor: cat.iconColor + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
-                      <Icon source={cat.icon || 'apps'} size={24} color={isSelected ? '#FFFFFF' : cat.iconColor} />
+                    <View style={[styles.categoryIconWrap, { backgroundColor: (cat.iconColor || '#1565FF') + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
+                      {hasImageUrl ? (
+                        <Image
+                          source={{ uri: cat.imageUrl }}
+                          style={{ width: 28, height: 28, borderRadius: 6 }}
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <Icon source={cat.icon || 'apps'} size={24} color={isSelected ? '#FFFFFF' : (cat.iconColor || '#1565FF')} />
+                      )}
                     </View>
                     <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]} numberOfLines={1}>
                       {cat.name}
@@ -605,7 +584,7 @@ export default function HomeScreen({ navigation, user }: any) {
             </>
           ) : (
             categoryItems.map((cat) => {
-              const isSelected = selectedCategory === cat.name;
+              const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
               return (
                 <TouchableOpacity
                   key={cat.id}
@@ -613,6 +592,8 @@ export default function HomeScreen({ navigation, user }: any) {
                   onPress={() => {
                     if (cat.id === 'More') {
                       navigation.navigate('AllCategories', { categories: categoryItems });
+                    } else if (isSelected) {
+                      setSelectedCategory('All');
                     } else {
                       setSelectedCategory(cat.name);
                     }
@@ -629,14 +610,40 @@ export default function HomeScreen({ navigation, user }: any) {
               );
             })
           )}
-
         </ScrollView>
 
+        {/* Active Category Filter Banner */}
+        {selectedCategory !== 'All' && (
+          <View style={styles.activeCategoryBar}>
+            <View style={styles.activeCategoryInfo}>
+              <Icon source="filter-check" size={16} color="#0066FF" />
+              <Text style={styles.activeCategoryText} numberOfLines={1}>
+                Category: <Text style={styles.activeCategoryBold}>{selectedCategory}</Text>
+              </Text>
+              <View style={styles.activeCategoryCountPill}>
+                <Text style={styles.activeCategoryCountText}>
+                  {filteredParts.length} {filteredParts.length === 1 ? 'part' : 'parts'}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.clearCategoryPillBtn}
+              onPress={() => setSelectedCategory('All')}
+              activeOpacity={0.7}
+            >
+              <Icon source="close-circle" size={15} color="#DC2626" />
+              <Text style={styles.clearCategoryPillBtnText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Latest Parts Section Header */}
-        <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-          <Text style={styles.sectionTitle}>Latest Parts</Text>
+        <View style={[styles.sectionHeader, { marginTop: selectedCategory !== 'All' ? 12 : 20 }]}>
+          <Text style={styles.sectionTitle}>
+            {selectedCategory !== 'All' ? `${selectedCategory} Parts` : 'Latest Parts'}
+          </Text>
           <TouchableOpacity 
-            onPress={() => navigation.navigate('Search')}
+            onPress={() => navigation.navigate('Search', { initialCategory: selectedCategory !== 'All' ? selectedCategory : undefined })}
           >
             <Text style={styles.seeAllText}>See all</Text>
           </TouchableOpacity>
@@ -649,9 +656,17 @@ export default function HomeScreen({ navigation, user }: any) {
           </View>
         ) : filteredParts.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Icon source="package-variant" size={48} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>No spare parts found</Text>
-            <Text style={styles.emptySubtitle}>Try resetting your search query or location filter.</Text>
+            <Icon source="car-search" size={48} color="#94A3B8" />
+            <Text style={styles.emptyTitle}>
+              {selectedCategory !== 'All' 
+                ? `No parts found in "${selectedCategory}"`
+                : 'No spare parts found'}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {selectedCategory !== 'All'
+                ? 'Try choosing another category or clearing your filter to view all available spare parts.'
+                : 'Try resetting your search query or location filter.'}
+            </Text>
             <Button 
               mode="contained" 
               buttonColor="#0066FF"
@@ -664,7 +679,7 @@ export default function HomeScreen({ navigation, user }: any) {
               }}
               style={{ marginTop: 14 }}
             >
-              Reset Filters
+              Show All Parts
             </Button>
           </View>
         ) : (
@@ -684,7 +699,7 @@ export default function HomeScreen({ navigation, user }: any) {
           </View>
         )}
 
-        {/* Promotional Bottom Banners */}
+        {/* Promotional Bottom Banners (Strict 16:9 Aspect Ratio) */}
         {promoBanners.length > 0 ? (
           promoBanners.map((banner, index) => (
             <TouchableOpacity 
@@ -695,8 +710,11 @@ export default function HomeScreen({ navigation, user }: any) {
                 borderRadius: 14,
                 overflow: 'hidden',
                 backgroundColor: '#08142C',
+                aspectRatio: 16 / 9,
+                position: 'relative',
               }}
               activeOpacity={banner.targetLink ? 0.85 : 1}
+              delayPressIn={0}
               onPress={() => {
                 if (banner.targetLink) {
                   Linking.openURL(banner.targetLink).catch(err => console.warn('Could not open link:', err));
@@ -704,10 +722,10 @@ export default function HomeScreen({ navigation, user }: any) {
               }}
             >
               {banner.imageUrl ? (
-                <View>
+                <View style={{ width: '100%', height: '100%', position: 'relative' }}>
                   <Image 
                     source={{ uri: banner.imageUrl }}
-                    style={{ width: '100%', height: 140 }}
+                    style={{ width: '100%', height: '100%' }}
                     resizeMode="cover"
                   />
                   {banner.tag ? (
@@ -715,15 +733,15 @@ export default function HomeScreen({ navigation, user }: any) {
                       <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
                     </View>
                   ) : null}
-                  {(banner.title || banner.subtitle) ? (
-                    <View style={{ padding: 14, backgroundColor: '#08142C' }}>
-                      {banner.title ? <Text style={styles.bannerTitle}>{banner.title}</Text> : null}
+                  {(banner.title && banner.title.toLowerCase() !== 'sale' && banner.title.toLowerCase() !== 'banner') ? (
+                    <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12, backgroundColor: 'rgba(8, 20, 44, 0.8)' }}>
+                      <Text style={styles.bannerTitle}>{banner.title}</Text>
                       {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
                     </View>
                   ) : null}
                 </View>
               ) : (
-                <View style={{ padding: 16 }}>
+                <View style={{ flex: 1, padding: 16, justifyContent: 'center' }}>
                   {banner.tag ? (
                     <View style={{ backgroundColor: '#10B981', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginBottom: 8 }}>
                       <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
@@ -742,20 +760,35 @@ export default function HomeScreen({ navigation, user }: any) {
             borderRadius: 14,
             overflow: 'hidden',
             backgroundColor: '#08142C',
+            aspectRatio: 16 / 9,
+            position: 'relative',
           }}>
             <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=600' }}
-              style={{ width: '100%', height: 140 }}
+              source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800' }}
+              style={{ width: '100%', height: '100%' }}
               resizeMode="cover"
             />
-            <View style={{ padding: 16, backgroundColor: '#08142C' }}>
-              <Text style={styles.bannerTitle}>Sell Your Parts</Text>
-              <Text style={styles.bannerSubtitle}>
-                Quickly list and reach thousands of buyers across India
-              </Text>
+            <View style={{ 
+              position: 'absolute', 
+              bottom: 0, 
+              left: 0, 
+              right: 0, 
+              padding: 14, 
+              backgroundColor: 'rgba(8, 20, 44, 0.85)',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={styles.bannerTitle}>Sell Your Parts</Text>
+                <Text style={styles.bannerSubtitle} numberOfLines={1}>
+                  Quickly list & reach thousands of buyers
+                </Text>
+              </View>
               <TouchableOpacity 
-                style={styles.bannerBtn}
+                style={[styles.bannerBtn, { alignSelf: 'center', marginTop: 0 }]}
                 activeOpacity={0.85}
+                delayPressIn={0}
                 onPress={() => {
                   if (!user) {
                     navigation.navigate('Auth');
@@ -1439,5 +1472,60 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
     marginBottom: 8,
+  },
+  activeCategoryBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginTop: 8,
+  },
+  activeCategoryInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  activeCategoryText: {
+    fontSize: 13,
+    color: '#1E40AF',
+    fontWeight: '500',
+  },
+  activeCategoryBold: {
+    fontWeight: '800',
+    color: '#1E3A8A',
+  },
+  activeCategoryCountPill: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 4,
+  },
+  activeCategoryCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1D4ED8',
+  },
+  clearCategoryPillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEE2E2',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  clearCategoryPillBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#DC2626',
   },
 });

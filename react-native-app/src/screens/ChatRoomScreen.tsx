@@ -247,7 +247,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
     const cleanText = textToSend ? textToSend.trim() : '';
     if (!cleanText && !imageUrl) return;
     if (!chatId || !activeUser) {
-      Alert.alert('Authentication', 'Please sign in to send messages.');
+      Alert.alert('Sign In Required', 'Please sign in to message this seller.');
       return;
     }
 
@@ -341,7 +341,7 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, status: 'failed' } : m))
       );
-      Alert.alert('Send Error', 'Failed to send message. Please tap retry.');
+      Alert.alert('Message Not Sent', 'Could not send your message. Please check your internet and tap to retry.');
     } finally {
       setIsSending(false);
     }

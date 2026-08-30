@@ -18,9 +18,28 @@ import SplashScreen from '../screens/SplashScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import SearchScreen from '../screens/SearchScreen';
 import AllCategoriesScreen from '../screens/AllCategoriesScreen';
+import MyAdsScreen from '../screens/MyAdsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+function CustomSellTabBarButton({ onPress, accessibilityState }: any) {
+  const focused = accessibilityState?.selected;
+  return (
+    <TouchableOpacity
+      activeOpacity={0.82}
+      onPress={onPress}
+      style={tabStyles.customSellButtonTouch}
+    >
+      <View style={[tabStyles.sellButtonCircle, focused && tabStyles.sellButtonCircleFocused]}>
+        <Icon source="plus" color="#FFFFFF" size={26} />
+      </View>
+      <Text style={[tabStyles.sellButtonLabel, { color: focused ? '#0066FF' : '#64748B' }]}>
+        Sell
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 function TabNavigator({ user }: { user: any }) {
   const insets = useSafeAreaInsets();
@@ -81,18 +100,7 @@ function TabNavigator({ user }: { user: any }) {
         name="SellTab" 
         options={{ 
           title: 'Sell',
-          tabBarLabel: ({ focused }) => (
-            <Text style={{ fontSize: 11, fontWeight: '700', color: focused ? '#0066FF' : '#64748B', marginTop: -2 }}>
-              Sell
-            </Text>
-          ),
-          tabBarIcon: () => (
-            <View style={tabStyles.sellButtonContainer}>
-              <View style={tabStyles.sellButtonCircle}>
-                <Icon source="plus" color="#FFFFFF" size={26} />
-              </View>
-            </View>
-          )
+          tabBarButton: (props) => <CustomSellTabBarButton {...props} />,
         }}
       >
         {(props) => <SellPartScreen {...props} user={user} />}
@@ -107,7 +115,7 @@ function TabNavigator({ user }: { user: any }) {
           )
         }}
       >
-        {(props) => <ProfileScreen {...props} user={user} initialTab="my_listings" />}
+        {(props) => <MyAdsScreen {...props} user={user} />}
       </Tab.Screen>
 
       <Tab.Screen 
@@ -126,15 +134,16 @@ function TabNavigator({ user }: { user: any }) {
 }
 
 const tabStyles = StyleSheet.create({
-  sellButtonContainer: {
-    top: -14,
+  customSellButtonTouch: {
+    top: -16,
     justifyContent: 'center',
     alignItems: 'center',
+    flex: 1,
   },
   sellButtonCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#0066FF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -145,6 +154,15 @@ const tabStyles = StyleSheet.create({
     elevation: 8,
     borderWidth: 3,
     borderColor: '#FFFFFF',
+  },
+  sellButtonCircleFocused: {
+    backgroundColor: '#0052CC',
+    transform: [{ scale: 1.05 }],
+  },
+  sellButtonLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
   },
 });
 
@@ -257,6 +275,13 @@ export default function AppNavigator({ user }: { user: any }) {
         component={AllCategoriesScreen}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen 
+        name="MyAds" 
+        options={{ headerShown: false }}
+      >
+        {(props) => <MyAdsScreen {...props} user={user} />}
+      </Stack.Screen>
     </Stack.Navigator>
 
   );

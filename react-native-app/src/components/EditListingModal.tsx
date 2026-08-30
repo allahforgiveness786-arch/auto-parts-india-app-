@@ -61,12 +61,12 @@ export const EditListingModal: React.FC<EditListingModalProps> = ({
 
   const handleSave = async () => {
     if (!title.trim() || !price.trim() || !carBrand.trim()) {
-      Alert.alert('Validation Error', 'Title, Price, and Brand are required fields.');
+      Alert.alert('Missing Details', 'Please provide a title, price, and vehicle brand.');
       return;
     }
 
     if (!listing?.id) {
-      Alert.alert('Error', 'Listing ID not found.');
+      Alert.alert('Notice', 'Unable to locate this listing.');
       return;
     }
 
@@ -79,7 +79,7 @@ export const EditListingModal: React.FC<EditListingModalProps> = ({
 
       const db = getFirebaseFirestore();
       if (!db || typeof db.collection !== 'function') {
-        throw new Error('Database is not available. Please try again.');
+        throw new Error('Unable to connect. Please try again.');
       }
 
       const listingRef = db.collection('spareParts').doc(listing.id);
@@ -97,12 +97,12 @@ export const EditListingModal: React.FC<EditListingModalProps> = ({
         updatedAt: Date.now(),
       });
 
-      Alert.alert('Success', 'Listing updated successfully!');
+      Alert.alert('Saved', 'Listing updated successfully!');
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
       console.warn('[EditListingModal] Update error:', err);
-      Alert.alert('Update Failed', err.message || 'Failed to update listing.');
+      Alert.alert('Unable to Update', 'Could not update your listing right now. Please try again.');
     } finally {
       setSaving(false);
     }
