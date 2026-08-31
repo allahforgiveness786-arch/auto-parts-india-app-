@@ -83,6 +83,8 @@ jobs:
       - name: Pre-bundle JS for Release
         run: |
           cd react-native-app
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/res
           npx @react-native-community/cli bundle \
             --platform android \
             --dev false \

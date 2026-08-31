@@ -44,7 +44,7 @@ try {
         
         try {
           const notifee = require('@notifee/react-native').default;
-          notifee.onBackgroundEvent(async ({ type, detail }: any) => {
+          notifee.onBackgroundEvent(async ({ type, detail }) => {
             // Background press is handled when the app opens natively, 
             // but we must register the handler so it doesn't crash
             console.log('[Notifee] Background event', type);
