@@ -489,11 +489,11 @@ export default function ChatRoomWindow({ chat, currentUser, onClose, onOpenUserP
                           <span>{t("retry")}</span>
                         </button>
                       ) : msg.status === "read" ? (
-                        <CheckCheck size={12} className="text-sky-500 font-black" title="Seen" />
+                        <CheckCheck size={12} className="text-sky-500 font-black" />
                       ) : msg.status === "delivered" ? (
-                        <CheckCheck size={12} className="text-slate-400 font-black" title="Delivered" />
+                        <CheckCheck size={12} className="text-slate-400 font-black" />
                       ) : (
-                        <Check size={12} className="text-slate-400 font-black" title="Sent" />
+                        <Check size={12} className="text-slate-400 font-black" />
                       )}
                     </span>
                   )}

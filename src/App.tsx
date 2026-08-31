@@ -64,7 +64,8 @@ export type NavScreen =
   | { type: "edit_part"; part: SparePart }
   | { type: "user_profile"; userId: string; userName?: string }
   | { type: "admin_dashboard" }
-  | { type: "notifications" };
+  | { type: "notifications" }
+  | { type: "auth" };
 
 export function screenToPath(screen: NavScreen): string {
   if (!screen) return "/";
@@ -89,6 +90,8 @@ export function screenToPath(screen: NavScreen): string {
       return "/admin";
     case "notifications":
       return "/notifications";
+    case "auth":
+      return "/auth";
     default:
       return "/";
   }

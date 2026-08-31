@@ -83,6 +83,8 @@ export const translations = {
     noActiveConversations: "No active conversations yet",
     noActiveConversationsSub: "When you contact a spare part seller or a buyer messages your ad, your chats will appear here.",
     failedToSyncChats: "Failed to Sync Chats",
+    retry: "Retry",
+    typing: "is typing...",
   },
   ta: {
     searchPlaceholder: "உதிரிபாகங்களைத் தேடுங்கள்...",
@@ -166,6 +168,8 @@ export const translations = {
     noActiveConversations: "செயலில் உள்ள உரையாடல்கள் எதுவும் இல்லை",
     noActiveConversationsSub: "நீங்கள் விற்பனையாளரைத் தொடர்பு கொள்ளும்போது உங்கள் சாட்கள் இங்கே தோன்றும்.",
     failedToSyncChats: "சாட்களை ஒத்திசைக்க முடியவில்லை",
+    retry: "மீண்டும் முயற்சிக்க",
+    typing: "டைப் செய்கிறார்...",
   },
   hi: {
     searchPlaceholder: "स्पेयर承 Parts खोजें...",
@@ -249,7 +253,9 @@ export const translations = {
     noActiveConversations: "अभी तक कोई सक्रिय बातचीत नहीं",
     noActiveConversationsSub: "जब आप विक्रेता से संपर्क करेंगे, तो आपकी बातचीत यहां दिखाई देगी।",
     failedToSyncChats: "चैट सिंक करने में विफल",
-  }
+    retry: "पुनः प्रयास",
+    typing: "टाइप कर रहे हैं...",
+  },
 };
 
 export const getQuickReplies = (lang: Language): string[] => {

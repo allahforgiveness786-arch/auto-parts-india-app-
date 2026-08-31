@@ -1161,7 +1161,7 @@ export default function ProfileScreen({
                           >
                             {currentUser.name || editName || "User"}
                           </h3>
-                          <ShieldCheck size={13} className="text-emerald-600 shrink-0" title="Verified Member" />
+                          <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
                           <button
                             type="button"
                             onClick={() => setIsEditingNameInline(true)}

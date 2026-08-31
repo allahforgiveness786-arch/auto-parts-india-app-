@@ -1,28 +1,24 @@
 const path = require('path');
-
-let getDefaultConfig, mergeConfig;
-try {
-  const RNMetro = require('@react-native/metro-config');
-  if (typeof RNMetro.setFrameworkDefaults !== 'function') {
-    RNMetro.setFrameworkDefaults = (cfg) => cfg;
-  }
-  ({ getDefaultConfig, mergeConfig } = RNMetro);
-} catch (e) {
-  try {
-    ({ getDefaultConfig, mergeConfig } = require('./react-native-app/node_modules/@react-native/metro-config'));
-  } catch (err) {
-    getDefaultConfig = () => ({ resolver: { assetExts: [], sourceExts: [] } });
-    mergeConfig = (a, b) => ({ ...a, ...b });
-  }
-}
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
 const appDir = path.resolve(__dirname, 'react-native-app');
-const defaultConfig = getDefaultConfig ? getDefaultConfig(appDir) : {};
+const rootDir = __dirname;
+const defaultConfig = getDefaultConfig(appDir);
 
 const config = {
   projectRoot: appDir,
-  watchFolders: [appDir],
+  watchFolders: [
+    rootDir,
+    appDir,
+    path.resolve(rootDir, 'node_modules'),
+  ],
+  resolver: {
+    nodeModulesPaths: [
+      path.resolve(appDir, 'node_modules'),
+      path.resolve(rootDir, 'node_modules'),
+    ],
+    unstable_enablePackageExports: false,
+  },
 };
 
-module.exports = mergeConfig ? mergeConfig(defaultConfig, config) : config;
-
+module.exports = mergeConfig(defaultConfig, config);
