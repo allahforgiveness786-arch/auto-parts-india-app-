@@ -539,23 +539,23 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
     setErrorMessage(null);
 
     // Robust auto-defaults for seamless posting
-    const finalImagesToUse = finalImagesToUse.length > 0 ? finalImagesToUse : [
+    const resolvedImagesToUse = finalImagesToUse.length > 0 ? finalImagesToUse : [
       'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800'
     ];
-    const finalBrand = finalBrand.trim() || 'Universal';
-    const finalModel = finalModel.trim() || 'All Models';
-    const finalCategory = finalCategory.trim() || 'Engine & Mechanical';
-    const finalPartName = finalPartName.trim() || 'Genuine Spare Part';
+    const resolvedBrand = finalBrand.trim() || 'Universal';
+    const resolvedModel = finalModel.trim() || 'All Models';
+    const resolvedCategory = finalCategory.trim() || 'Engine & Mechanical';
+    const resolvedPartName = finalPartName.trim() || 'Genuine Spare Part';
 
     const cleanPriceDigits = String(price).replace(/[^0-9.]/g, '');
     const priceNum = parseFloat(cleanPriceDigits) || 1500;
 
-    const finalTitle = finalTitle || '${finalBrand} ${finalModel} - ${finalPartName}';
-    const finalDesc = finalDesc || 'High quality ${finalPartName} for ${finalBrand} ${finalModel} in excellent working condition.';
-    const finalState = finalState.trim() || 'Tamil Nadu';
-    const finalDistrict = finalDistrict.trim() || 'Chennai';
-    const finalContactName = finalContactName || 'Auto Parts Seller';
-    const finalContactPhone = finalContactPhone || '9876543210';
+    const resolvedTitle = title || `${resolvedBrand} ${resolvedModel} - ${resolvedPartName}`;
+    const resolvedDesc = description || `High quality ${resolvedPartName} for ${resolvedBrand} ${resolvedModel} in excellent working condition.`;
+    const resolvedState = finalState.trim() || 'Tamil Nadu';
+    const resolvedDistrict = finalDistrict.trim() || 'Chennai';
+    const resolvedContactName = contactName || 'Auto Parts Seller';
+    const resolvedContactPhone = contactPhone || '9876543210';
 
     if (isSubmitting) return;
 
@@ -565,7 +565,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
     try {
       // 1. Fast parallel batch upload for all images at once
       const finalImageUrls = await uploadMultipleImagesToCloudinary(
-        finalImagesToUse,
+        resolvedImagesToUse,
         'spare_parts',
         (completed, total) => {
           setUploadProgress(`Uploading photos (${completed}/${total})...`);
@@ -577,47 +577,47 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
       let finalLat = lat;
       let finalLng = lng;
       if (finalLat === undefined || finalLng === undefined || finalLat === 0 || finalLng === 0) {
-        const approx = getApproxCoordinates(finalState, finalDistrict);
+        const approx = getApproxCoordinates(resolvedState, resolvedDistrict);
         finalLat = approx.lat;
         finalLng = approx.lng;
       }
 
       const readableLoc = selectedArea.trim()
-        ? `${selectedArea.trim()}, ${finalDistrict}`
-        : `${finalDistrict}, ${finalState}`;
+        ? `${selectedArea.trim()}, ${resolvedDistrict}`
+        : `${resolvedDistrict}, ${resolvedState}`;
 
       const listingData = {
-        title: finalTitle,
-        description: finalDesc,
+        title: resolvedTitle,
+        description: resolvedDesc,
         price: priceNum,
-        brand: finalBrand,
-        finalBrand,
-        model: finalModel,
-        finalModel,
+        brand: resolvedBrand,
+        finalBrand: resolvedBrand,
+        model: resolvedModel,
+        finalModel: resolvedModel,
         carVariant: carVariant.trim() || null,
-        finalCategory,
-        finalPartName,
+        finalCategory: resolvedCategory,
+        finalPartName: resolvedPartName,
         condition,
         location: readableLoc,
-        state: finalState,
-        district: finalDistrict,
+        state: resolvedState,
+        district: resolvedDistrict,
         area: selectedArea.trim() || null,
         lat: finalLat || null,
         lng: finalLng || null,
         latitude: finalLat || null,
         longitude: finalLng || null,
-        contactName: finalContactName,
-        contactPhone: finalContactPhone,
-        imageUrl: finalImageUrls[0] || finalImagesToUse[0] || '',
-        imageUrls: finalImageUrls.length > 0 ? finalImageUrls : finalImagesToUse,
-        images: finalImageUrls.length > 0 ? finalImageUrls : finalImagesToUse,
+        contactName: resolvedContactName,
+        contactPhone: resolvedContactPhone,
+        imageUrl: finalImageUrls[0] || resolvedImagesToUse[0] || '',
+        imageUrls: finalImageUrls.length > 0 ? finalImageUrls : resolvedImagesToUse,
+        images: finalImageUrls.length > 0 ? finalImageUrls : resolvedImagesToUse,
         sellerId: activeUser?.uid || 'guest-seller',
         ownerId: activeUser?.uid || 'guest-seller',
         sellerEmail: activeUser?.email || '',
         sellerPhoto: activeUser?.photoURL || activeUser?.profilePhoto || '',
         sellerPhotoURL: activeUser?.photoURL || activeUser?.profilePhoto || '',
         sellerAvatar: activeUser?.photoURL || activeUser?.profilePhoto || '',
-        sellerName: finalContactName || activeUser?.displayName || 'Auto Seller',
+        sellerName: resolvedContactName || activeUser?.displayName || 'Auto Seller',
         sold: false,
         status: 'active',
         approved: true,

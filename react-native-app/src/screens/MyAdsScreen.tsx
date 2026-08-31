@@ -57,9 +57,6 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
     setLoading(true);
     let unsubscribe = () => {};
 
-    setLoading(true);
-    let unsubscribe = () => {};
-
     try {
       const db = getFirebaseFirestore();
       if (db && typeof db.collection === 'function') {

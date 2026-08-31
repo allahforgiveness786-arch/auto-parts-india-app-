@@ -10,12 +10,11 @@ const config = {
     sourceExts: [...sourceExts, 'cjs', 'mjs'],
     nodeModulesPaths: [
       path.resolve(__dirname, 'node_modules'),
-      path.resolve(__dirname, '../node_modules'),
     ],
     unstable_enablePackageExports: false,
   },
   watchFolders: [
-    path.resolve(__dirname, '../node_modules'),
+    path.resolve(__dirname, 'node_modules'),
   ],
 };
 
