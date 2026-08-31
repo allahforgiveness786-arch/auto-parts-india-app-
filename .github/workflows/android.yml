@@ -76,6 +76,8 @@ jobs:
           cd react-native-app
           find node_modules/@react-native-firebase -name CMakeLists.txt -exec sed -i 's/target_compile_reactnative_options(\(.*\) PRIVATE)/target_compile_options(\1 PRIVATE -fexceptions -frtti -std=c++20 -Wall)/g' {} + || true
           find node_modules/react-native-svg -name "RNSVGLayoutableShadowNode.cpp" -exec sed -i 's/yoga::StyleSizeLength/yoga::StyleLength/g' {} + || true
+          find node_modules/@react-navigation/native-stack -name "*.js" -exec sed -i "s/'usesNewAndroidHeaderHeightImplementation' in compatibilityFlags/compatibilityFlags \&\& 'usesNewAndroidHeaderHeightImplementation' in compatibilityFlags/g" {} + || true
+          find node_modules/@react-navigation/native-stack -name "*.js" -exec sed -i "s/in compatibilityFlags/in (compatibilityFlags || {})/g" {} + || true
 
       - name: Pre-bundle JS for Release
         run: |

@@ -1,7 +1,26 @@
 import 'react-native-gesture-handler';
-import { enableScreens } from 'react-native-screens';
+import * as RNScreens from 'react-native-screens';
 
-enableScreens(true);
+// Polyfill compatibilityFlags for react-navigation 7 compatibility with react-native-screens
+if (RNScreens) {
+  if (!RNScreens.compatibilityFlags || typeof RNScreens.compatibilityFlags !== 'object') {
+    const flags = {
+      usesNewAndroidHeaderHeightImplementation: false,
+      isNewBackTitleImplementation: true,
+      usesHeaderFlexboxImplementation: true,
+      usesStableTabsApi: true,
+    };
+    try {
+      RNScreens.compatibilityFlags = flags;
+    } catch (_) {}
+    try {
+      global.compatibilityFlags = flags;
+    } catch (_) {}
+  }
+  if (typeof RNScreens.enableScreens === 'function') {
+    RNScreens.enableScreens(true);
+  }
+}
 
 import { AppRegistry, LogBox } from 'react-native';
 import App from './App';
