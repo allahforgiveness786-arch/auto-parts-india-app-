@@ -20,7 +20,10 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
   const [editLocation, setEditLocation] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const [isPopupModalVisible, setIsPopupModalVisible] = useState(false);
+  const isAdmin = 
+    dbUserDoc?.role === 'admin' || 
+    userEmail?.toLowerCase() === 'www.allahforgiveness877@gmail.com' ||
+    userEmail?.toLowerCase().includes('admin');
 
   useEffect(() => {
     let unsubscribeAuth = () => {};
@@ -154,6 +157,28 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
 
         {/* Menu Options List */}
         <View style={styles.menuContainer}>
+          {/* Admin Panel & Version Management Entry */}
+          <TouchableOpacity 
+            style={[styles.menuItem, styles.adminMenuItem]} 
+            onPress={() => navigation.navigate('AdminTab')}
+          >
+            <View style={[styles.menuIconBox, { backgroundColor: '#FEF3C7' }]}>
+              <Icon source="shield-crown" size={22} color="#D97706" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.menuItemText, { fontWeight: '700', color: '#B45309' }]}>Admin Panel</Text>
+                <View style={styles.adminBadge}>
+                  <Text style={styles.adminBadgeText}>CONTROL</Text>
+                </View>
+              </View>
+              <Text style={styles.adminSubText}>Version Management, CMS, Users & Ads</Text>
+            </View>
+            <Icon source="chevron-right" size={20} color="#D97706" />
+          </TouchableOpacity>
+
+          <Divider style={styles.divider} />
+
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyAdsTab')}>
             <View style={[styles.menuIconBox, { backgroundColor: '#EFF6FF' }]}>
               <Icon source="format-list-bulleted-square" size={20} color="#0066FF" />
@@ -308,6 +333,10 @@ const styles = StyleSheet.create({
   
   menuContainer: { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', overflow: 'hidden' },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, gap: 12 },
+  adminMenuItem: { backgroundColor: '#FFFDF7' },
+  adminBadge: { backgroundColor: '#FDE68A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  adminBadgeText: { fontSize: 10, fontWeight: '800', color: '#92400E' },
+  adminSubText: { fontSize: 12, color: '#94A3B8', marginTop: 2 },
   menuIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   menuItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#0F172A' },
   divider: { backgroundColor: '#F1F5F9', height: 1, marginLeft: 64 },

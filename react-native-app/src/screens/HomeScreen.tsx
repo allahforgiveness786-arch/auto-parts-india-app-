@@ -286,14 +286,14 @@ export default function HomeScreen({ navigation, route, user }: any) {
     ]).start();
   }, []);
 
-  // 6 Categories matching user mockup
+  // 6 Categories matching modern auto marketplace app
   const categoryGridItems = [
-    { id: 'Engine & Parts', name: 'Engine & Parts', icon: 'engine', iconColor: '#0F172A' },
-    { id: 'Body Parts', name: 'Body Parts', icon: 'car-door', iconColor: '#0F172A' },
-    { id: 'Electricals', name: 'Electricals', icon: 'lightning-bolt', iconColor: '#F59E0B' },
-    { id: 'Suspension', name: 'Suspension', icon: 'car-brake-alert', iconColor: '#0F172A' },
-    { id: 'Exhaust', name: 'Exhaust', icon: 'needle', iconColor: '#0F172A' },
-    { id: 'More', name: 'More', icon: 'apps', iconColor: '#1565FF' },
+    { id: 'Engine & Parts', name: 'Engine & Parts', icon: 'engine', iconBg: '#FEE2E2', iconColor: '#DC2626' },
+    { id: 'Body Parts', name: 'Body Parts', icon: 'car-door', iconBg: '#E0E7FF', iconColor: '#4338CA' },
+    { id: 'Electricals', name: 'Electricals', icon: 'lightning-bolt', iconBg: '#FEF3C7', iconColor: '#D97706' },
+    { id: 'Suspension', name: 'Suspension', icon: 'car-brake-alert', iconBg: '#ECFDF5', iconColor: '#059669' },
+    { id: 'Brakes & Steering', name: 'Brakes & Steering', icon: 'disc-alert', iconBg: '#F3E8FF', iconColor: '#7C3AED' },
+    { id: 'More', name: 'More', icon: 'apps', iconBg: '#EFF6FF', iconColor: '#1565FF' },
   ];
 
   // Brand items for horizontal brand selector
@@ -450,8 +450,17 @@ export default function HomeScreen({ navigation, route, user }: any) {
             <Icon source="chevron-down" size={15} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {/* Right Controls: Language & Notification */}
+          {/* Right Controls: Admin, Language & Notification */}
           <View style={styles.headerRightGroup}>
+            <TouchableOpacity 
+              style={styles.adminHeaderBtn} 
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('AdminTab')}
+            >
+              <Icon source="shield-account" color="#FFFFFF" size={18} />
+              <Text style={styles.adminHeaderBtnText}>Admin</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity 
               style={styles.langPill} 
               activeOpacity={0.8}
@@ -598,13 +607,11 @@ export default function HomeScreen({ navigation, route, user }: any) {
                   }
                 }}
               >
-                <View style={styles.catVisualBox}>
+                <View style={[styles.catVisualBox, { backgroundColor: isSelected ? '#DBEAFE' : (cat.iconBg || '#F1F5F9') }]}>
                   {isMore ? (
-                    <View style={styles.moreIconBox}>
-                      <Icon source="apps" size={32} color="#1565FF" />
-                    </View>
+                    <Icon source="apps" size={28} color="#1565FF" />
                   ) : (
-                    <Icon source={cat.icon} size={34} color={isSelected ? '#1565FF' : (cat.iconColor || '#0F172A')} />
+                    <Icon source={cat.icon} size={28} color={isSelected ? '#1565FF' : (cat.iconColor || '#0F172A')} />
                   )}
                 </View>
                 <Text 
@@ -920,7 +927,23 @@ const styles = StyleSheet.create({
   headerRightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+  },
+  adminHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F172A',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 14,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#FDE047',
+  },
+  adminHeaderBtnText: {
+    color: '#FDE047',
+    fontSize: 11,
+    fontWeight: '800',
   },
   langPill: {
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
@@ -1119,6 +1142,7 @@ const styles = StyleSheet.create({
   catVisualBox: {
     width: 48,
     height: 48,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,

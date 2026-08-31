@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Image } from 'react-native';
 
 interface BrandLogoProps {
   size?: number | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -76,14 +76,52 @@ export const ModernDeltaLogoIcon: React.FC<{ size?: number }> = ({ size = 48 }) 
   );
 };
 
+// Real High-Definition Car Brand Logos with safe fallback
+const BRAND_LOGO_URLS: Record<string, string> = {
+  'maruti suzuki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2.svg/300px-Suzuki_logo_2.svg.png',
+  'maruti': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2.svg/300px-Suzuki_logo_2.svg.png',
+  'suzuki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2.svg/300px-Suzuki_logo_2.svg.png',
+  'hyundai': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/320px-Hyundai_Motor_Company_logo.svg.png',
+  'tata': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/320px-Tata_logo.svg.png',
+  'mahindra': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Mahindra_Auto_logo.svg/320px-Mahindra_Auto_logo.svg.png',
+  'toyota': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Toyota.svg/320px-Toyota.svg.png',
+  'honda': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Honda_logo.svg/320px-Honda_logo.svg.png',
+  'ford': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Ford_Motor_Company_Logo.svg/320px-Ford_Motor_Company_Logo.svg.png',
+  'volkswagen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/320px-Volkswagen_logo_2019.svg.png',
+  'kia': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/KIA_logo2.svg/320px-KIA_logo2.svg.png',
+  'renault': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Renault_2021.svg/320px-Renault_2021.svg.png',
+  'bmw': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/320px-BMW.svg.png',
+  'audi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Audi-Logo_2016.svg/320px-Audi-Logo_2016.svg.png',
+  'mercedes': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Mercedes-Logo.svg/320px-Mercedes-Logo.svg.png',
+  'skoda': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Skoda_Auto_logo_%282023%29.svg/320px-Skoda_Auto_logo_%282023%29.svg.png',
+  'nissan': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Nissan_2020_logo.svg/320px-Nissan_2020_logo.svg.png',
+  'chevrolet': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Chevrolet-logo.png/320px-Chevrolet-logo.png',
+};
+
 export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: boolean }> = ({ brand, size = 32, active = false }) => {
-  const b = (brand || '').toLowerCase();
-  
-  // Custom styled brand emblem representations
+  const b = (brand || '').toLowerCase().trim();
+  const [hasError, setHasError] = React.useState(false);
+
+  const logoUrl = Object.entries(BRAND_LOGO_URLS).find(([key]) => b.includes(key))?.[1];
+
+  if (logoUrl && !hasError) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: size / 2, padding: 3, borderWidth: 1, borderColor: active ? '#1565FF' : '#E2E8F0' }}>
+        <Image
+          source={{ uri: logoUrl }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="contain"
+          onError={() => setHasError(true)}
+        />
+      </View>
+    );
+  }
+
+  // Custom styled brand emblem representations fallback
   if (b.includes('maruti') || b.includes('suzuki')) {
     return (
-      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: size * 0.7, fontWeight: '900', color: '#1E293B', fontStyle: 'italic', transform: [{ skewX: '-12deg' }] }}>
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: size * 0.6, fontWeight: '900', color: '#DC2626', fontStyle: 'italic', transform: [{ skewX: '-12deg' }] }}>
           S
         </Text>
       </View>
@@ -91,9 +129,9 @@ export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: bo
   }
   if (b.includes('hyundai')) {
     return (
-      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ width: size * 0.9, height: size * 0.65, borderRadius: size * 0.35, borderWidth: 2, borderColor: '#0B2050', justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: size * 0.5, fontWeight: '900', color: '#0B2050', fontStyle: 'italic', transform: [{ skewX: '-15deg' }] }}>
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.8, height: size * 0.55, borderRadius: size * 0.28, borderWidth: 2, borderColor: '#002C6C', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: size * 0.45, fontWeight: '900', color: '#002C6C', fontStyle: 'italic', transform: [{ skewX: '-15deg' }] }}>
             H
           </Text>
         </View>
@@ -102,54 +140,37 @@ export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: bo
   }
   if (b.includes('tata')) {
     return (
-      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ width: size * 0.85, height: size * 0.85, borderRadius: size * 0.425, backgroundColor: '#0052CC', justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: size * 0.52, fontWeight: '900', color: '#FFFFFF' }}>
-            T
-          </Text>
-        </View>
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#0052CC', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: size * 0.52, fontWeight: '900', color: '#FFFFFF' }}>
+          T
+        </Text>
       </View>
     );
   }
   if (b.includes('mahindra')) {
     return (
-      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: -2 }}>
-          <Text style={{ fontSize: size * 0.65, fontWeight: '900', color: '#E11D48', letterSpacing: -3 }}>
-            ∞
-          </Text>
-        </View>
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: size * 0.6, fontWeight: '900', color: '#E11D48' }}>
+          M
+        </Text>
       </View>
     );
   }
   if (b.includes('toyota')) {
     return (
-      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ width: size * 0.9, height: size * 0.68, borderRadius: size * 0.35, borderWidth: 2.2, borderColor: '#0F172A', justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ width: size * 0.45, height: size * 0.45, borderRadius: size * 0.22, borderWidth: 1.8, borderColor: '#0F172A' }} />
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.85, height: size * 0.6, borderRadius: size * 0.3, borderWidth: 2, borderColor: '#EB0A1E', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: size * 0.45, fontWeight: '900', color: '#EB0A1E' }}>T</Text>
         </View>
       </View>
     );
   }
   if (b.includes('honda')) {
     return (
-      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ width: size * 0.8, height: size * 0.8, borderRadius: 6, borderWidth: 2, borderColor: '#DC2626', justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: size * 0.55, fontWeight: '900', color: '#DC2626' }}>
-            H
-          </Text>
-        </View>
-      </View>
-    );
-  }
-  if (b.includes('ford')) {
-    return (
-      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ width: size * 0.95, height: size * 0.55, borderRadius: size * 0.28, backgroundColor: '#1D4ED8', justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: size * 0.35, fontWeight: '900', color: '#FFFFFF', fontStyle: 'italic' }}>
-            Ford
-          </Text>
-        </View>
+      <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: size * 0.6, fontWeight: '900', color: '#DC2626' }}>
+          H
+        </Text>
       </View>
     );
   }
