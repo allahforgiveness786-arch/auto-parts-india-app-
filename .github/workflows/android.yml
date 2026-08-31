@@ -78,6 +78,25 @@ jobs:
           find node_modules/react-native-svg -name "RNSVGLayoutableShadowNode.cpp" -exec sed -i 's/yoga::StyleSizeLength/yoga::StyleLength/g' {} + || true
           find node_modules/@react-navigation/native-stack -name "*.js" -exec sed -i "s/'usesNewAndroidHeaderHeightImplementation' in compatibilityFlags/compatibilityFlags \&\& 'usesNewAndroidHeaderHeightImplementation' in compatibilityFlags/g" {} + || true
           find node_modules/@react-navigation/native-stack -name "*.js" -exec sed -i "s/in compatibilityFlags/in (compatibilityFlags || {})/g" {} + || true
+          node -e "
+          const fs = require('fs');
+          const modPath = 'node_modules/react-native-screens/lib/module/index.js';
+          if (fs.existsSync(modPath)) {
+            let src = fs.readFileSync(modPath, 'utf8');
+            if (!src.includes('ScreenStackItem')) {
+              src += '\nexport const ScreenStackItem = Screen;\nexport const compatibilityFlags = { usesNewAndroidHeaderHeightImplementation: false, isNewBackTitleImplementation: true, usesHeaderFlexboxImplementation: true, usesStableTabsApi: true };\n';
+              fs.writeFileSync(modPath, src);
+            }
+          }
+          const cjsPath = 'node_modules/react-native-screens/lib/commonjs/index.js';
+          if (fs.existsSync(cjsPath)) {
+            let src = fs.readFileSync(cjsPath, 'utf8');
+            if (!src.includes('ScreenStackItem')) {
+              src += '\nexports.ScreenStackItem = exports.Screen;\nexports.compatibilityFlags = { usesNewAndroidHeaderHeightImplementation: false, isNewBackTitleImplementation: true, usesHeaderFlexboxImplementation: true, usesStableTabsApi: true };\n';
+              fs.writeFileSync(cjsPath, src);
+            }
+          }
+          " || true
 
       - name: Pre-bundle JS for Release
         run: |

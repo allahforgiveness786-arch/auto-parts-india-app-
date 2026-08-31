@@ -1,8 +1,13 @@
 import 'react-native-gesture-handler';
 import * as RNScreens from 'react-native-screens';
 
-// Polyfill compatibilityFlags for react-navigation 7 compatibility with react-native-screens
+// Polyfill compatibilityFlags and ScreenStackItem for react-navigation 7 compatibility with react-native-screens
 if (RNScreens) {
+  if (!RNScreens.ScreenStackItem && RNScreens.Screen) {
+    try {
+      RNScreens.ScreenStackItem = RNScreens.Screen;
+    } catch (_) {}
+  }
   if (!RNScreens.compatibilityFlags || typeof RNScreens.compatibilityFlags !== 'object') {
     const flags = {
       usesNewAndroidHeaderHeightImplementation: false,
