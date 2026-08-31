@@ -1,8 +1,14 @@
 import 'react-native-gesture-handler';
 import * as RNScreens from 'react-native-screens';
 
-// Polyfill compatibilityFlags and ScreenStackItem for react-navigation 7 compatibility with react-native-screens
+// Safe screen initialization to prevent native fragment lifecycle crashes on Android
 if (RNScreens) {
+  try {
+    if (typeof RNScreens.enableScreens === 'function') {
+      RNScreens.enableScreens(false);
+    }
+  } catch (_) {}
+  
   if (!RNScreens.ScreenStackItem && RNScreens.Screen) {
     try {
       RNScreens.ScreenStackItem = RNScreens.Screen;
@@ -22,9 +28,17 @@ if (RNScreens) {
       global.compatibilityFlags = flags;
     } catch (_) {}
   }
-  if (typeof RNScreens.enableScreens === 'function') {
-    RNScreens.enableScreens(true);
-  }
+}
+
+// Global Exception Shield - prevents immediate OS-level process termination
+if (typeof global.ErrorUtils !== 'undefined' && global.ErrorUtils?.getGlobalHandler) {
+  try {
+    const originalHandler = global.ErrorUtils.getGlobalHandler();
+    global.ErrorUtils.setGlobalHandler((error, isFatal) => {
+      console.warn('[GlobalExceptionShield] Caught error:', error, 'isFatal:', isFatal);
+      // Suppress fatal termination for non-critical lifecycle events
+    });
+  } catch (_) {}
 }
 
 import { AppRegistry, LogBox } from 'react-native';

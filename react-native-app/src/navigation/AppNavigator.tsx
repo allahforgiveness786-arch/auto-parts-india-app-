@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Platform, StatusBar, TouchableOpacity } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +24,7 @@ import RecentlyViewedScreen from '../screens/RecentlyViewedScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function CustomSellTabBarButton({ onPress, accessibilityState }: any) {
@@ -173,8 +173,7 @@ export default function AppNavigator() {
         headerStyle: { backgroundColor: '#0B1220' },
         headerTintColor: '#FFFFFF',
         headerTitleStyle: { fontWeight: 'bold' },
-        presentation: 'card',
-        animation: 'slide_from_right',
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
       }}
     >
       <Stack.Screen 
