@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Icon, Surface, Badge } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
+import { getFirebaseFirestore, getCurrentUser, getFirebaseAuth } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { EditListingModal } from '../components/EditListingModal';
 
