@@ -7,7 +7,6 @@ export default function AllCategoriesScreen({ navigation, route }: any) {
 
   const renderItem = ({ item }: { item: any }) => {
     if (item.name === 'More') return null;
-    const hasImageUrl = Boolean(item.imageUrl && item.imageUrl.startsWith('http'));
 
     return (
       <TouchableOpacity
@@ -18,15 +17,7 @@ export default function AllCategoriesScreen({ navigation, route }: any) {
         activeOpacity={0.7}
       >
         <View style={[styles.iconContainer, { backgroundColor: (item.iconColor || '#1565FF') + '15' }]}>
-          {hasImageUrl ? (
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={{ width: 36, height: 36, borderRadius: 8 }}
-              resizeMode="contain"
-            />
-          ) : (
-            <Icon source={item.icon || 'apps'} size={32} color={item.iconColor || '#1565FF'} />
-          )}
+          <Icon source={item.icon || 'apps'} size={32} color={item.iconColor || '#1565FF'} />
         </View>
         <Text style={styles.categoryLabel}>{item.name}</Text>
       </TouchableOpacity>

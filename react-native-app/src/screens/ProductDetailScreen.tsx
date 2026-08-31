@@ -223,10 +223,6 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
             source={{ uri: part.imageUrl || part.images?.[0] || part.imageUrls?.[0] || 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800' }} 
             style={styles.image} 
           />
-          <View style={styles.galleryBadge}>
-            <IconButton icon="arrow-expand-all" iconColor="#FFFFFF" size={14} style={{ margin: 0 }} />
-            <Text style={styles.galleryBadgeText}>View Gallery</Text>
-          </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.favFab} onPress={() => toggleFavorite(part.id)}>
           <IconButton icon={isFav ? "heart" : "heart-outline"} iconColor={isFav ? "#EF4444" : "#0B1220"} size={20} />
@@ -308,7 +304,7 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
         <Card style={styles.sellerCard}>
           <Card.Title
             title={part.contactName || part.sellerEmail || 'Verified Parts Dealer'}
-            subtitle={`📍 ${distanceInfo.text} • Tap photo to view popup`}
+            subtitle="Tap photo to view popup"
             left={(props) => {
               const sPhoto = part.sellerPhotoURL || part.sellerPhoto || part.sellerAvatar || part.photoURL;
               return (

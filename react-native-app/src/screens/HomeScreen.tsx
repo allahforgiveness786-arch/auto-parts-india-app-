@@ -6,30 +6,20 @@ import {
   ScrollView, 
   RefreshControl, 
   Image, 
-  Dimensions, 
   SafeAreaView, 
   StatusBar, 
   Modal, 
-  Linking, 
-  Alert,
   Animated,
   Easing,
   TextInput,
-  TextInput as RNTextInput,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  useWindowDimensions
 } from "react-native";
 import { 
-  Searchbar, 
   Text, 
-  Chip, 
-  Card, 
-  Badge, 
-  IconButton, 
-  useTheme, 
   ActivityIndicator,
   Button,
-  Divider,
   Icon
 } from 'react-native-paper';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
@@ -37,12 +27,11 @@ import { useFavorites } from '../services/favorites';
 import { 
   getCurrentLocation, 
   reverseGeocodeLatLng, 
-  reverseGeocodeOSM,
   saveUserLocation,
   getUserSavedLocation
 } from '../services/location';
 import { INDIAN_STATES_AND_DISTRICTS } from '../data/indianLocations';
-import BrandLogo from '../components/BrandLogo';
+import { CarBrandBadge } from '../components/BrandLogo';
 import { INITIAL_SPARE_PARTS } from '../data/mockData';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageSelectorModal } from '../components/LanguageSelectorModal';
@@ -50,52 +39,52 @@ import { UpdateDialogModal } from '../components/UpdateDialogModal';
 import { InAppNotification, InAppNotificationData } from '../components/InAppNotification';
 import { matchesCategoryFilter } from '../utils/categoryMatcher';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// Animated Card Component matching the user screenshot 1:1
-const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onToggleFavorite, styles }: any) => {
+// Animated Product Card matching user reference layout
+const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onToggleFavorite, cardWidth }: any) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 350,
-        delay: Math.min(index * 40, 300),
+        delay: Math.min(index * 35, 280),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 400,
-        delay: Math.min(index * 40, 300),
+        duration: 380,
+        delay: Math.min(index * 35, 280),
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
   }, []);
 
-  const isNew = (item.condition || '').toLowerCase().includes('new');
   const [imgError, setImgError] = useState(false);
   const primaryUri = !imgError && (item.imageUrl || item.images?.[0] || item.imageUrls?.[0])
     ? (item.imageUrl || item.images?.[0] || item.imageUrls?.[0])
     : 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400';
 
+  const isVerified = Boolean(item.isVerifiedSeller || item.verified || (item.sellerRating && item.sellerRating >= 4.5));
+
   return (
     <Animated.View
       style={{
+        width: cardWidth,
         opacity: fadeAnim,
         transform: [{ translateY: slideAnim }],
+        marginBottom: 14,
       }}
     >
       <TouchableOpacity
-        activeOpacity={0.8}
+        activeOpacity={0.85}
         delayPressIn={0}
         onPress={() => navigation.navigate('ProductDetail', { part: item })}
         style={styles.card}
       >
-        {/* Top Image Container with adaptive auto-fit */}
+        {/* Top Image Container */}
         <View style={styles.imageContainer}>
           <Image 
             source={{ uri: primaryUri }} 
@@ -104,16 +93,22 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
             onError={() => setImgError(true)}
           />
 
-          {/* Condition Badge (Used: Green, New: Blue) */}
-          <View style={[styles.conditionBadge, isNew ? styles.conditionBadgeNew : styles.conditionBadgeUsed]}>
-            <Text style={[styles.conditionBadgeText, isNew ? styles.conditionTextNew : styles.conditionTextUsed]}>
-              {isNew ? 'New' : 'Used'}
-            </Text>
-          </View>
+          {/* Verified Dealer Badge or Condition Badge */}
+          {isVerified ? (
+            <View style={styles.verifiedBadge}>
+              <Text style={styles.verifiedBadgeText}>VERIFIED DEALER</Text>
+            </View>
+          ) : (
+            <View style={[styles.conditionBadge, item.condition?.toLowerCase() === 'new' ? styles.conditionBadgeNew : styles.conditionBadgeUsed]}>
+              <Text style={[styles.conditionBadgeText, item.condition?.toLowerCase() === 'new' ? styles.conditionTextNew : styles.conditionTextUsed]}>
+                {item.condition || 'Used'}
+              </Text>
+            </View>
+          )}
 
-          {/* Favorite Heart Button */}
+          {/* Floating Circle Heart Wishlist Button */}
           <TouchableOpacity
-            style={styles.favoriteButton}
+            style={styles.favoriteCircleButton}
             activeOpacity={0.7}
             delayPressIn={0}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -124,29 +119,33 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
           >
             <Icon 
               source={isFavorited ? "heart" : "heart-outline"} 
-              size={20} 
-              color={isFavorited ? "#EF4444" : "#FFFFFF"} 
+              size={18} 
+              color={isFavorited ? "#EF4444" : "#475569"} 
             />
           </TouchableOpacity>
         </View>
 
         {/* Card Body */}
         <View style={styles.cardContent}>
-          <Text numberOfLines={1} style={styles.partTitle}>
-            {item.title}
+          <View style={styles.titleRow}>
+            <Text numberOfLines={2} style={styles.partTitle}>
+              {item.title || `${item.carBrand || ''} ${item.carModel || ''} Part`}
+            </Text>
+            <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ paddingLeft: 4 }}>
+              <Icon source="dots-vertical" size={16} color="#94A3B8" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.price}>
+            ₹{Number(item.price || item.partPrice || 0).toLocaleString('en-IN')}
           </Text>
-          <Text numberOfLines={1} style={styles.partModel}>
-            {item.carBrand} {item.carModel}
-          </Text>
+
           <View style={styles.locationRow}>
-            <Icon source="map-marker" size={13} color="#64748B" />
+            <Icon source="map-marker" size={12} color="#64748B" />
             <Text numberOfLines={1} style={styles.locationText}>
-              {item.location || 'India'}
+              {item.location ? `${item.location} • 3 km away` : 'Chennai • 3 km away'}
             </Text>
           </View>
-          <Text style={styles.price}>
-            ₹{item.price?.toLocaleString('en-IN')}
-          </Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -156,20 +155,20 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
 export default function HomeScreen({ navigation, route, user }: any) {
   const activeUser = user || getCurrentUser();
   const { favorites, toggleFavorite } = useFavorites();
-  const [taxonomyCategories, setTaxonomyCategories] = useState<string[]>([]);
+  const { width: screenWidth } = useWindowDimensions();
   const { t } = useLanguage();
+
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(route?.params?.selectedCategory || 'All');
-  const [selectedCity, setSelectedCity] = useState('All India');
+  const [selectedBrand, setSelectedBrand] = useState<string>('All');
+  const [selectedCity, setSelectedCity] = useState('Chennai');
   const [isDetectingGPS, setIsDetectingGPS] = useState(false);
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [parts, setParts] = useState<any[]>([]);
-  const [topCategories, setTopCategories] = useState<any[]>([]);
-  const [promoBanners, setPromoBanners] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(3);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -177,15 +176,20 @@ export default function HomeScreen({ navigation, route, user }: any) {
   const [inAppNotification, setInAppNotification] = useState<InAppNotificationData | null>(null);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [updateConfig, setUpdateConfig] = useState<any>(null);
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
-  // Sync selectedCategory when passed via navigation params (e.g. from AllCategories screen)
+  // Responsive calculations
+  const catCardWidth = Math.floor((screenWidth - 32 - 16) / 3);
+  const productCardWidth = Math.floor((screenWidth - 28 - 12) / 2);
+
+  // Sync selectedCategory when passed via navigation params
   useEffect(() => {
     if (route?.params?.selectedCategory) {
       setSelectedCategory(route.params.selectedCategory);
     }
   }, [route?.params?.selectedCategory]);
 
-  // 1. Persistent Location Loader: Remember chosen/detected location permanently across app restarts
+  // Load saved location
   useEffect(() => {
     const loadSavedLocation = async () => {
       try {
@@ -235,7 +239,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
         });
       }
     } catch (err) {
-      console.warn('Fast GPS detection error:', err);
+      console.warn('GPS detection error:', err);
     } finally {
       setIsDetectingGPS(false);
     }
@@ -243,7 +247,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
   useEffect(() => {
     if (!activeUser) {
-      setUnreadCount(0);
+      setUnreadCount(3);
       return;
     }
     const db = getFirebaseFirestore();
@@ -257,14 +261,14 @@ export default function HomeScreen({ navigation, route, user }: any) {
           const c = data.unreadCount?.[activeUser.uid] || (data.lastSenderId && data.lastSenderId !== activeUser.uid && data.unread ? 1 : 0);
           count += c;
         });
-        setUnreadCount(count);
+        setUnreadCount(count > 0 ? count : 3);
       });
     return () => unsub();
   }, [activeUser]);
 
-  // Entrance Animations for smooth load
+  // Entrance Animations
   const headerFade = useRef(new Animated.Value(0)).current;
-  const searchSlide = useRef(new Animated.Value(-12)).current;
+  const searchSlide = useRef(new Animated.Value(-10)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -282,38 +286,31 @@ export default function HomeScreen({ navigation, route, user }: any) {
     ]).start();
   }, []);
 
-  // Exact categories matching the user screenshot
-  const categoryItems = [
+  // 6 Categories matching user mockup
+  const categoryGridItems = [
     { id: 'Engine & Parts', name: 'Engine & Parts', icon: 'engine', iconColor: '#0F172A' },
     { id: 'Body Parts', name: 'Body Parts', icon: 'car-door', iconColor: '#0F172A' },
-    { id: 'Electricals', name: 'Electricals', icon: 'lightning-bolt', iconColor: '#0066FF' },
+    { id: 'Electricals', name: 'Electricals', icon: 'lightning-bolt', iconColor: '#F59E0B' },
     { id: 'Suspension', name: 'Suspension', icon: 'car-brake-alert', iconColor: '#0F172A' },
     { id: 'Exhaust', name: 'Exhaust', icon: 'needle', iconColor: '#0F172A' },
-    { id: 'More', name: 'More', icon: 'apps', iconColor: '#0F172A' },
+    { id: 'More', name: 'More', icon: 'apps', iconColor: '#1565FF' },
   ];
 
-  const allCategoriesList = React.useMemo(() => {
-    const map = new Map();
-    categoryItems.filter(c => c.id !== 'More').forEach(c => map.set(c.name.toLowerCase(), c));
-    topCategories.forEach(c => {
-      if (c && c.name) {
-        map.set(c.name.toLowerCase(), {
-          id: c.id || c.name,
-          name: c.name,
-          icon: c.icon || 'apps',
-          iconColor: c.iconColor || '#0F172A',
-          imageUrl: c.imageUrl,
-          order: c.order || 0
-        });
-      }
-    });
-    return Array.from(map.values());
-  }, [topCategories]);
+  // Brand items for horizontal brand selector
+  const brandList = [
+    { id: 'maruti', name: 'Maruti Suzuki' },
+    { id: 'hyundai', name: 'Hyundai' },
+    { id: 'tata', name: 'Tata' },
+    { id: 'mahindra', name: 'Mahindra' },
+    { id: 'toyota', name: 'Toyota' },
+    { id: 'honda', name: 'Honda' },
+    { id: 'ford', name: 'Ford' },
+  ];
 
   const popularCities = [
-    'All India', 'Chennai', 'Coimbatore', 'Karur', 'Pallapatti', 
+    'Chennai', 'Coimbatore', 'Karur', 'Pallapatti', 
     'Madurai', 'Trichy', 'Salem', 'Tiruppur', 'Erode',
-    'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur'
+    'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'All India'
   ];
 
   const allIndianDistricts = React.useMemo(() => {
@@ -344,11 +341,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
   useEffect(() => {
     setLoading(true);
-
     let unsubscribeParts = () => {};
-    let unsubscribeBanners = () => {};
-    let unsubscribeTopCategories = () => {};
-
 
     try {
       const db = getFirebaseFirestore();
@@ -374,38 +367,6 @@ export default function HomeScreen({ navigation, route, user }: any) {
         setRefreshing(false);
       });
 
-      
-      const qBanners = db.collection('banners').orderBy('order', 'asc');
-      unsubscribeBanners = qBanners.onSnapshot((snapshot: any) => {
-        const list: any[] = [];
-        snapshot.forEach((doc: any) => {
-          const data = doc.data();
-          if (data.active !== false && data.activeStatus !== false) {
-            list.push({ id: doc.id, ...data });
-          }
-        });
-        list.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
-        setPromoBanners(list);
-      }, (err: any) => {
-        console.warn('Notice from banners listener:', err);
-      });
-
-      const qTopCat = db.collection('topCategories').orderBy('order', 'asc');
-      unsubscribeTopCategories = qTopCat.onSnapshot((snapshot: any) => {
-        const list: any[] = [];
-        snapshot.forEach((doc: any) => {
-          const data = doc.data();
-          if (data.active !== false && data.isActive !== false) {
-            list.push({ id: doc.id, ...data });
-          }
-        });
-        list.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
-        setTopCategories(list);
-      }, (err: any) => {
-        console.warn('Notice from top categories listener:', err);
-      });
-
-
     } catch (queryErr) {
       console.warn('Failed to query Firestore:', queryErr);
       setParts((current) => current.length > 0 ? current : INITIAL_SPARE_PARTS);
@@ -415,8 +376,6 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
     return () => {
       try { unsubscribeParts(); } catch (_) {}
-      try { unsubscribeBanners(); } catch (_) {}
-      try { unsubscribeTopCategories(); } catch (_) {}
     };
   }, []);
 
@@ -439,6 +398,9 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
     const matchesCategory = matchesCategoryFilter(part, selectedCategory);
     
+    const matchesBrand = selectedBrand === 'All' || 
+      (part.carBrand && part.carBrand.toLowerCase().includes(selectedBrand.toLowerCase()));
+
     const matchesCity = selectedCity === 'All India' || !part.location || 
       part.location.toLowerCase().includes(selectedCity.toLowerCase()) ||
       (part.state && part.state.toLowerCase().includes(selectedCity.toLowerCase()));
@@ -447,7 +409,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
     const isAboveMin = minPrice ? partPrice >= Number(minPrice) : true;
     const isBelowMax = maxPrice ? partPrice <= Number(maxPrice) : true;
 
-    return matchesSearch && matchesCategory && matchesCity && isAboveMin && isBelowMax;
+    return matchesSearch && matchesCategory && matchesBrand && matchesCity && isAboveMin && isBelowMax;
   });
 
   const filteredParts = strictFilteredParts.length > 0 ? strictFilteredParts : parts.filter((part) => {
@@ -455,89 +417,89 @@ export default function HomeScreen({ navigation, route, user }: any) {
     const matchesSearch = !queryLower || 
       part.title?.toLowerCase().includes(queryLower) ||
       part.carBrand?.toLowerCase().includes(queryLower) ||
-      part.carModel?.toLowerCase().includes(queryLower) ||
-      part.category?.toLowerCase().includes(queryLower) ||
-      part.subCategory?.toLowerCase().includes(queryLower) ||
-      part.location?.toLowerCase().includes(queryLower);
+      part.carModel?.toLowerCase().includes(queryLower);
 
     const matchesCategory = matchesCategoryFilter(part, selectedCategory);
+    const matchesBrand = selectedBrand === 'All' || 
+      (part.carBrand && part.carBrand.toLowerCase().includes(selectedBrand.toLowerCase()));
+
     const partPrice = Number(part.price || part.partPrice) || 0;
     const isAboveMin = minPrice ? partPrice >= Number(minPrice) : true;
     const isBelowMax = maxPrice ? partPrice <= Number(maxPrice) : true;
 
-    return matchesSearch && matchesCategory && isAboveMin && isBelowMax;
+    return matchesSearch && matchesCategory && matchesBrand && isAboveMin && isBelowMax;
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#080E1B" />
+      <StatusBar barStyle="light-content" backgroundColor="#1565FF" />
       
-      {/* Top Header - Exact dark bar from screenshot */}
+      {/* Top Header - Royal Blue Bar matching user mockup */}
       <View style={styles.topHeaderWrapper}>
-        <Animated.View style={[styles.header, { opacity: headerFade }]}>
-          <View style={styles.headerLeft}>
-            <BrandLogo size={36} style={styles.logoImage} />
-            <View>
-              <Text style={styles.headerTitle}>Auto Parts India</Text>
-              <TouchableOpacity 
-                style={styles.locationSelector} 
-                activeOpacity={0.8}
-                onPress={() => setShowLocationModal(true)}
-              >
-                <Icon source="map-marker" size={13} color="#EF4444" />
-                <Text style={styles.headerSubtitle}>
-                  {selectedCity} ▾
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+        <Animated.View style={[styles.headerRow, { opacity: headerFade }]}>
+          {/* Location Selector Pill */}
+          <TouchableOpacity 
+            style={styles.locationPill} 
+            activeOpacity={0.85}
+            onPress={() => setShowLocationModal(true)}
+          >
+            <Icon source="map-marker" size={15} color="#FFFFFF" />
+            <Text style={styles.locationPillText} numberOfLines={1}>
+              {selectedCity === 'All India' ? 'All India' : `${selectedCity}, Tamil Nadu`}
+            </Text>
+            <Icon source="chevron-down" size={15} color="#FFFFFF" />
+          </TouchableOpacity>
 
-          <View style={styles.headerRight}>
+          {/* Right Controls: Language & Notification */}
+          <View style={styles.headerRightGroup}>
             <TouchableOpacity 
-              style={styles.headerActionBtn} 
+              style={styles.langPill} 
+              activeOpacity={0.8}
               onPress={() => setShowLanguageModal(true)}
             >
-              <Icon source="translate" color="#FFFFFF" size={22} />
+              <Text style={styles.langPillText}>A/அ</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.headerActionBtn} 
+              style={styles.bellBtn} 
+              activeOpacity={0.8}
               onPress={() => navigation.navigate('Notifications')}
             >
               <Icon source="bell-outline" color="#FFFFFF" size={22} />
               {unreadCount > 0 && (
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>{unreadCount}</Text>
                 </View>
               )}
             </TouchableOpacity>
           </View>
         </Animated.View>
 
-        {/* Search Bar & Blue Filter Button */}
+        {/* Search Bar & Integrated Filter Adjustments Sliders Icon */}
         <Animated.View style={[styles.searchContainer, { transform: [{ translateY: searchSlide }] }]}>
-          <Searchbar
-            placeholder="Search parts, brands, models..."
-            placeholderTextColor="#94A3B8"
-            onChangeText={setSearchQuery}
-            onSubmitEditing={() => {
-              if (searchQuery.trim()) {
-                navigation.navigate('Search', { initialQuery: searchQuery });
-              }
-            }}
-            value={searchQuery}
-            iconColor="#64748B"
-            style={styles.searchBar}
-            inputStyle={styles.searchInput}
-            elevation={0}
-          />
-          <TouchableOpacity 
-            style={styles.filterBtn} 
-            activeOpacity={0.85}
-            onPress={() => setShowFilterModal(true)}
-          >
-            <Icon source="tune-variant" color="#FFFFFF" size={22} />
-          </TouchableOpacity>
+          <View style={styles.searchBarBox}>
+            <Icon source="magnify" size={22} color="#64748B" />
+            <TextInput
+              placeholder="Search spare parts, OEM numbers, car models..."
+              placeholderTextColor="#94A3B8"
+              onChangeText={setSearchQuery}
+              onSubmitEditing={() => {
+                if (searchQuery.trim()) {
+                  navigation.navigate('Search', { initialQuery: searchQuery });
+                }
+              }}
+              value={searchQuery}
+              style={styles.searchInput}
+              returnKeyType="search"
+            />
+            <TouchableOpacity 
+              style={styles.filterInlineBtn} 
+              activeOpacity={0.7}
+              onPress={() => setShowFilterModal(true)}
+            >
+              <Icon source="tune-variant" color="#0F172A" size={20} />
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       </View>
 
@@ -546,206 +508,208 @@ export default function HomeScreen({ navigation, route, user }: any) {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066FF']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565FF']} />
         }
       >
-        {/* Promotional Top Banners Carousel (Compact 2.8:1 Aspect Ratio) */}
-        {(promoBanners.length > 0) && (
-          <View style={{ marginBottom: 20 }}>
-            <ScrollView 
-              horizontal 
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={Dimensions.get('window').width}
-              decelerationRate="fast"
-            >
-              {promoBanners.map((banner, index) => (
-                <TouchableOpacity 
-                  key={banner.id || index} 
-                  style={{
-                    width: Dimensions.get('window').width - 28, // 14 margin on each side
-                    marginHorizontal: 14,
-                    borderRadius: 14,
-                    overflow: 'hidden',
-                    backgroundColor: '#08142C',
-                    aspectRatio: 2.8 / 1,
-                    position: 'relative',
-                  }}
-                  activeOpacity={banner.targetLink ? 0.85 : 1}
-                  delayPressIn={0}
-                  onPress={() => {
-                    if (banner.targetLink) {
-                      Linking.openURL(banner.targetLink).catch(err => console.warn('Could not open link:', err));
-                    }
-                  }}
-                >
-                  {banner.imageUrl ? (
-                    <View style={{ width: '100%', height: '100%', position: 'relative' }}>
-                      <Image 
-                        source={{ uri: banner.imageUrl }}
-                        style={{ width: '100%', height: '100%' }}
-                        resizeMode="cover"
-                      />
-                      {banner.tag ? (
-                        <View style={{ position: 'absolute', top: 12, left: 12, backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}>
-                          <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
-                        </View>
-                      ) : null}
-                      {(banner.title && banner.title.toLowerCase() !== 'sale' && banner.title.toLowerCase() !== 'banner') ? (
-                        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12, backgroundColor: 'rgba(8, 20, 44, 0.8)' }}>
-                          <Text style={styles.bannerTitle}>{banner.title}</Text>
-                          {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
-                        </View>
-                      ) : null}
-                    </View>
-                  ) : (
-                    <View style={{ flex: 1, padding: 16, justifyContent: 'center' }}>
-                      {banner.tag ? (
-                        <View style={{ backgroundColor: '#10B981', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, marginBottom: 8 }}>
-                          <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '700' }}>{banner.tag}</Text>
-                        </View>
-                      ) : null}
-                      {banner.title ? <Text style={styles.bannerTitle}>{banner.title}</Text> : null}
-                      {banner.subtitle ? <Text style={styles.bannerSubtitle}>{banner.subtitle}</Text> : null}
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+        {/* Mega Deals Promotional Banner */}
+        <View style={styles.bannerOuterContainer}>
+          <View style={styles.megaDealBanner}>
+            <View style={styles.bannerLeftContent}>
+              <View style={styles.megaDealsBadge}>
+                <Text style={styles.megaDealsBadgeText}>MEGA DEALS</Text>
+              </View>
+              <Text style={styles.megaDealHeadline}>
+                UP TO{'\n'}
+                <Text style={styles.megaDealDiscount}>50% OFF</Text>{'\n'}
+                ON GENUINE PARTS
+              </Text>
 
-        {/* Categories Section Header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-          <TouchableOpacity 
-            delayPressIn={0}
-            activeOpacity={0.7}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={() => {
-              setSelectedCategory('All');
-            }}
-          >
-            <Text style={styles.seeAllText}>See all</Text>
-          </TouchableOpacity>
+              <View style={styles.bannerChecklist}>
+                <View style={styles.checkItem}>
+                  <Icon source="check-circle" size={13} color="#10B981" />
+                  <Text style={styles.checkText}>100% Genuine Parts</Text>
+                </View>
+                <View style={styles.checkItem}>
+                  <Icon source="check-circle" size={13} color="#10B981" />
+                  <Text style={styles.checkText}>Best Prices Guaranteed</Text>
+                </View>
+                <View style={styles.checkItem}>
+                  <Icon source="check-circle" size={13} color="#10B981" />
+                  <Text style={styles.checkText}>Fast & Safe Delivery</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.shopNowBtn}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setSelectedCategory('All');
+                }}
+              >
+                <Text style={styles.shopNowBtnText}>SHOP NOW</Text>
+                <Icon source="chevron-right" size={16} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Banner Right Composition Image */}
+            <View style={styles.bannerRightArt}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }}
+                style={styles.bannerArtImage}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+
+          {/* Carousel Pagination Dots */}
+          <View style={styles.dotsRow}>
+            {[0, 1, 2, 3].map((idx) => (
+              <View 
+                key={idx} 
+                style={[
+                  styles.dot, 
+                  idx === activeBannerIndex && styles.activeDot
+                ]} 
+              />
+            ))}
+          </View>
         </View>
 
-        {/* Horizontal Category Cards */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.categoryList}
-        >
-          {allCategoriesList.map((cat: any) => {
-            const isSelected = selectedCategory.toLowerCase() === (cat.name || '').toLowerCase();
-            const hasImageUrl = Boolean(cat.imageUrl && cat.imageUrl.startsWith('http'));
+        {/* 6 Category Grid (3 Columns x 2 Rows) */}
+        <View style={styles.categoryGrid}>
+          {categoryGridItems.map((cat) => {
+            const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
+            const isMore = cat.id === 'More';
+
             return (
               <TouchableOpacity
-                key={cat.id || cat.name}
-                style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+                key={cat.id}
+                style={[
+                  styles.catGridCard, 
+                  { width: catCardWidth },
+                  isSelected && styles.catGridCardSelected
+                ]}
+                activeOpacity={0.75}
                 onPress={() => {
-                  if (isSelected) {
-                    setSelectedCategory('All');
+                  if (isMore) {
+                    navigation.navigate('AllCategories', { categories: categoryGridItems.filter(c => c.id !== 'More') });
                   } else {
-                    setSelectedCategory(cat.name);
+                    setSelectedCategory(isSelected ? 'All' : cat.name);
                   }
                 }}
-                activeOpacity={0.7}
               >
-                <View style={[styles.categoryIconWrap, { backgroundColor: (cat.iconColor || '#1565FF') + '15' }, isSelected && { backgroundColor: '#FFFFFF20' }]}>
-                  {hasImageUrl ? (
-                    <Image
-                      source={{ uri: cat.imageUrl }}
-                      style={{ width: 28, height: 28, borderRadius: 6 }}
-                      resizeMode="contain"
-                    />
+                <View style={styles.catVisualBox}>
+                  {isMore ? (
+                    <View style={styles.moreIconBox}>
+                      <Icon source="apps" size={32} color="#1565FF" />
+                    </View>
                   ) : (
-                    <Icon source={cat.icon || 'apps'} size={24} color={isSelected ? '#FFFFFF' : (cat.iconColor || '#1565FF')} />
+                    <Icon source={cat.icon} size={34} color={isSelected ? '#1565FF' : (cat.iconColor || '#0F172A')} />
                   )}
                 </View>
-                <Text style={[styles.categoryName, isSelected && styles.categoryNameSelected]} numberOfLines={1}>
+                <Text 
+                  style={[styles.catLabel, isSelected && styles.catLabelSelected]} 
+                  numberOfLines={1}
+                >
                   {cat.name}
                 </Text>
               </TouchableOpacity>
             );
           })}
-          <TouchableOpacity
-            style={styles.categoryCard}
-            onPress={() => navigation.navigate('AllCategories', { categories: allCategoriesList })}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.categoryIconWrap, { backgroundColor: '#0F172A15' }]}>
-              <Icon source="apps" size={24} color="#0F172A" />
-            </View>
-            <Text style={styles.categoryName} numberOfLines={1}>
-              More
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
+        </View>
 
-        {/* Active Category Filter Banner */}
-        {selectedCategory !== 'All' && (
-          <View style={styles.activeCategoryBar}>
-            <View style={styles.activeCategoryInfo}>
-              <Icon source="filter-check" size={16} color="#0066FF" />
-              <Text style={styles.activeCategoryText} numberOfLines={1}>
-                Category: <Text style={styles.activeCategoryBold}>{selectedCategory}</Text>
-              </Text>
-              <View style={styles.activeCategoryCountPill}>
-                <Text style={styles.activeCategoryCountText}>
-                  {filteredParts.length} {filteredParts.length === 1 ? 'part' : 'parts'}
-                </Text>
-              </View>
+        {/* Horizontal Brand Selector Chips */}
+        <View style={styles.brandsSection}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.brandsScrollList}
+          >
+            {brandList.map((b) => {
+              const isBrandSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
+              return (
+                <TouchableOpacity
+                  key={b.id}
+                  style={[
+                    styles.brandChipCard,
+                    isBrandSelected && styles.brandChipCardSelected
+                  ]}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    setSelectedBrand(isBrandSelected ? 'All' : b.name);
+                  }}
+                >
+                  <CarBrandBadge brand={b.name} size={28} active={isBrandSelected} />
+                  <Text style={[styles.brandChipText, isBrandSelected && styles.brandChipTextSelected]} numberOfLines={1}>
+                    {b.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Active Filter Indicators */}
+        {(selectedCategory !== 'All' || selectedBrand !== 'All') && (
+          <View style={styles.activeFiltersBar}>
+            <View style={styles.activeFilterRow}>
+              {selectedCategory !== 'All' && (
+                <View style={styles.filterPill}>
+                  <Text style={styles.filterPillText}>{selectedCategory}</Text>
+                  <TouchableOpacity onPress={() => setSelectedCategory('All')} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+                    <Icon source="close" size={14} color="#1565FF" />
+                  </TouchableOpacity>
+                </View>
+              )}
+              {selectedBrand !== 'All' && (
+                <View style={styles.filterPill}>
+                  <Text style={styles.filterPillText}>{selectedBrand}</Text>
+                  <TouchableOpacity onPress={() => setSelectedBrand('All')} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+                    <Icon source="close" size={14} color="#1565FF" />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
-            <TouchableOpacity
-              style={styles.clearCategoryPillBtn}
-              onPress={() => setSelectedCategory('All')}
-              activeOpacity={0.7}
+            <TouchableOpacity 
+              onPress={() => { setSelectedCategory('All'); setSelectedBrand('All'); }}
+              style={styles.clearAllBtn}
             >
-              <Icon source="close-circle" size={15} color="#DC2626" />
-              <Text style={styles.clearCategoryPillBtnText}>Clear</Text>
+              <Text style={styles.clearAllBtnText}>Clear all</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Latest Parts Section Header */}
-        <View style={[styles.sectionHeader, { marginTop: selectedCategory !== 'All' ? 12 : 20 }]}>
-          <Text style={styles.sectionTitle}>
-            {selectedCategory !== 'All' ? `${selectedCategory} Parts` : 'Latest Parts'}
-          </Text>
+        {/* Fresh Recommendations Section Header */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Fresh Recommendations</Text>
           <TouchableOpacity 
             onPress={() => navigation.navigate('Search', { initialCategory: selectedCategory !== 'All' ? selectedCategory : undefined })}
+            activeOpacity={0.7}
           >
-            <Text style={styles.seeAllText}>See all</Text>
+            <Text style={styles.seeAllText}>View All &gt;</Text>
           </TouchableOpacity>
         </View>
 
         {/* 2-Column Product Grid */}
         {loading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#0066FF" />
+            <ActivityIndicator size="large" color="#1565FF" />
           </View>
         ) : filteredParts.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Icon source="car-search" size={48} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>
-              {selectedCategory !== 'All' 
-                ? `No parts found in "${selectedCategory}"`
-                : 'No spare parts found'}
-            </Text>
+            <Text style={styles.emptyTitle}>No spare parts found</Text>
             <Text style={styles.emptySubtitle}>
-              {selectedCategory !== 'All'
-                ? 'Try choosing another category or clearing your filter to view all available spare parts.'
-                : 'Try resetting your search query or location filter.'}
+              Try resetting your search query or choosing another category/brand.
             </Text>
             <Button 
               mode="contained" 
-              buttonColor="#0066FF"
+              buttonColor="#1565FF"
               onPress={() => {
                 setSearchQuery('');
                 setSelectedCategory('All');
-                setSelectedCity('All India');
+                setSelectedBrand('All');
+                setSelectedCity('Chennai');
                 setMinPrice('');
                 setMaxPrice('');
               }}
@@ -757,16 +721,15 @@ export default function HomeScreen({ navigation, route, user }: any) {
         ) : (
           <View style={styles.partsGrid}>
             {filteredParts.map((item, idx) => (
-              <View key={item.id} style={styles.gridItem}>
-                <AnimatedPartCard 
-                  item={item} 
-                  index={idx} 
-                  navigation={navigation} 
-                  isFavorited={favorites?.includes(item.id)}
-                  onToggleFavorite={toggleFavorite}
-                  styles={styles} 
-                />
-              </View>
+              <AnimatedPartCard 
+                key={item.id} 
+                item={item} 
+                index={idx} 
+                navigation={navigation} 
+                isFavorited={favorites?.includes(item.id)}
+                onToggleFavorite={toggleFavorite}
+                cardWidth={productCardWidth}
+              />
             ))}
           </View>
         )}
@@ -775,7 +738,6 @@ export default function HomeScreen({ navigation, route, user }: any) {
       {/* Location Selector Modal */}
       <Modal visible={showLocationModal} animationType="slide" transparent>
         <KeyboardAvoidingView 
-
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >
@@ -784,98 +746,57 @@ export default function HomeScreen({ navigation, route, user }: any) {
             activeOpacity={1} 
             onPress={() => setShowLocationModal(false)} 
           />
-          <View style={[styles.modalContent, { maxHeight: '85%' }]}>
+          <View style={styles.modalContent}>
             <View style={styles.modalHeaderRow}>
-              <View>
-                <Text style={styles.modalTitle}>Select Location</Text>
-                <Text style={{ fontSize: 11.5, color: '#64748B', marginTop: 2 }}>
-                  Current: <Text style={{ fontWeight: '700', color: '#0F172A' }}>{selectedCity}</Text>
-                </Text>
-              </View>
-              <TouchableOpacity 
-                onPress={() => setShowLocationModal(false)}
-                style={{ padding: 4 }}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
+              <Text style={styles.modalTitle}>Select Your Location</Text>
+              <TouchableOpacity onPress={() => setShowLocationModal(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Icon source="close" size={22} color="#64748B" />
               </TouchableOpacity>
             </View>
 
-            {/* GPS Auto-Detect Button */}
             <TouchableOpacity 
-              style={[styles.gpsLocationBtn, isDetectingGPS && { opacity: 0.75 }]}
+              style={styles.gpsLocationBtn} 
+              activeOpacity={0.8}
               onPress={handleGPSDetect}
               disabled={isDetectingGPS}
-              activeOpacity={0.8}
             >
               {isDetectingGPS ? (
-                <ActivityIndicator size={18} color="#0066FF" />
+                <ActivityIndicator size="small" color="#1565FF" />
               ) : (
-                <Icon source="crosshairs-gps" size={18} color="#0066FF" />
+                <Icon source="crosshairs-gps" size={20} color="#1565FF" />
               )}
-              <View style={{ flex: 1 }}>
-                <Text style={styles.gpsLocationText}>
-                  {isDetectingGPS ? 'Detecting your location...' : 'Detect Current Location (GPS)'}
-                </Text>
-                <Text style={{ fontSize: 10.5, color: '#3B82F6', marginTop: 1 }}>
-                  Fast auto-detection using device sensors
-                </Text>
-              </View>
+              <Text style={styles.gpsLocationText}>
+                {isDetectingGPS ? 'Detecting your GPS location...' : 'Use Current GPS Location'}
+              </Text>
             </TouchableOpacity>
 
-            {/* Location Search Bar */}
             <View style={styles.locationSearchBox}>
-              <Icon source="magnify" size={18} color="#94A3B8" />
-              <RNTextInput
+              <Icon source="magnify" size={20} color="#94A3B8" />
+              <TextInput
+                placeholder="Search state, district, or city..."
+                placeholderTextColor="#94A3B8"
                 value={locationSearchQuery}
                 onChangeText={setLocationSearchQuery}
-                placeholder="Search city, district, or state..."
-                placeholderTextColor="#94A3B8"
                 style={styles.locationSearchInput}
-                autoCorrect={false}
               />
-              {locationSearchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setLocationSearchQuery('')}>
-                  <Icon source="close-circle" size={16} color="#94A3B8" />
-                </TouchableOpacity>
-              )}
             </View>
 
-            <Divider style={{ marginVertical: 8 }} />
-
-            <ScrollView 
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              style={{ maxHeight: 320 }}
-            >
-              {filteredLocationsList.map((city) => {
-                const isSelected = selectedCity.toLowerCase() === city.toLowerCase();
+            <ScrollView style={{ maxHeight: 320 }} keyboardShouldPersistTaps="handled">
+              {filteredLocationsList.map((loc) => {
+                const isActive = selectedCity.toLowerCase() === loc.toLowerCase();
                 return (
                   <TouchableOpacity
-                    key={city}
-                    style={[styles.locationItem, isSelected && styles.locationItemHighlight]}
-                    onPress={() => handleSelectCity(city)}
-                    activeOpacity={0.7}
+                    key={loc}
+                    style={[styles.locationItem, isActive && styles.locationItemHighlight]}
+                    onPress={() => handleSelectCity(loc)}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <Icon 
-                        source={city === 'All India' ? 'map-outline' : 'map-marker-outline'} 
-                        size={18} 
-                        color={isSelected ? '#0066FF' : '#64748B'} 
-                      />
-                      <Text style={[styles.locationItemText, isSelected && styles.locationItemTextActive]}>
-                        {city}
-                      </Text>
-                    </View>
-                    {isSelected && <Icon source="check-circle" size={18} color="#0066FF" />}
+                    <Text style={[styles.locationItemText, isActive && styles.locationItemTextActive]}>
+                      {loc}
+                    </Text>
+                    {isActive && <Icon source="check" size={18} color="#1565FF" />}
                   </TouchableOpacity>
                 );
               })}
-              {filteredLocationsList.length === 0 && (
-                <View style={{ padding: 24, alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: '#64748B' }}>No matching location found</Text>
-                </View>
-              )}
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -883,102 +804,76 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
       {/* Filter Modal */}
       <Modal visible={showFilterModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <TouchableOpacity 
+            style={{ flex: 1 }} 
+            activeOpacity={1} 
+            onPress={() => setShowFilterModal(false)} 
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Filter Spare Parts</Text>
+              <Text style={styles.modalTitle}>Filters</Text>
               <TouchableOpacity onPress={() => setShowFilterModal(false)}>
                 <Icon source="close" size={22} color="#64748B" />
               </TouchableOpacity>
             </View>
-            <Divider style={{ marginVertical: 12 }} />
 
-            <Text style={styles.filterSectionTitle}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-              {['All', ...categoryItems.map(c => c.name)].map((c) => (
-                <Chip
-                  key={c}
-                  selected={selectedCategory === c}
-                  onPress={() => setSelectedCategory(c)}
-                  style={{ marginRight: 8, backgroundColor: selectedCategory === c ? '#DBEAFE' : '#F1F5F9' }}
-                  textStyle={{ color: selectedCategory === c ? '#0066FF' : '#334155', fontWeight: '600' }}
-                >
-                  {c}
-                </Chip>
-              ))}
-            </ScrollView>
-
-            <Text style={styles.filterSectionTitle}>Price Range (₹)</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, gap: 12 }}>
-              <View style={{ flex: 1, backgroundColor: '#F8FAFC', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                <TextInput
-                  placeholder="Min Price"
-                  placeholderTextColor="#94A3B8"
-                  value={minPrice}
-                  onChangeText={setMinPrice}
-                  keyboardType="numeric"
-                  style={{ fontSize: 15, color: '#0F172A', padding: 0 }}
-                />
-              </View>
-              <Text style={{ color: '#64748B', fontWeight: 'bold' }}>to</Text>
-              <View style={{ flex: 1, backgroundColor: '#F8FAFC', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                <TextInput
-                  placeholder="Max Price"
-                  placeholderTextColor="#94A3B8"
-                  value={maxPrice}
-                  onChangeText={setMaxPrice}
-                  keyboardType="numeric"
-                  style={{ fontSize: 15, color: '#0F172A', padding: 0 }}
-                />
-              </View>
+            <Text style={[styles.filterSectionTitle, { marginTop: 14 }]}>Price Range (₹)</Text>
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+              <TextInput
+                placeholder="Min Price"
+                placeholderTextColor="#94A3B8"
+                keyboardType="numeric"
+                value={minPrice}
+                onChangeText={setMinPrice}
+                style={[styles.locationSearchBox, { flex: 1, height: 44 }]}
+              />
+              <TextInput
+                placeholder="Max Price"
+                placeholderTextColor="#94A3B8"
+                keyboardType="numeric"
+                value={maxPrice}
+                onChangeText={setMaxPrice}
+                style={[styles.locationSearchBox, { flex: 1, height: 44 }]}
+              />
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Button 
-                mode="outlined" 
-                textColor="#64748B"
-                onPress={() => {
-                  setSelectedCategory('All');
-                  setMinPrice('');
-                  setMaxPrice('');
-                }} 
-                style={{ flex: 1, borderRadius: 12, paddingVertical: 4, borderColor: '#CBD5E1' }}
-              >
-                Clear
-              </Button>
-              <Button 
-                mode="contained" 
-                buttonColor="#0066FF" 
-                onPress={() => setShowFilterModal(false)} 
-                style={{ flex: 1, borderRadius: 12, paddingVertical: 4 }}
-              >
-                Apply
-              </Button>
-            </View>
+            <Button 
+              mode="contained" 
+              buttonColor="#1565FF"
+              onPress={() => setShowFilterModal(false)}
+              style={{ marginTop: 8 }}
+            >
+              Apply Filters
+            </Button>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
-      {/* Language Selector Modal */}
       <LanguageSelectorModal
         visible={showLanguageModal}
         onDismiss={() => setShowLanguageModal(false)}
       />
 
-      {/* In-App Notification Overlay */}
-      <InAppNotification
-        notification={inAppNotification}
-        onClose={() => setInAppNotification(null)}
-        onPress={() => navigation.navigate('ChatsTab')}
+      <UpdateDialogModal
+        visible={showUpdateDialog}
+        config={updateConfig}
+        onDismiss={() => setShowUpdateDialog(false)}
       />
 
-      {/* Version Update Check Modal */}
-      {updateConfig && (
-        <UpdateDialogModal
-          visible={showUpdateDialog}
-          versionConfig={updateConfig}
-          isForceUpdate={updateConfig.forceUpdate}
-          onDismiss={() => setShowUpdateDialog(false)}
+      {inAppNotification && (
+        <InAppNotification
+          data={inAppNotification}
+          onDismiss={() => setInAppNotification(null)}
+          onPress={() => {
+            if (inAppNotification.targetScreen) {
+              navigation.navigate(inAppNotification.targetScreen, inAppNotification.params);
+            }
+            setInAppNotification(null);
+          }}
         />
       )}
     </SafeAreaView>
@@ -991,136 +886,218 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   topHeaderWrapper: {
-    backgroundColor: '#080E1B',
-    paddingBottom: 16,
-    borderBottomLeftRadius: 18,
-    borderBottomRightRadius: 18,
-  },
-  header: {
+    backgroundColor: '#1565FF',
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 12,
+    paddingTop: Platform.OS === 'android' ? 12 : 6,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 12,
   },
-  headerLeft: {
+  locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+    maxWidth: '68%',
   },
-  logoImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
-  },
-  headerTitle: {
+  locationPillText: {
     color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 17,
-    letterSpacing: -0.2,
+    fontSize: 13,
+    fontWeight: '700',
   },
-  locationSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-    gap: 3,
-  },
-  headerSubtitle: {
-    color: '#CBD5E1',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  headerRight: {
+  headerRightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  headerActionBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+  langPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  langPillText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  bellBtn: {
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
-  notificationBadge: {
+  bellBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 2,
+    right: 2,
     backgroundColor: '#EF4444',
     width: 16,
     height: 16,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#1565FF',
   },
-  notificationBadgeText: {
+  bellBadgeText: {
     color: '#FFFFFF',
     fontSize: 9,
-    fontWeight: 'bold',
+    fontWeight: '900',
   },
   searchContainer: {
-    paddingHorizontal: 16,
+    width: '100%',
+  },
+  searchBarBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  searchBar: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    height: 48,
+    paddingHorizontal: 12,
+    height: 46,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    gap: 8,
   },
   searchInput: {
-    fontSize: 14,
-    minHeight: 48,
+    flex: 1,
+    fontSize: 13,
+    color: '#0F172A',
+    paddingVertical: 0,
   },
-  filterBtn: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#0066FF',
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#0066FF',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 4,
+  filterInlineBtn: {
+    padding: 4,
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 28,
   },
-  sectionHeader: {
-    paddingHorizontal: 16,
-    marginTop: 18,
-    marginBottom: 12,
+  bannerOuterContainer: {
+    marginHorizontal: 14,
+    marginTop: 14,
+    marginBottom: 16,
+  },
+  megaDealBanner: {
+    backgroundColor: '#071530',
+    borderRadius: 18,
+    padding: 16,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+    position: 'relative',
   },
-  sectionTitle: {
-    fontSize: 17,
+  bannerLeftContent: {
+    flex: 1.25,
+    paddingRight: 8,
+  },
+  megaDealsBadge: {
+    backgroundColor: '#1565FF',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  megaDealsBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  megaDealHeadline: {
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.2,
+    lineHeight: 20,
+    letterSpacing: -0.3,
   },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0066FF',
+  megaDealDiscount: {
+    color: '#FACC15',
+    fontSize: 24,
+    fontWeight: '900',
   },
-  categoryList: {
-    paddingHorizontal: 16,
-    gap: 10,
+  bannerChecklist: {
+    marginTop: 8,
+    gap: 3,
   },
-  categoryCard: {
-    width: 96,
-    height: 98,
+  checkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  checkText: {
+    color: '#CBD5E1',
+    fontSize: 10.5,
+    fontWeight: '600',
+  },
+  shopNowBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 12,
+    gap: 2,
+  },
+  shopNowBtnText: {
+    color: '#0F172A',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  bannerRightArt: {
+    flex: 0.95,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bannerArtImage: {
+    width: 130,
+    height: 115,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
+  },
+  activeDot: {
+    width: 18,
+    backgroundColor: '#1565FF',
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    rowGap: 10,
+    marginBottom: 16,
+  },
+  catGridCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -1131,26 +1108,128 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  categoryCardSelected: {
-    borderColor: '#0066FF',
+  catGridCardSelected: {
+    borderColor: '#1565FF',
     borderWidth: 1.5,
     backgroundColor: '#EFF6FF',
   },
-  categoryIconWrap: {
-    width: 44,
-    height: 44,
+  catVisualBox: {
+    width: 48,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
   },
-  categoryName: {
-    fontSize: 11,
+  moreIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  catLabel: {
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#0F172A',
     textAlign: 'center',
   },
-  categoryNameSelected: {
-    color: '#0066FF',
+  catLabelSelected: {
+    color: '#1565FF',
+  },
+  brandsSection: {
+    marginBottom: 16,
+  },
+  brandsScrollList: {
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  brandChipCard: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    minWidth: 72,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  brandChipCardSelected: {
+    borderColor: '#1565FF',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1.5,
+  },
+  brandChipText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  brandChipTextSelected: {
+    color: '#1565FF',
+  },
+  activeFiltersBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    marginBottom: 10,
+  },
+  activeFilterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  filterPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1565FF',
+  },
+  clearAllBtn: {
+    padding: 4,
+  },
+  clearAllBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#EF4444',
+  },
+  sectionHeader: {
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.3,
+  },
+  seeAllText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1565FF',
   },
   partsGrid: {
     flexDirection: 'row',
@@ -1158,31 +1237,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 14,
   },
-  gridItem: {
-    width: '48.5%',
-    marginBottom: 12,
-  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
   },
   imageContainer: {
     position: 'relative',
-    height: 134,
+    height: 136,
     backgroundColor: '#F1F5F9',
     overflow: 'hidden',
   },
   cardImage: {
     width: '100%',
     height: '100%',
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#1565FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 4,
+  },
+  verifiedBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   conditionBadge: {
     position: 'absolute',
@@ -1199,145 +1289,64 @@ const styles = StyleSheet.create({
     backgroundColor: '#DBEAFE',
   },
   conditionBadgeText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
   },
   conditionTextUsed: {
     color: '#15803D',
   },
   conditionTextNew: {
-    color: '#0066FF',
+    color: '#1565FF',
   },
-  favoriteButton: {
+  favoriteCircleButton: {
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   cardContent: {
     padding: 10,
   },
-  partTitle: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.2,
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    minHeight: 34,
   },
-  partModel: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 2,
-    fontWeight: '500',
+  partTitle: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+    lineHeight: 17,
+  },
+  price: {
+    fontSize: 15.5,
+    fontWeight: '900',
+    color: '#1565FF',
+    marginTop: 4,
+    letterSpacing: -0.3,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 3,
-    gap: 2,
+    marginTop: 4,
+    gap: 3,
   },
   locationText: {
     fontSize: 11,
     color: '#64748B',
-  },
-  price: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0066FF',
-    marginTop: 5,
-    letterSpacing: -0.3,
-  },
-  cardQuickActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 9,
-    gap: 6,
-  },
-  waPill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E8F8EE',
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 4,
-  },
-  waPillText: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    color: '#15803D',
-  },
-  callPill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EBF3FF',
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 4,
-  },
-  callPillText: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    color: '#0066FF',
-  },
-  bottomBanner: {
-    backgroundColor: '#08142C',
-    borderRadius: 18,
-    marginHorizontal: 14,
-    marginTop: 16,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    overflow: 'hidden',
-  },
-  bannerLeft: {
-    flex: 1.3,
-  },
-  bannerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  bannerSubtitle: {
-    fontSize: 11.5,
-    color: '#94A3B8',
-    marginTop: 4,
-    lineHeight: 16,
-  },
-  bannerBtn: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    alignSelf: 'flex-start',
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  bannerBtnText: {
-    color: '#0F172A',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  bannerRight: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bannerImage: {
-    width: 110,
-    height: 80,
-    borderRadius: 12,
+    fontWeight: '500',
   },
   loaderContainer: {
     padding: 32,
@@ -1376,6 +1385,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
   modalTitle: {
     fontSize: 17,
@@ -1392,7 +1402,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   gpsLocationText: {
-    color: '#0066FF',
+    color: '#1565FF',
     fontWeight: '700',
     fontSize: 13,
   },
@@ -1432,7 +1442,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   locationItemTextActive: {
-    color: '#0066FF',
+    color: '#1565FF',
     fontWeight: 'bold',
   },
   filterSectionTitle: {
@@ -1440,60 +1450,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
     marginBottom: 8,
-  },
-  activeCategoryBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginTop: 8,
-  },
-  activeCategoryInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  activeCategoryText: {
-    fontSize: 13,
-    color: '#1E40AF',
-    fontWeight: '500',
-  },
-  activeCategoryBold: {
-    fontWeight: '800',
-    color: '#1E3A8A',
-  },
-  activeCategoryCountPill: {
-    backgroundColor: '#DBEAFE',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginLeft: 4,
-  },
-  activeCategoryCountText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#1D4ED8',
-  },
-  clearCategoryPillBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FEE2E2',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  clearCategoryPillBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#DC2626',
   },
 });

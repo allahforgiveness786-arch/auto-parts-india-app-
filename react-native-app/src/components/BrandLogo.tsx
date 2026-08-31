@@ -76,6 +76,92 @@ export const ModernDeltaLogoIcon: React.FC<{ size?: number }> = ({ size = 48 }) 
   );
 };
 
+export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: boolean }> = ({ brand, size = 32, active = false }) => {
+  const b = (brand || '').toLowerCase();
+  
+  // Custom styled brand emblem representations
+  if (b.includes('maruti') || b.includes('suzuki')) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: size * 0.7, fontWeight: '900', color: '#1E293B', fontStyle: 'italic', transform: [{ skewX: '-12deg' }] }}>
+          S
+        </Text>
+      </View>
+    );
+  }
+  if (b.includes('hyundai')) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.9, height: size * 0.65, borderRadius: size * 0.35, borderWidth: 2, borderColor: '#0B2050', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: size * 0.5, fontWeight: '900', color: '#0B2050', fontStyle: 'italic', transform: [{ skewX: '-15deg' }] }}>
+            H
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  if (b.includes('tata')) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.85, height: size * 0.85, borderRadius: size * 0.425, backgroundColor: '#0052CC', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: size * 0.52, fontWeight: '900', color: '#FFFFFF' }}>
+            T
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  if (b.includes('mahindra')) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: -2 }}>
+          <Text style={{ fontSize: size * 0.65, fontWeight: '900', color: '#E11D48', letterSpacing: -3 }}>
+            ∞
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  if (b.includes('toyota')) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.9, height: size * 0.68, borderRadius: size * 0.35, borderWidth: 2.2, borderColor: '#0F172A', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: size * 0.45, height: size * 0.45, borderRadius: size * 0.22, borderWidth: 1.8, borderColor: '#0F172A' }} />
+        </View>
+      </View>
+    );
+  }
+  if (b.includes('honda')) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.8, height: size * 0.8, borderRadius: 6, borderWidth: 2, borderColor: '#DC2626', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: size * 0.55, fontWeight: '900', color: '#DC2626' }}>
+            H
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  if (b.includes('ford')) {
+    return (
+      <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.95, height: size * 0.55, borderRadius: size * 0.28, backgroundColor: '#1D4ED8', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: size * 0.35, fontWeight: '900', color: '#FFFFFF', fontStyle: 'italic' }}>
+            Ford
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ fontSize: size * 0.45, fontWeight: '800', color: '#0F172A' }}>
+        {(brand || 'C').charAt(0).toUpperCase()}
+      </Text>
+    </View>
+  );
+};
+
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   size = 48,
   variant = 'icon',
