@@ -15,6 +15,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
   const [dbUserDoc, setDbUserDoc] = useState<any>(null);
 
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isPopupModalVisible, setIsPopupModalVisible] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editLocation, setEditLocation] = useState('');

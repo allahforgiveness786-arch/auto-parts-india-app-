@@ -38,6 +38,7 @@ import { LanguageSelectorModal } from '../components/LanguageSelectorModal';
 import { UpdateDialogModal } from '../components/UpdateDialogModal';
 import { InAppNotification, InAppNotificationData } from '../components/InAppNotification';
 import { matchesCategoryFilter } from '../utils/categoryMatcher';
+import { Category3DIcon } from '../components/Category3DIcon';
 
 // Animated Product Card matching user reference layout
 const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onToggleFavorite, cardWidth }: any) => {
@@ -286,51 +287,44 @@ export default function HomeScreen({ navigation, route, user }: any) {
     ]).start();
   }, []);
 
-  // 6 Categories matching user reference mockup with exact 3D visuals
+  // 6 Categories matching user reference mockup with exact isolated 3D product visuals
   const categoryGridItems = [
     { 
       id: 'Engine & Parts', 
       name: 'Engine & Parts', 
       icon: 'engine', 
       imageUrl: 'https://images.unsplash.com/photo-1598209279122-8541213a0387?auto=format&fit=crop&q=80&w=260',
-      iconColor: '#0F172A',
-      iconBg: '#F8FAFC',
+      is3DGraphic: 'engine',
     },
     { 
       id: 'Body Parts', 
       name: 'Body Parts', 
       icon: 'car-door', 
-      imageUrl: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&q=80&w=260',
-      iconColor: '#2563EB',
-      iconBg: '#F8FAFC',
+      is3DGraphic: 'door',
     },
     { 
       id: 'Electricals', 
       name: 'Electricals', 
       icon: 'lightning-bolt', 
-      iconColor: '#F59E0B',
-      iconBg: '#F8FAFC',
+      is3DGraphic: 'lightning',
     },
     { 
       id: 'Suspension', 
       name: 'Suspension', 
       icon: 'car-brake-alert', 
-      iconColor: '#0F172A',
-      iconBg: '#F8FAFC',
+      is3DGraphic: 'suspension',
     },
     { 
       id: 'Exhaust', 
       name: 'Exhaust', 
       icon: 'pipe', 
-      iconColor: '#0F172A',
-      iconBg: '#F8FAFC',
+      is3DGraphic: 'exhaust',
     },
     { 
       id: 'More', 
       name: 'More', 
       icon: 'apps', 
-      iconColor: '#1565FF',
-      iconBg: '#F8FAFC',
+      is3DGraphic: 'more',
     },
   ];
 
@@ -488,17 +482,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
             <Icon source="chevron-down" size={15} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {/* Right Controls: Admin, Language & Notification */}
+          {/* Right Controls: Language & Notification */}
           <View style={styles.headerRightGroup}>
-            <TouchableOpacity 
-              style={styles.adminHeaderBtn} 
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('AdminTab')}
-            >
-              <Icon source="shield-account" color="#FFFFFF" size={18} />
-              <Text style={styles.adminHeaderBtnText}>Admin</Text>
-            </TouchableOpacity>
-
             <TouchableOpacity 
               style={styles.langPill} 
               activeOpacity={0.8}
@@ -645,18 +630,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
                   }
                 }}
               >
-                <View style={[styles.catVisualBox, { backgroundColor: isSelected ? '#DBEAFE' : (cat.iconBg || '#F8FAFC') }]}>
-                  {cat.imageUrl ? (
-                    <Image 
-                      source={{ uri: cat.imageUrl }} 
-                      style={styles.catImage}
-                      resizeMode="cover"
-                    />
-                  ) : isMore ? (
-                    <Icon source="apps" size={30} color="#1565FF" />
-                  ) : (
-                    <Icon source={cat.icon} size={30} color={isSelected ? '#1565FF' : (cat.iconColor || '#0F172A')} />
-                  )}
+                <View style={[styles.catVisualBox, { backgroundColor: isSelected ? '#DBEAFE' : '#F8FAFC' }]}>
+                  <Category3DIcon type={cat.is3DGraphic || 'more'} size={48} />
                 </View>
                 <Text 
                   style={[styles.catLabel, isSelected && styles.catLabelSelected]} 
