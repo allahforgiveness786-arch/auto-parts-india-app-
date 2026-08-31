@@ -15,33 +15,40 @@ export default function WishlistScreen({ navigation }: any) {
     }
     
     let unsubFavs = () => {};
+    let unsubParts = () => {};
     try {
       const db = getFirebaseFirestore();
       if (db) {
+        let favIds: string[] = [];
+        let allParts: any[] = [];
+
+        const updateSavedParts = () => {
+          const matched = allParts.filter(p => favIds.includes(p.id));
+          setSavedParts(matched);
+          setLoading(false);
+        };
+
         unsubFavs = db.collection('favorites')
           .where('userId', '==', user.uid)
-          .onSnapshot(async (favSnap: any) => {
-            const favIds: string[] = [];
+          .onSnapshot((favSnap: any) => {
+            favIds = [];
             favSnap.forEach((d: any) => {
               const data = d.data();
               if (data.partId) favIds.push(data.partId);
             });
-
-            if (favIds.length > 0) {
-              const partsSnap = await db.collection('spareParts').get();
-              const favedList: any[] = [];
-              partsSnap.forEach((docSnap: any) => {
-                if (favIds.includes(docSnap.id)) {
-                  favedList.push({ id: docSnap.id, ...docSnap.data() });
-                }
-              });
-              setSavedParts(favedList);
-            } else {
-              setSavedParts([]);
-            }
-            setLoading(false);
+            updateSavedParts();
           }, () => {
-            setSavedParts([]);
+            setLoading(false);
+          });
+
+        unsubParts = db.collection('spareParts')
+          .onSnapshot((partsSnap: any) => {
+            allParts = [];
+            partsSnap.forEach((docSnap: any) => {
+              allParts.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            updateSavedParts();
+          }, () => {
             setLoading(false);
           });
       }
@@ -49,7 +56,10 @@ export default function WishlistScreen({ navigation }: any) {
       setSavedParts([]);
       setLoading(false);
     }
-    return () => unsubFavs();
+    return () => {
+      unsubFavs?.();
+      unsubParts?.();
+    };
   }, []);
 
   const handleRemoveFavorite = async (partId: string) => {

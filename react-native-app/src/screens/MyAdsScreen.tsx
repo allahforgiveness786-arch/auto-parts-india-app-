@@ -37,17 +37,25 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
 
-  const currentUser = initialUser || getCurrentUser();
+  const [currentUser, setCurrentUser] = useState(() => initialUser || getCurrentUser());
+
+  useEffect(() => {
+    const authInst = getFirebaseAuth();
+    if (authInst && typeof authInst.onAuthStateChanged === 'function') {
+      const unsub = authInst.onAuthStateChanged((usr) => {
+        if (usr) setCurrentUser(usr);
+      });
+      return () => unsub();
+    }
+  }, []);
+
   const currentUid = currentUser?.uid || currentUser?.id || null;
   const currentEmail = (currentUser?.email || '').toLowerCase();
 
   // 1. Real-time Firestore Listener for User's Listings
   useEffect(() => {
-    if (!currentUser) {
-      setMyParts([]);
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
+    let unsubscribe = () => {};
 
     setLoading(true);
     let unsubscribe = () => {};

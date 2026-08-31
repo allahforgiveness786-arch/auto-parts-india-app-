@@ -427,7 +427,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
     }, 1000);
   };
 
-  const filteredParts = parts.filter((part) => {
+  const strictFilteredParts = parts.filter((part) => {
     const queryLower = searchQuery.toLowerCase().trim();
     const matchesSearch = !queryLower || 
       part.title?.toLowerCase().includes(queryLower) ||
@@ -448,6 +448,24 @@ export default function HomeScreen({ navigation, route, user }: any) {
     const isBelowMax = maxPrice ? partPrice <= Number(maxPrice) : true;
 
     return matchesSearch && matchesCategory && matchesCity && isAboveMin && isBelowMax;
+  });
+
+  const filteredParts = strictFilteredParts.length > 0 ? strictFilteredParts : parts.filter((part) => {
+    const queryLower = searchQuery.toLowerCase().trim();
+    const matchesSearch = !queryLower || 
+      part.title?.toLowerCase().includes(queryLower) ||
+      part.carBrand?.toLowerCase().includes(queryLower) ||
+      part.carModel?.toLowerCase().includes(queryLower) ||
+      part.category?.toLowerCase().includes(queryLower) ||
+      part.subCategory?.toLowerCase().includes(queryLower) ||
+      part.location?.toLowerCase().includes(queryLower);
+
+    const matchesCategory = matchesCategoryFilter(part, selectedCategory);
+    const partPrice = Number(part.price || part.partPrice) || 0;
+    const isAboveMin = minPrice ? partPrice >= Number(minPrice) : true;
+    const isBelowMax = maxPrice ? partPrice <= Number(maxPrice) : true;
+
+    return matchesSearch && matchesCategory && isAboveMin && isBelowMax;
   });
 
   return (

@@ -65,7 +65,6 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
   const openEditModal = () => {
     setEditName(dbUserDoc?.displayName || displayName || '');
     setEditPhone(dbUserDoc?.phone || '');
-    setEditLocation(dbUserDoc?.location || '');
     setIsEditProfileModalOpen(true);
   };
 
@@ -78,7 +77,6 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
         await db.collection('users').doc(activeUid).set({
           displayName: editName.trim(),
           phone: editPhone.trim(),
-          location: editLocation.trim(),
           updatedAt: Date.now(),
         }, { merge: true });
 
@@ -256,15 +254,6 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
               placeholder="e.g. +91 98765 43210"
               placeholderTextColor="#94A3B8"
               keyboardType="phone-pad"
-            />
-
-            <Text style={styles.inputLabel}>Location / City / State</Text>
-            <TextInput
-              style={styles.textInput}
-              value={editLocation}
-              onChangeText={setEditLocation}
-              placeholder="e.g. Chennai, Tamil Nadu"
-              placeholderTextColor="#94A3B8"
             />
 
             <TouchableOpacity
