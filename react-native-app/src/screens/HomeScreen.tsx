@@ -858,11 +858,14 @@ export default function HomeScreen({ navigation, route, user }: any) {
         onDismiss={() => setShowLanguageModal(false)}
       />
 
-      <UpdateDialogModal
-        visible={showUpdateDialog}
-        config={updateConfig}
-        onDismiss={() => setShowUpdateDialog(false)}
-      />
+      {showUpdateDialog && !!updateConfig && (
+        <UpdateDialogModal
+          visible={showUpdateDialog}
+          versionConfig={updateConfig}
+          config={updateConfig}
+          onDismiss={() => setShowUpdateDialog(false)}
+        />
+      )}
 
       {inAppNotification && (
         <InAppNotification

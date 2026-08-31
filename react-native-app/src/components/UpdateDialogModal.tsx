@@ -5,7 +5,8 @@ import { AppVersionConfig } from '../types';
 
 interface UpdateDialogModalProps {
   visible: boolean;
-  versionConfig: AppVersionConfig;
+  versionConfig?: AppVersionConfig;
+  config?: AppVersionConfig;
   currentVersion?: string;
   isForceUpdate?: boolean;
   onDismiss?: () => void;
@@ -14,12 +15,19 @@ interface UpdateDialogModalProps {
 export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
   visible,
   versionConfig,
+  config,
   currentVersion = '1.0.0',
   isForceUpdate = false,
   onDismiss,
 }) => {
+  const activeConfig = versionConfig || config;
+
+  if (!visible || !activeConfig) {
+    return null;
+  }
+
   const handleUpdate = () => {
-    const targetUrl = versionConfig.apkDownloadUrl || versionConfig.playStoreUrl;
+    const targetUrl = activeConfig.apkDownloadUrl || activeConfig.playStoreUrl;
     if (targetUrl) {
       Linking.openURL(targetUrl).catch((err) => {
         console.warn('[UpdateDialogModal] Failed to open URL:', err);
@@ -27,12 +35,15 @@ export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
     }
   };
 
+  const latestVersion = activeConfig.latestVersion || '1.0.0';
+  const force = isForceUpdate || activeConfig.forceUpdate || false;
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={isForceUpdate ? undefined : onDismiss}
+      onRequestClose={force ? undefined : onDismiss}
     >
       <View style={styles.backdrop}>
         <Surface style={styles.card} elevation={5}>
@@ -40,12 +51,12 @@ export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
           <View
             style={[
               styles.headerBanner,
-              isForceUpdate ? styles.headerBannerRed : styles.headerBannerBlue,
+              force ? styles.headerBannerRed : styles.headerBannerBlue,
             ]}
           >
             <View style={styles.bannerIconContainer}>
               <IconButton
-                icon={isForceUpdate ? 'shield-alert' : 'sparkles'}
+                icon={force ? 'shield-alert' : 'sparkles'}
                 iconColor="#FDE047"
                 size={26}
                 style={{ margin: 0 }}
@@ -53,13 +64,13 @@ export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
             </View>
             <View style={styles.bannerTextCol}>
               <Text style={styles.bannerTag}>
-                {isForceUpdate ? 'CRITICAL UPDATE REQUIRED' : 'NEW VERSION AVAILABLE'}
+                {force ? 'CRITICAL UPDATE REQUIRED' : 'NEW VERSION AVAILABLE'}
               </Text>
               <Text style={styles.bannerTitle}>
-                Auto Parts India v{versionConfig.latestVersion}
+                Auto Parts India v{latestVersion}
               </Text>
             </View>
-            {!isForceUpdate && onDismiss && (
+            {!force && onDismiss && (
               <TouchableOpacity style={styles.closeBtn} onPress={onDismiss}>
                 <IconButton icon="close" size={18} iconColor="#FFFFFF" style={{ margin: 0 }} />
               </TouchableOpacity>
@@ -78,16 +89,16 @@ export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
               <View style={styles.compareCol}>
                 <Text style={[styles.compareLabel, { color: '#6366F1' }]}>LATEST VERSION</Text>
                 <Text style={[styles.compareVal, { color: '#818CF8' }]}>
-                  v{versionConfig.latestVersion}
+                  v{latestVersion}
                 </Text>
               </View>
             </View>
 
             {/* Release Date */}
-            {versionConfig.releaseDate ? (
+            {activeConfig.releaseDate ? (
               <View style={styles.dateRow}>
                 <IconButton icon="calendar-clock" size={16} iconColor="#94A3B8" style={{ margin: 0 }} />
-                <Text style={styles.dateText}>Release Date: {versionConfig.releaseDate}</Text>
+                <Text style={styles.dateText}>Release Date: {activeConfig.releaseDate}</Text>
               </View>
             ) : null}
 
@@ -95,12 +106,12 @@ export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
             <Text style={styles.notesHeader}>WHAT'S NEW</Text>
             <ScrollView style={styles.notesContainer}>
               <Text style={styles.notesText}>
-                {versionConfig.releaseNotes ||
+                {activeConfig.releaseNotes ||
                   '• Performance enhancements & speed improvements\n• Live GPS auto-detection updates\n• Bug fixes and stability patches.'}
               </Text>
             </ScrollView>
 
-            {isForceUpdate && (
+            {force && (
               <View style={styles.criticalNotice}>
                 <IconButton icon="alert-circle-outline" size={16} iconColor="#EF4444" style={{ margin: 0 }} />
                 <Text style={styles.criticalNoticeText}>
@@ -111,7 +122,7 @@ export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
 
             {/* Action Buttons */}
             <View style={styles.actionsRow}>
-              {!isForceUpdate && onDismiss && (
+              {!force && onDismiss && (
                 <Button
                   mode="outlined"
                   onPress={onDismiss}
@@ -126,7 +137,7 @@ export const UpdateDialogModal: React.FC<UpdateDialogModalProps> = ({
                 onPress={handleUpdate}
                 style={[
                   styles.updateBtn,
-                  isForceUpdate ? styles.updateBtnRed : styles.updateBtnBlue,
+                  force ? styles.updateBtnRed : styles.updateBtnBlue,
                 ]}
                 labelStyle={{ color: '#FFFFFF', fontWeight: '700' }}
                 icon="download"
