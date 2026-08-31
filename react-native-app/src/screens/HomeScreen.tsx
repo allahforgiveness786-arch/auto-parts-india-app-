@@ -286,17 +286,55 @@ export default function HomeScreen({ navigation, route, user }: any) {
     ]).start();
   }, []);
 
-  // 6 Categories matching modern auto marketplace app
+  // 6 Categories matching user reference mockup with exact 3D visuals
   const categoryGridItems = [
-    { id: 'Engine & Parts', name: 'Engine & Parts', icon: 'engine', iconBg: '#FEE2E2', iconColor: '#DC2626' },
-    { id: 'Body Parts', name: 'Body Parts', icon: 'car-door', iconBg: '#E0E7FF', iconColor: '#4338CA' },
-    { id: 'Electricals', name: 'Electricals', icon: 'lightning-bolt', iconBg: '#FEF3C7', iconColor: '#D97706' },
-    { id: 'Suspension', name: 'Suspension', icon: 'car-brake-alert', iconBg: '#ECFDF5', iconColor: '#059669' },
-    { id: 'Brakes & Steering', name: 'Brakes & Steering', icon: 'disc-alert', iconBg: '#F3E8FF', iconColor: '#7C3AED' },
-    { id: 'More', name: 'More', icon: 'apps', iconBg: '#EFF6FF', iconColor: '#1565FF' },
+    { 
+      id: 'Engine & Parts', 
+      name: 'Engine & Parts', 
+      icon: 'engine', 
+      imageUrl: 'https://images.unsplash.com/photo-1598209279122-8541213a0387?auto=format&fit=crop&q=80&w=260',
+      iconColor: '#0F172A',
+      iconBg: '#F8FAFC',
+    },
+    { 
+      id: 'Body Parts', 
+      name: 'Body Parts', 
+      icon: 'car-door', 
+      imageUrl: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&q=80&w=260',
+      iconColor: '#2563EB',
+      iconBg: '#F8FAFC',
+    },
+    { 
+      id: 'Electricals', 
+      name: 'Electricals', 
+      icon: 'lightning-bolt', 
+      iconColor: '#F59E0B',
+      iconBg: '#F8FAFC',
+    },
+    { 
+      id: 'Suspension', 
+      name: 'Suspension', 
+      icon: 'car-brake-alert', 
+      iconColor: '#0F172A',
+      iconBg: '#F8FAFC',
+    },
+    { 
+      id: 'Exhaust', 
+      name: 'Exhaust', 
+      icon: 'pipe', 
+      iconColor: '#0F172A',
+      iconBg: '#F8FAFC',
+    },
+    { 
+      id: 'More', 
+      name: 'More', 
+      icon: 'apps', 
+      iconColor: '#1565FF',
+      iconBg: '#F8FAFC',
+    },
   ];
 
-  // Brand items for horizontal brand selector
+  // Brand items for horizontal brand selector matching the reference image
   const brandList = [
     { id: 'maruti', name: 'Maruti Suzuki' },
     { id: 'hyundai', name: 'Hyundai' },
@@ -607,11 +645,17 @@ export default function HomeScreen({ navigation, route, user }: any) {
                   }
                 }}
               >
-                <View style={[styles.catVisualBox, { backgroundColor: isSelected ? '#DBEAFE' : (cat.iconBg || '#F1F5F9') }]}>
-                  {isMore ? (
-                    <Icon source="apps" size={28} color="#1565FF" />
+                <View style={[styles.catVisualBox, { backgroundColor: isSelected ? '#DBEAFE' : (cat.iconBg || '#F8FAFC') }]}>
+                  {cat.imageUrl ? (
+                    <Image 
+                      source={{ uri: cat.imageUrl }} 
+                      style={styles.catImage}
+                      resizeMode="cover"
+                    />
+                  ) : isMore ? (
+                    <Icon source="apps" size={30} color="#1565FF" />
                   ) : (
-                    <Icon source={cat.icon} size={28} color={isSelected ? '#1565FF' : (cat.iconColor || '#0F172A')} />
+                    <Icon source={cat.icon} size={30} color={isSelected ? '#1565FF' : (cat.iconColor || '#0F172A')} />
                   )}
                 </View>
                 <Text 
@@ -1116,19 +1160,19 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 14,
-    rowGap: 10,
+    rowGap: 12,
     marginBottom: 16,
   },
   catGridCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -1140,23 +1184,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
   catVisualBox: {
-    width: 48,
-    height: 48,
+    width: 54,
+    height: 54,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  catImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
   moreIconBox: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: 12,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   catLabel: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '700',
     color: '#0F172A',
     textAlign: 'center',
@@ -1176,17 +1226,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    minWidth: 72,
-    shadowColor: '#0F172A',
+    minWidth: 80,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.04,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 1.5,
   },
   brandChipCardSelected: {
     borderColor: '#1565FF',
@@ -1194,10 +1244,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   brandChipText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '700',
     color: '#0F172A',
-    marginTop: 4,
+    marginTop: 6,
     textAlign: 'center',
   },
   brandChipTextSelected: {
