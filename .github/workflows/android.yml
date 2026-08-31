@@ -80,12 +80,20 @@ jobs:
           find node_modules/react-native-screens -name "SearchBarNativeComponent.d.ts" -exec sed -i 's/React\.ElementRef<[^>]*>/any/g' {} + || true
           find node_modules/react-native-screens -name "SearchBarNativeComponent.js" -exec sed -i 's/React\.ElementRef<[^>]*>/any/g' {} + || true
 
-      - name: Prepare Clean Asset Directories
+      - name: Pre-bundle JS for Release
         run: |
           cd react-native-app
-          rm -rf android/app/src/main/assets/index.android.bundle || true
-          mkdir -p android/app/src/main/assets
-          mkdir -p android/app/src/main/res
+          npx @react-native-community/cli bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res || npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res || true
 
       - name: Ensure Gradle Wrapper & Executable
         run: |
