@@ -1,465 +1,280 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, Text, Image } from 'react-native';
 
-interface BrandLogoProps {
-  size?: number | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  variant?: 'icon' | 'horizontal' | 'full' | 'compact';
-  theme?: 'light' | 'dark';
-  showTagline?: boolean;
-  style?: ViewStyle;
-  className?: string;
-}
-
-export const ModernDeltaLogoIcon: React.FC<{ size?: number }> = ({ size = 48 }) => {
-  const s = size;
-  
+// 1. Maruti Suzuki Emblem
+export const SuzukiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
+  const scale = size / 38;
   return (
-    <View style={{ width: s, height: s, justifyContent: 'center', alignItems: 'center' }}>
-      <View style={{ width: s, height: s, position: 'relative' }}>
-        
-        {/* White Left Pillar */}
-        <View style={{
-          position: 'absolute',
-          left: s * 0.335,
-          top: s * 0.12,
-          width: s * 0.16,
-          height: s * 0.56,
-          backgroundColor: '#FFFFFF',
-          transform: [{ skewX: '-20.56deg' }],
-        }} />
-
-        {/* White Right Pillar (Full) */}
-        <View style={{
-          position: 'absolute',
-          left: s * 0.545,
-          top: s * 0.12,
-          width: s * 0.16,
-          height: s * 0.56,
-          backgroundColor: '#FFFFFF',
-          transform: [{ skewX: '20.56deg' }],
-        }} />
-
-        {/* White Crossbar */}
-        <View style={{
-          position: 'absolute',
-          left: s * 0.35,
-          top: s * 0.46,
-          width: s * 0.30,
-          height: s * 0.10,
-          backgroundColor: '#FFFFFF',
-        }} />
-
-        {/* Blue Right Pillar (Bottom Half) */}
-        <View style={{
-          position: 'absolute',
-          left: s * 0.60875,
-          top: s * 0.46,
-          width: s * 0.16,
-          height: s * 0.22,
-          backgroundColor: '#0066FF',
-          transform: [{ skewX: '20.56deg' }],
-        }} />
-
-        {/* Orange Accent */}
-        <View style={{
-          position: 'absolute',
-          left: s * 0.36875,
-          top: s * 0.72,
-          width: s * 0.21,
-          height: s * 0.06,
-          backgroundColor: '#FF6B00',
-          transform: [{ skewX: '-20.56deg' }],
-        }} />
-
+    <View style={[styles.center, { width: size, height: size }]}>
+      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
+        {/* Upper S Diagonal */}
+        <View style={styles.suzukiTopBar} />
+        {/* Middle Connecting S Stroke */}
+        <View style={styles.suzukiMidBar} />
+        {/* Bottom S Diagonal */}
+        <View style={styles.suzukiBottomBar} />
       </View>
     </View>
   );
 };
 
-// High-Fidelity Exact Vector Emblems for Indian Car Brands matching reference image
+// 2. Hyundai Slanted Oval H Emblem
+export const HyundaiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
+  const scale = size / 38;
+  return (
+    <View style={[styles.center, { width: size, height: size }]}>
+      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
+        {/* Oval Outer Ring */}
+        <View style={styles.hyundaiOval}>
+          {/* Slanted H Left Leg */}
+          <View style={styles.hyundaiLegLeft} />
+          {/* Slanted H Right Leg */}
+          <View style={styles.hyundaiLegRight} />
+          {/* H Cross Connector */}
+          <View style={styles.hyundaiCrossBar} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// 3. Tata Motors Circular T Emblem
+export const TataEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
+  const scale = size / 38;
+  return (
+    <View style={[styles.center, { width: size, height: size }]}>
+      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
+        {/* Blue Circle Base */}
+        <View style={styles.tataCircle}>
+          {/* Top Arc Ring */}
+          <View style={styles.tataTopArc} />
+          {/* T Vertical Stem */}
+          <View style={styles.tataStem} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// 4. Mahindra Twin Peaks Red Butterfly Emblem
+export const MahindraEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
+  const scale = size / 38;
+  return (
+    <View style={[styles.center, { width: size, height: size }]}>
+      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
+        <View style={styles.mahindraRow}>
+          {/* Left Wing Loop */}
+          <View style={styles.mahindraWingLeft} />
+          {/* Right Wing Loop */}
+          <View style={styles.mahindraWingRight} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// 5. Toyota Triple Oval Emblem
+export const ToyotaEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
+  const scale = size / 38;
+  return (
+    <View style={[styles.center, { width: size, height: size }]}>
+      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
+        {/* Outer Ellipse */}
+        <View style={styles.toyotaOuterOval}>
+          {/* Inner Horizontal Oval */}
+          <View style={styles.toyotaInnerHorizOval} />
+          {/* Inner Vertical Oval */}
+          <View style={styles.toyotaInnerVertOval} />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// Combined Brand Component supporting both High-Res Official CDN and Direct Vector Fallbacks
 export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: boolean }> = ({ brand, size = 38, active = false }) => {
   const b = (brand || '').toLowerCase().trim();
 
-  // 1. MARUTI SUZUKI: Official Suzuki S Geometric Emblem (Dual Chrome Slash)
   if (b.includes('maruti') || b.includes('suzuki')) {
-    return (
-      <View style={[styles.badgeContainer, { width: size, height: size }]}>
-        <View style={styles.suzukiEmblem}>
-          <View style={styles.suzukiTopSlash} />
-          <View style={styles.suzukiMidCross} />
-          <View style={styles.suzukiBottomSlash} />
-        </View>
-      </View>
-    );
+    return <SuzukiEmblemSvg size={size} />;
   }
-
-  // 2. HYUNDAI: Official Slanted Oval H Chrome Emblem
   if (b.includes('hyundai')) {
-    return (
-      <View style={[styles.badgeContainer, { width: size, height: size }]}>
-        <View style={styles.hyundaiOval}>
-          <View style={styles.hyundaiLeftBar} />
-          <View style={styles.hyundaiCrossBar} />
-          <View style={styles.hyundaiRightBar} />
-        </View>
-      </View>
-    );
+    return <HyundaiEmblemSvg size={size} />;
   }
-
-  // 3. TATA: Official Circular Blue Background with Crisp Chrome T Ring Emblem
   if (b.includes('tata')) {
-    return (
-      <View style={[styles.badgeContainer, { width: size, height: size }]}>
-        <View style={styles.tataCircle}>
-          <View style={styles.tataUpperArc} />
-          <View style={styles.tataCenterStem} />
-        </View>
-      </View>
-    );
+    return <TataEmblemSvg size={size} />;
   }
-
-  // 4. MAHINDRA: Official Twin Peaks Infinity Red Butterfly Emblem
   if (b.includes('mahindra')) {
-    return (
-      <View style={[styles.badgeContainer, { width: size, height: size }]}>
-        <View style={styles.mahindraTwinPeaks}>
-          <View style={styles.mahindraPeakLeft} />
-          <View style={styles.mahindraPeakRight} />
-        </View>
-      </View>
-    );
+    return <MahindraEmblemSvg size={size} />;
   }
-
-  // 5. TOYOTA: Official Triple Oval Chrome Emblem
   if (b.includes('toyota')) {
-    return (
-      <View style={[styles.badgeContainer, { width: size, height: size }]}>
-        <View style={styles.toyotaOuterOval}>
-          <View style={styles.toyotaInnerHorizontalOval} />
-          <View style={styles.toyotaInnerVerticalOval} />
-        </View>
-      </View>
-    );
-  }
-
-  // 6. HONDA: Chrome Squared H
-  if (b.includes('honda')) {
-    return (
-      <View style={[styles.badgeContainer, { width: size, height: size }]}>
-        <View style={styles.hondaTrapezoid}>
-          <Text style={{ fontSize: size * 0.55, fontWeight: '900', color: '#0F172A' }}>H</Text>
-        </View>
-      </View>
-    );
-  }
-
-  // 7. FORD: Blue Oval with Script
-  if (b.includes('ford')) {
-    return (
-      <View style={[styles.badgeContainer, { width: size, height: size }]}>
-        <View style={styles.fordBlueOval}>
-          <Text style={{ fontSize: size * 0.35, fontWeight: '900', color: '#FFFFFF', fontStyle: 'italic' }}>Ford</Text>
-        </View>
-      </View>
-    );
+    return <ToyotaEmblemSvg size={size} />;
   }
 
   return (
-    <View style={[styles.badgeContainer, { width: size, height: size, backgroundColor: '#F8FAFC' }]}>
-      <Text style={{ fontSize: size * 0.42, fontWeight: '800', color: '#0F172A' }}>
+    <View style={[styles.center, { width: size, height: size, backgroundColor: '#F8FAFC', borderRadius: size / 2 }]}>
+      <Text style={{ fontSize: size * 0.42, fontWeight: '800', color: active ? '#1565FF' : '#0F172A' }}>
         {(brand || 'C').charAt(0).toUpperCase()}
       </Text>
     </View>
   );
 };
 
-export const BrandLogo: React.FC<BrandLogoProps> = ({
-  size = 48,
-  variant = 'icon',
-  theme = 'dark',
-  showTagline = false,
-  style,
-}) => {
-  let numSize = 48;
-  if (typeof size === 'number') {
-    numSize = size;
-  } else if (size === 'sm') {
-    numSize = 32;
-  } else if (size === 'md') {
-    numSize = 44;
-  } else if (size === 'lg') {
-    numSize = 56;
-  } else if (size === 'xl') {
-    numSize = 72;
-  } else if (size === '2xl') {
-    numSize = 96;
-  }
-
-  const isLight = theme === 'light';
-  const textColor = isLight ? '#0F172A' : '#F8FAFC';
-  const accentColor = '#0066FF';
-  const subTextColor = isLight ? '#64748B' : '#94A3B8';
-
-  if (variant === 'icon') {
-    return (
-      <View style={[styles.container, style]}>
-        <ModernDeltaLogoIcon size={numSize} />
-      </View>
-    );
-  }
-
-  if (variant === 'horizontal') {
-    return (
-      <View style={[styles.horizontalContainer, style]}>
-        <ModernDeltaLogoIcon size={numSize} />
-        <View style={styles.textColumn}>
-          <Text style={[styles.brandTitle, { color: textColor, fontSize: numSize * 0.4 }]}>
-            Auto<Text style={{ color: accentColor }}>Parts</Text>
-          </Text>
-          {showTagline && (
-            <Text style={[styles.tagline, { color: subTextColor, fontSize: numSize * 0.2 }]}>
-              INDIA MARKETPLACE
-            </Text>
-          )}
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.fullContainer, style]}>
-      <ModernDeltaLogoIcon size={numSize} />
-      <Text style={[styles.brandTitleFull, { color: textColor, fontSize: numSize * 0.28 }]}>
-        Auto<Text style={{ color: accentColor }}>Parts</Text> India
-      </Text>
-      {showTagline && (
-        <Text style={[styles.tagline, { color: subTextColor, fontSize: numSize * 0.16 }]}>
-          Verified Genuine Auto Spares & Parts
-        </Text>
-      )}
-    </View>
-  );
-};
-
-export default BrandLogo;
-
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  horizontalContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  textColumn: {
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  brandTitle: {
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  tagline: {
-    fontWeight: '600',
-    letterSpacing: 0.8,
-    marginTop: 1,
-  },
-  fullContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-  },
-  brandTitleFull: {
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    marginTop: 8,
-  },
-
-  // Brand badges precision geometry
-  badgeContainer: {
+  center: {
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  // Suzuki S
-  suzukiEmblem: {
-    width: 26,
-    height: 24,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    position: 'relative',
+  // 1. SUZUKI
+  suzukiTopBar: {
+    position: 'absolute',
+    top: 6,
+    left: 8,
+    width: 22,
+    height: 7,
+    backgroundColor: '#64748B',
+    transform: [{ skewX: '-45deg' }],
+    borderRadius: 1.5,
   },
-  suzukiTopSlash: {
+  suzukiMidBar: {
+    position: 'absolute',
+    top: 15,
     width: 20,
-    height: 6,
+    height: 8,
     backgroundColor: '#475569',
-    transform: [{ skewX: '-30deg' }],
-    borderRadius: 1.5,
-    borderTopWidth: 1,
-    borderColor: '#94A3B8',
-  },
-  suzukiMidCross: {
-    width: 14,
-    height: 6,
-    backgroundColor: '#334155',
-    transform: [{ skewX: '30deg' }],
+    transform: [{ skewX: '45deg' }],
     borderRadius: 1.5,
   },
-  suzukiBottomSlash: {
-    width: 20,
-    height: 6,
-    backgroundColor: '#475569',
-    transform: [{ skewX: '-30deg' }],
+  suzukiBottomBar: {
+    position: 'absolute',
+    bottom: 6,
+    right: 8,
+    width: 22,
+    height: 7,
+    backgroundColor: '#64748B',
+    transform: [{ skewX: '-45deg' }],
     borderRadius: 1.5,
-    borderBottomWidth: 1,
-    borderColor: '#1E293B',
   },
 
-  // Hyundai Oval H
+  // 2. HYUNDAI
   hyundaiOval: {
-    width: 32,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2.5,
+    width: 34,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 3,
     borderColor: '#0F172A',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    transform: [{ rotate: '-6deg' }],
   },
-  hyundaiLeftBar: {
+  hyundaiLegLeft: {
     position: 'absolute',
-    left: 7,
-    width: 3,
-    height: 12,
+    left: 8,
+    width: 3.5,
+    height: 16,
     backgroundColor: '#0F172A',
-    transform: [{ skewX: '-18deg' }],
+    transform: [{ skewX: '-15deg' }],
+    borderRadius: 1,
+  },
+  hyundaiLegRight: {
+    position: 'absolute',
+    right: 8,
+    width: 3.5,
+    height: 16,
+    backgroundColor: '#0F172A',
+    transform: [{ skewX: '-15deg' }],
     borderRadius: 1,
   },
   hyundaiCrossBar: {
-    position: 'absolute',
-    width: 12,
-    height: 2.5,
+    width: 14,
+    height: 3,
     backgroundColor: '#0F172A',
-  },
-  hyundaiRightBar: {
-    position: 'absolute',
-    right: 7,
-    width: 3,
-    height: 12,
-    backgroundColor: '#0F172A',
-    transform: [{ skewX: '-18deg' }],
-    borderRadius: 1,
+    transform: [{ skewX: '-15deg' }],
   },
 
-  // Tata Blue Ring
+  // 3. TATA
   tataCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#0052CC',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    shadowColor: '#0052CC',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.25,
-    shadowRadius: 2,
   },
-  tataUpperArc: {
-    width: 16,
-    height: 6,
-    borderTopWidth: 2.5,
-    borderLeftWidth: 2,
-    borderRightWidth: 2,
+  tataTopArc: {
+    position: 'absolute',
+    top: 5,
+    width: 18,
+    height: 10,
+    borderTopLeftRadius: 9,
+    borderTopRightRadius: 9,
+    borderWidth: 2.5,
     borderColor: '#FFFFFF',
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    marginBottom: 1,
+    borderBottomWidth: 0,
   },
-  tataCenterStem: {
-    width: 2.5,
-    height: 8,
+  tataStem: {
+    position: 'absolute',
+    top: 12,
+    width: 3,
+    height: 11,
     backgroundColor: '#FFFFFF',
-    borderRadius: 1,
+    borderRadius: 1.5,
   },
 
-  // Mahindra Twin Peaks Red Butterfly
-  mahindraTwinPeaks: {
-    width: 30,
-    height: 18,
+  // 4. MAHINDRA
+  mahindraRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    gap: 3,
     alignItems: 'center',
-    gap: 1,
+    justifyContent: 'center',
   },
-  mahindraPeakLeft: {
-    width: 13,
-    height: 14,
-    borderTopLeftRadius: 10,
-    borderBottomRightRadius: 8,
-    borderWidth: 2.5,
-    borderColor: '#E11D48',
-    transform: [{ rotate: '-12deg' }],
+  mahindraWingLeft: {
+    width: 15,
+    height: 18,
+    borderRadius: 7.5,
+    borderWidth: 3,
+    borderColor: '#DC2626',
+    transform: [{ rotate: '25deg' }],
   },
-  mahindraPeakRight: {
-    width: 13,
-    height: 14,
-    borderTopRightRadius: 10,
-    borderBottomLeftRadius: 8,
-    borderWidth: 2.5,
-    borderColor: '#E11D48',
-    transform: [{ rotate: '12deg' }],
+  mahindraWingRight: {
+    width: 15,
+    height: 18,
+    borderRadius: 7.5,
+    borderWidth: 3,
+    borderColor: '#DC2626',
+    transform: [{ rotate: '-25deg' }],
   },
 
-  // Toyota Triple Oval
+  // 5. TOYOTA
   toyotaOuterOval: {
-    width: 32,
-    height: 22,
-    borderRadius: 11,
+    width: 34,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2.5,
     borderColor: '#0F172A',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
-  toyotaInnerHorizontalOval: {
+  toyotaInnerHorizOval: {
     position: 'absolute',
     top: 2,
-    width: 18,
-    height: 9,
+    width: 22,
+    height: 10,
     borderRadius: 5,
     borderWidth: 2,
     borderColor: '#0F172A',
   },
-  toyotaInnerVerticalOval: {
+  toyotaInnerVertOval: {
     position: 'absolute',
-    width: 8,
-    height: 14,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#0F172A',
-  },
-
-  // Honda
-  hondaTrapezoid: {
-    width: 26,
-    height: 22,
-    borderWidth: 2,
-    borderColor: '#0F172A',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // Ford
-  fordBlueOval: {
-    width: 32,
+    top: 2,
+    width: 10,
     height: 18,
-    borderRadius: 9,
-    backgroundColor: '#002C6C',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#0F172A',
   },
 });

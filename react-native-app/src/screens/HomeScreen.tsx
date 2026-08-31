@@ -145,7 +145,7 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
           <View style={styles.locationRow}>
             <Icon source="map-marker" size={12} color="#64748B" />
             <Text numberOfLines={1} style={styles.locationText}>
-              {item.location ? `${item.location} • 3 km away` : 'Chennai • 3 km away'}
+              {item.location ? `${item.location} • ${item.distance || (item.id === 'demo-part-2' ? '12 km away' : '3 km away')}` : 'Chennai • 3 km away'}
             </Text>
           </View>
         </View>
