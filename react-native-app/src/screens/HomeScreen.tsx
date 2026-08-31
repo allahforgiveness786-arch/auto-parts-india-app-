@@ -39,6 +39,7 @@ import { UpdateDialogModal } from '../components/UpdateDialogModal';
 import { InAppNotification, InAppNotificationData } from '../components/InAppNotification';
 import { matchesCategoryFilter } from '../utils/categoryMatcher';
 import { Category3DIcon } from '../components/Category3DIcon';
+import { BannerPartsCollage } from '../components/BannerPartsCollage';
 
 // Animated Product Card matching user reference layout
 const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onToggleFavorite, cardWidth }: any) => {
@@ -583,13 +584,9 @@ export default function HomeScreen({ navigation, route, user }: any) {
               </TouchableOpacity>
             </View>
 
-            {/* Banner Right Composition Image */}
+            {/* Banner Right Composition 3D Collage matching mockup */}
             <View style={styles.bannerRightArt}>
-              <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400' }}
-                style={styles.bannerArtImage}
-                resizeMode="contain"
-              />
+              <BannerPartsCollage />
             </View>
           </View>
 
@@ -665,7 +662,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
                     setSelectedBrand(isBrandSelected ? 'All' : b.name);
                   }}
                 >
-                  <CarBrandBadge brand={b.name} size={28} active={isBrandSelected} />
+                  <CarBrandBadge brand={b.name} size={38} active={isBrandSelected} />
                   <Text style={[styles.brandChipText, isBrandSelected && styles.brandChipTextSelected]} numberOfLines={1}>
                     {b.name}
                   </Text>
@@ -1105,13 +1102,24 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   bannerRightArt: {
-    flex: 0.95,
+    flex: 1,
+    height: 120,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  bannerGlowCircle: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#1E40AF',
+    opacity: 0.6,
   },
   bannerArtImage: {
-    width: 130,
-    height: 115,
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
   dotsRow: {
     flexDirection: 'row',

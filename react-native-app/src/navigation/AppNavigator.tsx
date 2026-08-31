@@ -92,6 +92,17 @@ function TabNavigator() {
         component={ChatsScreen}
         options={{ 
           title: 'Chats',
+          tabBarBadge: 2,
+          tabBarBadgeStyle: {
+            backgroundColor: '#EF4444',
+            color: '#FFFFFF',
+            fontSize: 10,
+            fontWeight: '800',
+            lineHeight: 14,
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+          },
           tabBarIcon: ({ color, size, focused }) => (
             <Icon source={focused ? "message-text" : "message-text-outline"} color={color} size={23} />
           )
