@@ -300,15 +300,7 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
           ) : null}
         </View>
 
-        <GMap
-          latitude={partLat}
-          longitude={partLng}
-          state={part.state}
-          district={part.district || part.location}
-          title={`${part.title} - ${part.location || 'India'}`}
-          interactive={false}
-          style={{ marginBottom: 16 }}
-        />
+        <GMap latitude={partLat} longitude={partLng} state={part.state} district={part.district || part.location} title={`${part.title} - ${part.location || 'India'}`} interactive={false} style={{ marginBottom: 16 }} height={250} />
 
         <Divider style={styles.divider} />
 

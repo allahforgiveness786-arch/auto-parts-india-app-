@@ -19,6 +19,10 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import SearchScreen from '../screens/SearchScreen';
 import AllCategoriesScreen from '../screens/AllCategoriesScreen';
 import MyAdsScreen from '../screens/MyAdsScreen';
+import WishlistScreen from '../screens/WishlistScreen';
+import RecentlyViewedScreen from '../screens/RecentlyViewedScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -41,7 +45,7 @@ function CustomSellTabBarButton({ onPress, accessibilityState }: any) {
   );
 }
 
-function TabNavigator({ user }: { user: any }) {
+function TabNavigator() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 6) : insets.bottom;
   const tabHeight = 60 + bottomPadding;
@@ -74,61 +78,56 @@ function TabNavigator({ user }: { user: any }) {
     >
       <Tab.Screen 
         name="HomeTab" 
+        component={HomeScreen}
         options={{ 
           title: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
             <Icon source={focused ? "home" : "home-outline"} color={color} size={24} />
           )
         }}
-      >
-        {(props) => <HomeScreen {...props} user={user} />}
-      </Tab.Screen>
+      />
 
       <Tab.Screen 
         name="ChatsTab" 
+        component={ChatsScreen}
         options={{ 
           title: 'Chat',
           tabBarIcon: ({ color, size, focused }) => (
             <Icon source={focused ? "message-text" : "message-text-outline"} color={color} size={23} />
           )
         }}
-      >
-        {(props) => <ChatsScreen {...props} user={user} />}
-      </Tab.Screen>
+      />
 
       <Tab.Screen 
         name="SellTab" 
+        component={SellPartScreen}
         options={{ 
           title: 'Sell',
           tabBarButton: (props) => <CustomSellTabBarButton {...props} />,
         }}
-      >
-        {(props) => <SellPartScreen {...props} user={user} />}
-      </Tab.Screen>
+      />
 
       <Tab.Screen 
         name="MyAdsTab" 
+        component={MyAdsScreen}
         options={{ 
           title: 'My Ads',
           tabBarIcon: ({ color, size, focused }) => (
             <Icon source={focused ? "format-list-bulleted-square" : "newspaper-variant-outline"} color={color} size={23} />
           )
         }}
-      >
-        {(props) => <MyAdsScreen {...props} user={user} />}
-      </Tab.Screen>
+      />
 
       <Tab.Screen 
         name="ProfileTab" 
+        component={ProfileScreen}
         options={{ 
           title: 'Account',
           tabBarIcon: ({ color, size, focused }) => (
             <Icon source={focused ? "account" : "account-outline"} color={color} size={24} />
           )
         }}
-      >
-        {(props) => <ProfileScreen {...props} user={user} />}
-      </Tab.Screen>
+      />
     </Tab.Navigator>
   );
 }
@@ -166,7 +165,7 @@ const tabStyles = StyleSheet.create({
   },
 });
 
-export default function AppNavigator({ user }: { user: any }) {
+export default function AppNavigator() {
   return (
     <Stack.Navigator id="MainStack"
       initialRouteName="Splash"
@@ -192,31 +191,27 @@ export default function AppNavigator({ user }: { user: any }) {
 
       <Stack.Screen 
         name="MainTabs" 
+        component={TabNavigator}
         options={{ headerShown: false }}
-      >
-        {(props) => <TabNavigator {...props} user={user} />}
-      </Stack.Screen>
+      />
 
       <Stack.Screen 
         name="SellPart" 
+        component={SellPartScreen}
         options={{ title: 'Sell Spare Part' }}
-      >
-        {(props) => <SellPartScreen {...props} user={user} />}
-      </Stack.Screen>
+      />
 
       <Stack.Screen 
         name="ProductDetail" 
+        component={ProductDetailScreen}
         options={{ title: 'Part Details' }}
-      >
-        {(props) => <ProductDetailScreen {...props} user={user} />}
-      </Stack.Screen>
+      />
 
       <Stack.Screen 
         name="ChatRoom" 
+        component={ChatRoomScreen}
         options={{ headerShown: false }}
-      >
-        {(props) => <ChatRoomScreen {...props} user={user} />}
-      </Stack.Screen>
+      />
 
       <Stack.Screen 
         name="SellerProfile" 
@@ -246,6 +241,30 @@ export default function AppNavigator({ user }: { user: any }) {
         name="AllCategories" 
         component={AllCategoriesScreen}
         options={{ headerShown: false }}
+      />
+
+      <Stack.Screen 
+        name="WishlistScreen" 
+        component={WishlistScreen}
+        options={{ title: 'Saved Parts' }}
+      />
+
+      <Stack.Screen 
+        name="RecentlyViewedScreen" 
+        component={RecentlyViewedScreen}
+        options={{ title: 'Recently Viewed' }}
+      />
+
+      <Stack.Screen 
+        name="SettingsScreen" 
+        component={SettingsScreen}
+        options={{ title: 'Settings' }}
+      />
+
+      <Stack.Screen 
+        name="HelpSupportScreen" 
+        component={HelpSupportScreen}
+        options={{ title: 'Help & Support', headerShown: false }}
       />
     </Stack.Navigator>
 

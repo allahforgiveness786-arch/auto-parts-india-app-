@@ -489,7 +489,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         if (!category) setCategory(detectedCategory);
         if (!partName) setPartName(detectedPart);
         if (!price) setPrice(detectedPrice);
-        setCondition('Like New');
+        setCondition('New');
         setDescription(
           `Genuine OEM ${detectedBrand} ${detectedModel} ${detectedPart}. 100% original factory fitment in excellent working condition with all mounting brackets intact.`
         );
@@ -609,18 +609,18 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         carBrand,
         model: carModel,
         carModel,
-        carVariant: carVariant.trim() || undefined,
+        carVariant: carVariant.trim() || null,
         category,
         partName,
         condition,
         location: readableLoc,
         state: selectedState,
         district: selectedDistrict,
-        area: selectedArea.trim() || undefined,
-        lat: finalLat,
-        lng: finalLng,
-        latitude: finalLat,
-        longitude: finalLng,
+        area: selectedArea.trim() || null,
+        lat: finalLat || null,
+        lng: finalLng || null,
+        latitude: finalLat || null,
+        longitude: finalLng || null,
         contactName: contactName.trim(),
         contactPhone: contactPhone.trim(),
         imageUrl: finalImageUrls[0] || uploadedImages[0] || '',
@@ -644,8 +644,8 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
       if (db) {
         // Parallel non-blocking write
         await Promise.all([
-          db.collection('products/listings/items').add(listingData).catch(() => null),
-          db.collection('spareParts').add(listingData).catch(() => null),
+          db.collection('products/listings/items').add(listingData),
+          db.collection('spareParts').add(listingData),
         ]);
       }
 
@@ -674,7 +674,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
     setCarVariant('');
     setCategory('');
     setPartName('');
-    setCondition('Brand New');
+    setCondition('New');
     setSelectedState('');
     setSelectedDistrict('');
     setSelectedArea('');

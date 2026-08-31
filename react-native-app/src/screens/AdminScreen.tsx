@@ -2892,7 +2892,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   bannerImageWrap: {
-    aspectRatio: 16 / 9,
+    aspectRatio: 2.8 / 1,
     width: '100%',
     position: 'relative',
     backgroundColor: '#E2E8F0',
@@ -3130,7 +3130,7 @@ const styles = StyleSheet.create({
   },
   previewBannerImg: {
     width: '100%',
-    aspectRatio: 16 / 9,
+    aspectRatio: 2.8 / 1,
     borderRadius: 8,
     marginBottom: 6,
   },

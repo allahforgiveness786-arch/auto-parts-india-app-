@@ -32,7 +32,7 @@ import {
   Divider,
   Icon
 } from 'react-native-paper';
-import { getFirebaseFirestore } from '../services/firebase';
+import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { useFavorites } from '../services/favorites';
 import { 
   getCurrentLocation, 
@@ -154,6 +154,7 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
 });
 
 export default function HomeScreen({ navigation, route, user }: any) {
+  const activeUser = user || getCurrentUser();
   const { favorites, toggleFavorite } = useFavorites();
   const [taxonomyCategories, setTaxonomyCategories] = useState<string[]>([]);
   const { t } = useLanguage();
@@ -241,25 +242,25 @@ export default function HomeScreen({ navigation, route, user }: any) {
   };
 
   useEffect(() => {
-    if (!user) {
+    if (!activeUser) {
       setUnreadCount(0);
       return;
     }
     const db = getFirebaseFirestore();
     if (!db) return;
     const unsub = db.collection('chats')
-      .where('participants', 'array-contains', user.uid)
+      .where('participants', 'array-contains', activeUser.uid)
       .onSnapshot((snap: any) => {
         let count = 0;
         snap.forEach((doc: any) => {
           const data = doc.data();
-          const c = data.unreadCount?.[user.uid] || (data.lastSenderId && data.lastSenderId !== user.uid && data.unread ? 1 : 0);
+          const c = data.unreadCount?.[activeUser.uid] || (data.lastSenderId && data.lastSenderId !== activeUser.uid && data.unread ? 1 : 0);
           count += c;
         });
         setUnreadCount(count);
       });
     return () => unsub();
-  }, [user]);
+  }, [activeUser]);
 
   // Entrance Animations for smooth load
   const headerFade = useRef(new Animated.Value(0)).current;
@@ -530,7 +531,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066FF']} />
         }
       >
-        {/* Promotional Top Banners Carousel (Strict 16:9 Aspect Ratio) */}
+        {/* Promotional Top Banners Carousel (Compact 2.8:1 Aspect Ratio) */}
         {(promoBanners.length > 0) && (
           <View style={{ marginBottom: 20 }}>
             <ScrollView 
@@ -549,7 +550,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
                     borderRadius: 14,
                     overflow: 'hidden',
                     backgroundColor: '#08142C',
-                    aspectRatio: 16 / 9,
+                    aspectRatio: 2.8 / 1,
                     position: 'relative',
                   }}
                   activeOpacity={banner.targetLink ? 0.85 : 1}
@@ -751,63 +752,12 @@ export default function HomeScreen({ navigation, route, user }: any) {
             ))}
           </View>
         )}
-
-        {/* Promotional Bottom Banners (Strict 16:9 Aspect Ratio) - Fallback ONLY */}
-        {promoBanners.length === 0 && (
-          <View style={{
-            marginHorizontal: 14,
-            marginTop: 16,
-            borderRadius: 14,
-            overflow: 'hidden',
-            backgroundColor: '#08142C',
-            aspectRatio: 16 / 9,
-            position: 'relative',
-          }}>
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800' }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
-            <View style={{ 
-              position: 'absolute', 
-              bottom: 0, 
-              left: 0, 
-              right: 0, 
-              padding: 14, 
-              backgroundColor: 'rgba(8, 20, 44, 0.85)',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.bannerTitle}>Sell Your Parts</Text>
-                <Text style={styles.bannerSubtitle} numberOfLines={1}>
-                  Quickly list & reach thousands of buyers
-                </Text>
-              </View>
-              <TouchableOpacity 
-                style={[styles.bannerBtn, { alignSelf: 'center', marginTop: 0 }]}
-                activeOpacity={0.85}
-                delayPressIn={0}
-                onPress={() => {
-                  if (!user) {
-                    navigation.navigate('Auth');
-                  } else {
-                    navigation.navigate('SellPart');
-                  }
-                }}
-              >
-                <Text style={styles.bannerBtnText}>Sell Now</Text>
-                <Icon source="chevron-right" size={16} color="#0F172A" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
       </ScrollView>
 
       {/* Location Selector Modal */}
       <Modal visible={showLocationModal} animationType="slide" transparent>
         <KeyboardAvoidingView 
+
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.modalOverlay}
         >

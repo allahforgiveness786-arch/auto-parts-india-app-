@@ -15,68 +15,60 @@ export const ModernDeltaLogoIcon: React.FC<{ size?: number }> = ({ size = 48 }) 
   
   return (
     <View style={{ width: s, height: s, justifyContent: 'center', alignItems: 'center' }}>
-      <View style={{ width: s * 0.85, height: s * 0.85, position: 'relative' }}>
+      <View style={{ width: s, height: s, position: 'relative' }}>
         
-        {/* White Left Pillar & Apex */}
+        {/* White Left Pillar */}
         <View style={{
           position: 'absolute',
-          left: s * 0.1,
-          bottom: s * 0.22,
-          width: s * 0.26,
-          height: s * 0.65,
+          left: s * 0.335,
+          top: s * 0.12,
+          width: s * 0.16,
+          height: s * 0.56,
           backgroundColor: '#FFFFFF',
-          transform: [{ skewX: '-24deg' }],
-          borderWidth: 1,
-          borderColor: '#E2E8F0',
-          borderRightWidth: 0,
+          transform: [{ skewX: '-20.56deg' }],
         }} />
 
-        {/* Blue Right Pillar */}
+        {/* White Right Pillar (Full) */}
         <View style={{
           position: 'absolute',
-          right: s * 0.1,
-          bottom: s * 0.22,
-          width: s * 0.28,
-          height: s * 0.65,
-          backgroundColor: '#0066FF',
-          transform: [{ skewX: '24deg' }],
+          left: s * 0.545,
+          top: s * 0.12,
+          width: s * 0.16,
+          height: s * 0.56,
+          backgroundColor: '#FFFFFF',
+          transform: [{ skewX: '20.56deg' }],
         }} />
 
         {/* White Crossbar */}
         <View style={{
           position: 'absolute',
-          bottom: s * 0.42,
-          left: s * 0.2,
-          width: s * 0.45,
-          height: s * 0.18,
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderBottomWidth: 1,
-          borderColor: '#E2E8F0',
-        }} />
-
-        {/* Top Cover (to smooth the apex) */}
-        <View style={{
-          position: 'absolute',
-          top: -s * 0.05,
           left: s * 0.35,
-          width: s * 0.15,
-          height: s * 0.15,
+          top: s * 0.46,
+          width: s * 0.30,
+          height: s * 0.10,
           backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderColor: '#E2E8F0',
         }} />
 
-        {/* Orange Slanted Accent Line Below */}
+        {/* Blue Right Pillar (Bottom Half) */}
         <View style={{
           position: 'absolute',
-          bottom: s * 0.02,
-          left: s * 0.2,
-          width: s * 0.45,
-          height: s * 0.12,
+          left: s * 0.60875,
+          top: s * 0.46,
+          width: s * 0.16,
+          height: s * 0.22,
+          backgroundColor: '#0066FF',
+          transform: [{ skewX: '20.56deg' }],
+        }} />
+
+        {/* Orange Accent */}
+        <View style={{
+          position: 'absolute',
+          left: s * 0.36875,
+          top: s * 0.72,
+          width: s * 0.21,
+          height: s * 0.06,
           backgroundColor: '#FF6B00',
-          transform: [{ skewX: '-24deg' }],
-          borderRadius: 2,
+          transform: [{ skewX: '-20.56deg' }],
         }} />
 
       </View>
