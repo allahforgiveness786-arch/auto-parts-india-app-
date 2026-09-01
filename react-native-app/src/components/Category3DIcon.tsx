@@ -597,3 +597,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#1565FF',
   },
 });
+
+export default Category3DIcon;

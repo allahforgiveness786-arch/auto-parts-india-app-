@@ -116,3 +116,5 @@ const styles = StyleSheet.create({
     zIndex: 7,
   },
 });
+
+export default BannerPartsCollage;

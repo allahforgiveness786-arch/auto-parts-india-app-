@@ -137,6 +137,9 @@ export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: bo
   );
 };
 
+export const BrandLogo = CarBrandBadge;
+export default CarBrandBadge;
+
 const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
