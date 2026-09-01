@@ -1,285 +1,156 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, Image } from 'react-native';
 
-// 1. Maruti Suzuki Emblem
-export const SuzukiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
-  const scale = size / 38;
-  return (
-    <View style={[styles.center, { width: size, height: size }]}>
-      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
-        {/* Upper S Diagonal */}
-        <View style={styles.suzukiTopBar} />
-        {/* Middle Connecting S Stroke */}
-        <View style={styles.suzukiMidBar} />
-        {/* Bottom S Diagonal */}
-        <View style={styles.suzukiBottomBar} />
-      </View>
-    </View>
-  );
+const BRAND_LOGO_URLS: Record<string, string> = {
+  suzuki: 'https://www.carlogos.org/car-logos/suzuki-logo.png',
+  maruti: 'https://www.carlogos.org/car-logos/suzuki-logo.png',
+  hyundai: 'https://www.carlogos.org/car-logos/hyundai-logo.png',
+  tata: 'https://www.carlogos.org/car-logos/tata-motors-logo.png',
+  mahindra: 'https://www.carlogos.org/car-logos/mahindra-logo.png',
+  toyota: 'https://www.carlogos.org/car-logos/toyota-logo.png',
+  honda: 'https://www.carlogos.org/car-logos/honda-logo.png',
+  volkswagen: 'https://www.carlogos.org/car-logos/volkswagen-logo.png',
+  ford: 'https://www.carlogos.org/car-logos/ford-logo.png',
+  kia: 'https://www.carlogos.org/car-logos/kia-logo.png',
+  bmw: 'https://www.carlogos.org/car-logos/bmw-logo.png',
+  mercedes: 'https://www.carlogos.org/car-logos/mercedes-benz-logo.png',
+  audi: 'https://www.carlogos.org/car-logos/audi-logo.png',
+  skoda: 'https://www.carlogos.org/car-logos/skoda-logo.png',
+  renault: 'https://www.carlogos.org/car-logos/renault-logo.png',
+  nissan: 'https://www.carlogos.org/car-logos/nissan-logo.png',
+  mg: 'https://www.carlogos.org/car-logos/mg-logo.png',
 };
 
-// 2. Hyundai Slanted Oval H Emblem
-export const HyundaiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
-  const scale = size / 38;
-  return (
-    <View style={[styles.center, { width: size, height: size }]}>
-      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
-        {/* Oval Outer Ring */}
-        <View style={styles.hyundaiOval}>
-          {/* Slanted H Left Leg */}
-          <View style={styles.hyundaiLegLeft} />
-          {/* Slanted H Right Leg */}
-          <View style={styles.hyundaiLegRight} />
-          {/* H Cross Connector */}
-          <View style={styles.hyundaiCrossBar} />
-        </View>
-      </View>
-    </View>
-  );
-};
+export const SuzukiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => (
+  <CarBrandBadge brand="suzuki" size={size} />
+);
 
-// 3. Tata Motors Circular T Emblem
-export const TataEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
-  const scale = size / 38;
-  return (
-    <View style={[styles.center, { width: size, height: size }]}>
-      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
-        {/* Blue Circle Base */}
-        <View style={styles.tataCircle}>
-          {/* Top Arc Ring */}
-          <View style={styles.tataTopArc} />
-          {/* T Vertical Stem */}
-          <View style={styles.tataStem} />
-        </View>
-      </View>
-    </View>
-  );
-};
+export const HyundaiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => (
+  <CarBrandBadge brand="hyundai" size={size} />
+);
 
-// 4. Mahindra Twin Peaks Red Butterfly Emblem
-export const MahindraEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
-  const scale = size / 38;
-  return (
-    <View style={[styles.center, { width: size, height: size }]}>
-      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
-        <View style={styles.mahindraRow}>
-          {/* Left Wing Loop */}
-          <View style={styles.mahindraWingLeft} />
-          {/* Right Wing Loop */}
-          <View style={styles.mahindraWingRight} />
-        </View>
-      </View>
-    </View>
-  );
-};
+export const TataEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => (
+  <CarBrandBadge brand="tata" size={size} />
+);
 
-// 5. Toyota Triple Oval Emblem
-export const ToyotaEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
-  const scale = size / 38;
-  return (
-    <View style={[styles.center, { width: size, height: size }]}>
-      <View style={{ width: 38, height: 38, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
-        {/* Outer Ellipse */}
-        <View style={styles.toyotaOuterOval}>
-          {/* Inner Horizontal Oval */}
-          <View style={styles.toyotaInnerHorizOval} />
-          {/* Inner Vertical Oval */}
-          <View style={styles.toyotaInnerVertOval} />
-        </View>
-      </View>
-    </View>
-  );
-};
+export const MahindraEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => (
+  <CarBrandBadge brand="mahindra" size={size} />
+);
 
-// Combined Brand Component supporting both High-Res 3D Emblem Assets and Direct Vector Fallbacks
+export const ToyotaEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => (
+  <CarBrandBadge brand="toyota" size={size} />
+);
 
-export const CarBrandBadge: React.FC<{ brand?: string; size?: number; active?: boolean; style?: any }> = ({ brand = 'auto', size = 38, active = false, style }) => {
+export interface CarBrandBadgeProps {
+  brand?: string;
+  size?: number;
+  active?: boolean;
+  style?: any;
+}
+
+export const CarBrandBadge: React.FC<CarBrandBadgeProps> = ({
+  brand = 'All',
+  size = 38,
+  active = false,
+  style,
+}) => {
   const b = (brand || '').toLowerCase().trim();
+  const [loadError, setLoadError] = useState(false);
 
-  let inner = (
-    <View style={[styles.center, { width: size, height: size, backgroundColor: '#F8FAFC', borderRadius: size / 2 }]}>
-      <Text style={{ fontSize: size * 0.42, fontWeight: '800', color: active ? '#1565FF' : '#0F172A' }}>
-        {(brand || 'A').charAt(0).toUpperCase()}
-      </Text>
-    </View>
-  );
+  // Match key
+  let brandKey = '';
+  if (b.includes('maruti') || b.includes('suzuki')) brandKey = 'suzuki';
+  else if (b.includes('hyundai')) brandKey = 'hyundai';
+  else if (b.includes('tata')) brandKey = 'tata';
+  else if (b.includes('mahindra')) brandKey = 'mahindra';
+  else if (b.includes('toyota')) brandKey = 'toyota';
+  else if (b.includes('honda')) brandKey = 'honda';
+  else if (b.includes('volkswagen') || b.includes('vw')) brandKey = 'volkswagen';
+  else if (b.includes('ford')) brandKey = 'ford';
+  else if (b.includes('kia')) brandKey = 'kia';
+  else if (b.includes('bmw')) brandKey = 'bmw';
+  else if (b.includes('mercedes') || b.includes('benz')) brandKey = 'mercedes';
+  else if (b.includes('audi')) brandKey = 'audi';
+  else if (b.includes('skoda')) brandKey = 'skoda';
+  else if (b.includes('renault')) brandKey = 'renault';
+  else if (b.includes('nissan')) brandKey = 'nissan';
+  else if (b.includes('mg')) brandKey = 'mg';
 
-  if (b.includes('maruti') || b.includes('suzuki')) {
-    inner = <SuzukiEmblemSvg size={size} />;
-  } else if (b.includes('hyundai')) {
-    inner = <HyundaiEmblemSvg size={size} />;
-  } else if (b.includes('tata')) {
-    inner = <TataEmblemSvg size={size} />;
-  } else if (b.includes('mahindra')) {
-    inner = <MahindraEmblemSvg size={size} />;
-  } else if (b.includes('toyota')) {
-    inner = <ToyotaEmblemSvg size={size} />;
+  const logoUrl = brandKey ? BRAND_LOGO_URLS[brandKey] : null;
+
+  let content = null;
+
+  if (logoUrl && !loadError) {
+    const imgSize = Math.floor(size * 0.78);
+    content = (
+      <View
+        style={[
+          styles.badgeContainer,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: active ? '#EFF6FF' : '#FFFFFF',
+            borderColor: active ? '#1565FF' : '#E2E8F0',
+          },
+        ]}
+      >
+        <Image
+          source={{ uri: logoUrl }}
+          style={{ width: imgSize, height: imgSize }}
+          resizeMode="contain"
+          onError={() => setLoadError(true)}
+        />
+      </View>
+    );
+  } else {
+    const initial = (brand || 'A').charAt(0).toUpperCase();
+    content = (
+      <View
+        style={[
+          styles.badgeContainer,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: active ? '#1565FF' : '#F1F5F9',
+            borderColor: active ? '#1565FF' : '#E2E8F0',
+          },
+        ]}
+      >
+        <Text
+          style={{
+            fontSize: Math.max(12, Math.floor(size * 0.42)),
+            fontWeight: '800',
+            color: active ? '#FFFFFF' : '#334155',
+          }}
+        >
+          {initial}
+        </Text>
+      </View>
+    );
   }
 
   if (style) {
-    return <View style={style}>{inner}</View>;
+    return <View style={style}>{content}</View>;
   }
-  return inner;
+
+  return content;
 };
+
+const styles = StyleSheet.create({
+  badgeContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    overflow: 'hidden',
+  },
+});
 
 export const BrandLogo = CarBrandBadge;
 export default CarBrandBadge;
-
-const styles = StyleSheet.create({
-  center: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // 1. SUZUKI
-  suzukiTopBar: {
-    position: 'absolute',
-    top: 6,
-    left: 8,
-    width: 22,
-    height: 7,
-    backgroundColor: '#64748B',
-    transform: [{ skewX: '-45deg' }],
-    borderRadius: 1.5,
-  },
-  suzukiMidBar: {
-    position: 'absolute',
-    top: 15,
-    width: 20,
-    height: 8,
-    backgroundColor: '#475569',
-    transform: [{ skewX: '45deg' }],
-    borderRadius: 1.5,
-  },
-  suzukiBottomBar: {
-    position: 'absolute',
-    bottom: 6,
-    right: 8,
-    width: 22,
-    height: 7,
-    backgroundColor: '#64748B',
-    transform: [{ skewX: '-45deg' }],
-    borderRadius: 1.5,
-  },
-
-  // 2. HYUNDAI
-  hyundaiOval: {
-    width: 34,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 3,
-    borderColor: '#0F172A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    transform: [{ rotate: '-6deg' }],
-  },
-  hyundaiLegLeft: {
-    position: 'absolute',
-    left: 8,
-    width: 3.5,
-    height: 16,
-    backgroundColor: '#0F172A',
-    transform: [{ skewX: '-15deg' }],
-    borderRadius: 1,
-  },
-  hyundaiLegRight: {
-    position: 'absolute',
-    right: 8,
-    width: 3.5,
-    height: 16,
-    backgroundColor: '#0F172A',
-    transform: [{ skewX: '-15deg' }],
-    borderRadius: 1,
-  },
-  hyundaiCrossBar: {
-    width: 14,
-    height: 3,
-    backgroundColor: '#0F172A',
-    transform: [{ skewX: '-15deg' }],
-  },
-
-  // 3. TATA
-  tataCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#0052CC',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  tataTopArc: {
-    position: 'absolute',
-    top: 5,
-    width: 18,
-    height: 10,
-    borderTopLeftRadius: 9,
-    borderTopRightRadius: 9,
-    borderWidth: 2.5,
-    borderColor: '#FFFFFF',
-    borderBottomWidth: 0,
-  },
-  tataStem: {
-    position: 'absolute',
-    top: 12,
-    width: 3,
-    height: 11,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 1.5,
-  },
-
-  // 4. MAHINDRA
-  mahindraRow: {
-    flexDirection: 'row',
-    gap: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mahindraWingLeft: {
-    width: 15,
-    height: 18,
-    borderRadius: 7.5,
-    borderWidth: 3,
-    borderColor: '#DC2626',
-    transform: [{ rotate: '25deg' }],
-  },
-  mahindraWingRight: {
-    width: 15,
-    height: 18,
-    borderRadius: 7.5,
-    borderWidth: 3,
-    borderColor: '#DC2626',
-    transform: [{ rotate: '-25deg' }],
-  },
-
-  // 5. TOYOTA
-  toyotaOuterOval: {
-    width: 34,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2.5,
-    borderColor: '#0F172A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  toyotaInnerHorizOval: {
-    position: 'absolute',
-    top: 2,
-    width: 22,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: '#0F172A',
-  },
-  toyotaInnerVertOval: {
-    position: 'absolute',
-    top: 2,
-    width: 10,
-    height: 18,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: '#0F172A',
-  },
-});

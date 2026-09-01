@@ -7,35 +7,35 @@ export const BannerPartsCollage: React.FC = () => {
       {/* Background Soft Blue Radial Glow Flare */}
       <View style={styles.flareGlow} />
 
-      {/* 1. Drilled Steel Brake Disc Rotor (Background layer) */}
+      {/* 1. High-Performance Ventilated Brake Disc Rotor (Back Layer) */}
       <Image
         source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3202/3202924.png' }}
         style={styles.brakeDisc}
         resizeMode="contain"
       />
 
-      {/* 2. Blue Coilover Strut Shock Absorber (Center Top) */}
+      {/* 2. Blue Racing Coilover Suspension Strut (Center Top) */}
       <Image
         source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2061/2061986.png' }}
         style={styles.shockStrut}
         resizeMode="contain"
       />
 
-      {/* 3. Automotive Alternator / Generator (Front Left) */}
+      {/* 3. Turbocharger & Engine Component (Front Left) */}
       <Image
         source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3202/3202926.png' }}
-        style={styles.alternator}
+        style={styles.engineTurbo}
         resizeMode="contain"
       />
 
-      {/* 4. Yellow Ribbed Oil Filter Cartridge (Front Middle) */}
+      {/* 4. Dual Exhaust Muffler (Front Center) */}
       <Image
-        source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2061/2061966.png' }}
-        style={styles.oilFilter}
+        source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3202/3202930.png' }}
+        style={styles.exhaustTip}
         resizeMode="contain"
       />
 
-      {/* 5. 5W-30 Motor Oil Bottle (Front Right) */}
+      {/* 5. 5W-30 Synthetic Motor Oil Bottle (Front Right) */}
       <Image
         source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2061/2061976.png' }}
         style={styles.motorOil}
@@ -48,7 +48,7 @@ export const BannerPartsCollage: React.FC = () => {
 const styles = StyleSheet.create({
   collageWrapper: {
     width: '100%',
-    height: 135,
+    height: 145,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
@@ -56,11 +56,11 @@ const styles = StyleSheet.create({
   },
   flareGlow: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: '#1D4ED8',
-    opacity: 0.45,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: '#1E40AF',
+    opacity: 0.5,
     top: -5,
     right: 0,
   },
@@ -68,10 +68,10 @@ const styles = StyleSheet.create({
   // 1. Drilled Brake Rotor Disc
   brakeDisc: {
     position: 'absolute',
-    top: 6,
-    right: 14,
-    width: 68,
-    height: 68,
+    top: 4,
+    right: 16,
+    width: 76,
+    height: 76,
     opacity: 0.95,
     zIndex: 2,
   },
@@ -79,29 +79,29 @@ const styles = StyleSheet.create({
   // 2. Shock Strut
   shockStrut: {
     position: 'absolute',
-    top: -4,
-    right: 48,
-    width: 46,
-    height: 76,
+    top: -8,
+    right: 58,
+    width: 52,
+    height: 86,
     zIndex: 4,
   },
 
-  // 3. Alternator
-  alternator: {
+  // 3. Engine / Turbo
+  engineTurbo: {
     position: 'absolute',
-    bottom: 4,
-    left: 8,
-    width: 52,
-    height: 52,
+    bottom: 6,
+    left: 4,
+    width: 58,
+    height: 58,
     zIndex: 6,
   },
 
-  // 4. Yellow Oil Filter
-  oilFilter: {
+  // 4. Exhaust / Muffler
+  exhaustTip: {
     position: 'absolute',
-    bottom: 6,
-    left: 54,
-    width: 40,
+    bottom: 8,
+    left: 56,
+    width: 48,
     height: 48,
     zIndex: 5,
   },
@@ -109,10 +109,10 @@ const styles = StyleSheet.create({
   // 5. Motor Oil
   motorOil: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 44,
-    height: 58,
+    bottom: 4,
+    right: 4,
+    width: 46,
+    height: 60,
     zIndex: 7,
   },
 });

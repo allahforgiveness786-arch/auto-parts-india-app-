@@ -288,26 +288,70 @@ export default function HomeScreen({ navigation, route, user }: any) {
     ]).start();
   }, []);
 
-  // 6 Categories matching user reference mockup with exact isolated 3D product visuals
+  // Promotional Banners Carousel Data
+  const promoBanners = [
+    {
+      id: 'mega-deals',
+      badge: 'MEGA DEALS',
+      badgeColor: '#1565FF',
+      headline1: 'UP TO',
+      discount: '50% OFF',
+      headline2: 'ON GENUINE PARTS',
+      features: ['100% Genuine Parts', 'Best Prices Guaranteed', 'Fast & Safe Delivery'],
+      cta: 'SHOP NOW',
+      targetCategory: 'All',
+    },
+    {
+      id: 'turbo-performance',
+      badge: 'PERFORMANCE',
+      badgeColor: '#EF4444',
+      headline1: 'NEW OEM',
+      discount: 'TURBO KITS',
+      headline2: 'FOR ALL ENGINES',
+      features: ['High-Power Output', 'Precision Balanced', '1 Year Warranty'],
+      cta: 'VIEW ENGINES',
+      targetCategory: 'Engine & Parts',
+    },
+    {
+      id: 'brakes-suspension',
+      badge: 'SAFETY & COMFORT',
+      badgeColor: '#10B981',
+      headline1: 'SPORT',
+      discount: 'COILOVERS',
+      headline2: '& BRAKE ROTORS',
+      features: ['Ceramic Friction Pads', 'Slotted Steel Discs', 'Anti-Fade Durability'],
+      cta: 'EXPLORE BRAKES',
+      targetCategory: 'Suspension',
+    },
+  ];
+
+  // Auto rotate banner
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveBannerIndex((prev) => (prev + 1) % promoBanners.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // 6 Categories with exact 3D automotive visuals
   const categoryGridItems = [
     { 
       id: 'Engine & Parts', 
       name: 'Engine & Parts', 
       icon: 'engine', 
-      imageUrl: 'https://images.unsplash.com/photo-1598209279122-8541213a0387?auto=format&fit=crop&q=80&w=260',
       is3DGraphic: 'engine',
     },
     { 
       id: 'Body Parts', 
       name: 'Body Parts', 
       icon: 'car-door', 
-      is3DGraphic: 'door',
+      is3DGraphic: 'body',
     },
     { 
       id: 'Electricals', 
       name: 'Electricals', 
       icon: 'lightning-bolt', 
-      is3DGraphic: 'lightning',
+      is3DGraphic: 'electrical',
     },
     { 
       id: 'Suspension', 
@@ -337,6 +381,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
     { id: 'mahindra', name: 'Mahindra' },
     { id: 'toyota', name: 'Toyota' },
     { id: 'honda', name: 'Honda' },
+    { id: 'kia', name: 'Kia' },
+    { id: 'volkswagen', name: 'Volkswagen' },
     { id: 'ford', name: 'Ford' },
   ];
 
@@ -546,60 +592,72 @@ export default function HomeScreen({ navigation, route, user }: any) {
       >
         {/* Mega Deals Promotional Banner */}
         <View style={styles.bannerOuterContainer}>
-          <View style={styles.megaDealBanner}>
-            <View style={styles.bannerLeftContent}>
-              <View style={styles.megaDealsBadge}>
-                <Text style={styles.megaDealsBadgeText}>MEGA DEALS</Text>
-              </View>
-              <Text style={styles.megaDealHeadline}>
-                UP TO{'\n'}
-                <Text style={styles.megaDealDiscount}>50% OFF</Text>{'\n'}
-                ON GENUINE PARTS
-              </Text>
-
-              <View style={styles.bannerChecklist}>
-                <View style={styles.checkItem}>
-                  <Icon source="check-circle" size={13} color="#10B981" />
-                  <Text style={styles.checkText}>100% Genuine Parts</Text>
-                </View>
-                <View style={styles.checkItem}>
-                  <Icon source="check-circle" size={13} color="#10B981" />
-                  <Text style={styles.checkText}>Best Prices Guaranteed</Text>
-                </View>
-                <View style={styles.checkItem}>
-                  <Icon source="check-circle" size={13} color="#10B981" />
-                  <Text style={styles.checkText}>Fast & Safe Delivery</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity 
-                style={styles.shopNowBtn}
-                activeOpacity={0.85}
+          {(() => {
+            const curBanner = promoBanners[activeBannerIndex] || promoBanners[0];
+            return (
+              <TouchableOpacity
+                activeOpacity={0.92}
                 onPress={() => {
-                  setSelectedCategory('All');
+                  if (curBanner.targetCategory) {
+                    setSelectedCategory(curBanner.targetCategory);
+                  }
                 }}
+                style={styles.megaDealBanner}
               >
-                <Text style={styles.shopNowBtnText}>SHOP NOW</Text>
-                <Icon source="chevron-right" size={16} color="#0F172A" />
-              </TouchableOpacity>
-            </View>
+                <View style={styles.bannerLeftContent}>
+                  <View style={[styles.megaDealsBadge, { backgroundColor: curBanner.badgeColor || '#1565FF' }]}>
+                    <Text style={styles.megaDealsBadgeText}>{curBanner.badge}</Text>
+                  </View>
+                  <Text style={styles.megaDealHeadline}>
+                    {curBanner.headline1}{'\n'}
+                    <Text style={styles.megaDealDiscount}>{curBanner.discount}</Text>{'\n'}
+                    {curBanner.headline2}
+                  </Text>
 
-            {/* Banner Right Composition 3D Collage matching mockup */}
-            <View style={styles.bannerRightArt}>
-              <BannerPartsCollage />
-            </View>
-          </View>
+                  <View style={styles.bannerChecklist}>
+                    {curBanner.features.map((feat, fIdx) => (
+                      <View key={fIdx} style={styles.checkItem}>
+                        <Icon source="check-circle" size={13} color="#10B981" />
+                        <Text style={styles.checkText}>{feat}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <TouchableOpacity 
+                    style={styles.shopNowBtn}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      setSelectedCategory(curBanner.targetCategory || 'All');
+                    }}
+                  >
+                    <Text style={styles.shopNowBtnText}>{curBanner.cta}</Text>
+                    <Icon source="chevron-right" size={16} color="#0F172A" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Banner Right Composition 3D Collage matching mockup */}
+                <View style={styles.bannerRightArt}>
+                  <BannerPartsCollage />
+                </View>
+              </TouchableOpacity>
+            );
+          })()}
 
           {/* Carousel Pagination Dots */}
           <View style={styles.dotsRow}>
-            {[0, 1, 2, 3].map((idx) => (
-              <View 
-                key={idx} 
-                style={[
-                  styles.dot, 
-                  idx === activeBannerIndex && styles.activeDot
-                ]} 
-              />
+            {promoBanners.map((bItem, idx) => (
+              <TouchableOpacity
+                key={bItem.id}
+                onPress={() => setActiveBannerIndex(idx)}
+                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+              >
+                <View 
+                  style={[
+                    styles.dot, 
+                    idx === activeBannerIndex && styles.activeDot
+                  ]} 
+                />
+              </TouchableOpacity>
             ))}
           </View>
         </View>
