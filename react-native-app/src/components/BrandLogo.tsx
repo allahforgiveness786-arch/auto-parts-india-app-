@@ -18,14 +18,14 @@ export interface BrandLogoProps {
  * 4. 247383074_...jpg -> Hyundai (3D Metallic Deep Navy Blue Oval with Slanted 'H')
  * 5. 361288193_...jpg -> Tata Motors (3D Royal Blue Oval Ring with Dual-Bar 'T')
  */
-export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44 }) => {
+export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44, color, showText, style }) => {
   const norm = (name || '').toLowerCase().trim();
 
   // 1. MARUTI SUZUKI: Chiseled 3D Beveled Chrome 'S'
   if (norm.includes('suzuki') || norm.includes('maruti')) {
     const scale = size / 44;
     return (
-      <View style={[styles.centerBox, { width: size, height: size }]}>
+      <View style={[styles.centerBox, { width: size, height: size }, style]}>
         <View style={[styles.suzukiContainer, { transform: [{ scale }] }]}>
           {/* Top Angled Chrome Bevel Wing */}
           <View style={styles.suzukiTopWing}>
@@ -50,7 +50,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44 }) => {
   if (norm.includes('toyota')) {
     const scale = size / 44;
     return (
-      <View style={[styles.centerBox, { width: size, height: size }]}>
+      <View style={[styles.centerBox, { width: size, height: size }, style]}>
         <View style={[styles.toyotaContainer, { transform: [{ scale }] }]}>
           {/* Outer Chrome Oval Ring */}
           <View style={styles.toyotaOuterRing}>
@@ -67,7 +67,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44 }) => {
   if (norm.includes('mahindra')) {
     const scale = size / 44;
     return (
-      <View style={[styles.centerBox, { width: size, height: size }]}>
+      <View style={[styles.centerBox, { width: size, height: size }, style]}>
         <View style={[styles.mahindraContainer, { transform: [{ scale }] }]}>
           {/* Left Wing Peak */}
           <View style={styles.mahindraLeftPeak}>
@@ -90,7 +90,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44 }) => {
   if (norm.includes('hyundai')) {
     const scale = size / 44;
     return (
-      <View style={[styles.centerBox, { width: size, height: size }]}>
+      <View style={[styles.centerBox, { width: size, height: size }, style]}>
         <View style={[styles.hyundaiContainer, { transform: [{ scale }] }]}>
           {/* Navy Blue Outer Chrome Beveled Oval */}
           <View style={styles.hyundaiOuterOval}>
@@ -112,7 +112,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44 }) => {
   if (norm.includes('tata')) {
     const scale = size / 44;
     return (
-      <View style={[styles.centerBox, { width: size, height: size }]}>
+      <View style={[styles.centerBox, { width: size, height: size }, style]}>
         <View style={[styles.tataContainer, { transform: [{ scale }] }]}>
           {/* Royal Blue Metallic Oval Ring */}
           <View style={styles.tataOuterOvalRing}>
@@ -134,7 +134,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44 }) => {
   if (norm.includes('honda')) {
     const scale = size / 44;
     return (
-      <View style={[styles.centerBox, { width: size, height: size }]}>
+      <View style={[styles.centerBox, { width: size, height: size }, style]}>
         <View style={[styles.hondaContainer, { transform: [{ scale }] }]}>
           <View style={styles.hondaOuterTrapezoid}>
             <View style={styles.hondaLeftBar} />
@@ -149,7 +149,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 44 }) => {
   // 7. KIA: High-Tech Modern Connected Red 'KIA' Badge
   if (norm.includes('kia')) {
     return (
-      <View style={[styles.centerBox, { width: size, height: size }]}>
+      <View style={[styles.centerBox, { width: size, height: size }, style]}>
         <View style={styles.kiaModernBox}>
           <Text style={styles.kiaModernText}>KIA</Text>
         </View>
