@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, Image } from 'react-native';
-import { BRAND_EMBLEM_ASSETS } from '../data/assetCatalog';
+import { View, StyleSheet, Text } from 'react-native';
 
 // 1. Maruti Suzuki Emblem
 export const SuzukiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
@@ -96,21 +95,6 @@ export const ToyotaEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
 
 export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: boolean }> = ({ brand, size = 38, active = false }) => {
   const b = (brand || '').toLowerCase().trim();
-
-  // Find matching asset key
-  const matchedKey = Object.keys(BRAND_EMBLEM_ASSETS).find(key => b.includes(key));
-  const assetUrl = matchedKey ? BRAND_EMBLEM_ASSETS[matchedKey] : null;
-
-  if (assetUrl) {
-    return (
-      <View style={[styles.center, { width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3, elevation: 3, overflow: 'hidden', borderWidth: active ? 2 : 1, borderColor: active ? '#1565FF' : '#E2E8F0' }]}>
-        <Image 
-          source={{ uri: assetUrl }} 
-          style={{ width: size * 0.85, height: size * 0.85, resizeMode: 'contain' }} 
-        />
-      </View>
-    );
-  }
 
   if (b.includes('maruti') || b.includes('suzuki')) {
     return <SuzukiEmblemSvg size={size} />;

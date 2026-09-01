@@ -102,13 +102,24 @@ export const ElectricalsSvg: React.FC<{ size?: number }> = ({ size = 52 }) => {
   );
 };
 
-// 4. Suspension - Blue Coilover Strut Shock Absorber at 45-Degree Angle
+// 4. Suspension - Coilover Strut Shock Absorber with Drilled Brake Disc Rotor
 export const SuspensionSvg: React.FC<{ size?: number }> = ({ size = 52 }) => {
   const scale = size / 52;
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <View style={{ width: 52, height: 52, transform: [{ scale }], justifyContent: 'center', alignItems: 'center' }}>
-        {/* Tilted Strut Assembly at 45deg */}
+        {/* Slotted Brake Rotor Disc behind/right */}
+        <View style={styles.rotorDisc}>
+          <View style={styles.rotorHub}>
+            <View style={styles.rotorHoleCenter} />
+          </View>
+          <View style={styles.rotorHoleDot1} />
+          <View style={styles.rotorHoleDot2} />
+          <View style={styles.rotorHoleDot3} />
+          <View style={styles.rotorHoleDot4} />
+        </View>
+
+        {/* Shock Strut Assembly on left/front */}
         <View style={styles.strutDiagonalWrap}>
           {/* Top Mounting Eyelet */}
           <View style={styles.strutTopEyelet}>
@@ -117,13 +128,12 @@ export const SuspensionSvg: React.FC<{ size?: number }> = ({ size = 52 }) => {
           {/* Chrome Upper Piston Shaft */}
           <View style={styles.strutShaft} />
 
-          {/* Electric Blue Coil Spring Assembly */}
+          {/* Black & Chrome Coil Spring Assembly */}
           <View style={styles.springCoilsWrap}>
-            <View style={styles.blueSpringRing} />
-            <View style={styles.blueSpringRing} />
-            <View style={styles.blueSpringRing} />
-            <View style={styles.blueSpringRing} />
-            <View style={styles.blueSpringRing} />
+            <View style={styles.darkSpringRing} />
+            <View style={styles.darkSpringRing} />
+            <View style={styles.darkSpringRing} />
+            <View style={styles.darkSpringRing} />
           </View>
 
           {/* Lower Damper Body Cylinder */}
@@ -457,11 +467,80 @@ const styles = StyleSheet.create({
   },
 
   // --- 4. SUSPENSION / STRUT STYLES ---
+  rotorDisc: {
+    position: 'absolute',
+    right: 0,
+    top: 4,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#94A3B8',
+    borderWidth: 3,
+    borderColor: '#CBD5E1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  rotorHub: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#475569',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#64748B',
+  },
+  rotorHoleCenter: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#1E293B',
+  },
+  rotorHoleDot1: {
+    position: 'absolute',
+    top: 5,
+    width: 2.5,
+    height: 2.5,
+    borderRadius: 1.25,
+    backgroundColor: '#334155',
+  },
+  rotorHoleDot2: {
+    position: 'absolute',
+    bottom: 5,
+    width: 2.5,
+    height: 2.5,
+    borderRadius: 1.25,
+    backgroundColor: '#334155',
+  },
+  rotorHoleDot3: {
+    position: 'absolute',
+    left: 5,
+    width: 2.5,
+    height: 2.5,
+    borderRadius: 1.25,
+    backgroundColor: '#334155',
+  },
+  rotorHoleDot4: {
+    position: 'absolute',
+    right: 5,
+    width: 2.5,
+    height: 2.5,
+    borderRadius: 1.25,
+    backgroundColor: '#334155',
+  },
   strutDiagonalWrap: {
+    position: 'absolute',
+    left: 2,
     width: 20,
     height: 52,
     alignItems: 'center',
-    transform: [{ rotate: '38deg' }],
+    transform: [{ rotate: '25deg' }],
+    zIndex: 2,
   },
   strutTopEyelet: {
     width: 11,
@@ -488,6 +567,15 @@ const styles = StyleSheet.create({
     width: 18,
     alignItems: 'center',
     marginVertical: 1,
+  },
+  darkSpringRing: {
+    width: 17,
+    height: 5,
+    backgroundColor: '#1E293B',
+    borderRadius: 2.5,
+    marginVertical: 0.6,
+    borderWidth: 0.8,
+    borderColor: '#64748B',
   },
   blueSpringRing: {
     width: 17,
