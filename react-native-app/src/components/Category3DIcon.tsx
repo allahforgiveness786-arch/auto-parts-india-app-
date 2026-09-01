@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { Icon } from 'react-native-paper';
 
 export interface CategoryIconProps {
@@ -9,31 +9,32 @@ export interface CategoryIconProps {
 }
 
 /**
- * High-definition 3D Automotive Category Visuals
- * Matches the photorealistic 3D reference mockup:
- * 1. Engine & Parts: 3D Metallic V6 Turbo Engine with Chrome Manifolds
- * 2. Body Parts: 3D Deep Metallic Blue Car Door with Aero Glass & Handle
- * 3. Electricals: 3D Chiseled Solid Golden Lightning Bolt with Specular Sheen
- * 4. Suspension: 3D Performance Blue Coilover Damper + Slotted Rotor Disc
+ * High-Definition 3D Automotive Category Visuals
+ * Matches the Reference Mockup:
+ * 1. Engine & Parts: 3D V6 Turbo Engine Block with Dual Manifolds & Crank Pulley
+ * 2. Body Parts: 3D Glossy Royal Blue Car Door with Aero Glass & Handle
+ * 3. Electricals: 3D Chiseled Solid Golden Lightning Energy Bolt with Specular Sheen
+ * 4. Suspension: 3D Sport Blue Coilover Damper + Slotted Drilled Brake Rotor
  * 5. Exhaust: 3D Stainless Steel Dual-Tip Performance Muffler
  * 6. More: 3D Glossy Blue 2x2 Rounded Matrix
  */
 export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 }) => {
   const t = (type || 'more').toLowerCase().trim();
 
-  // 1. ENGINE & PARTS: 3D V6 Engine Block with Dual Manifolds & Crank Pulley
+  // 1. ENGINE & PARTS
   if (t.includes('engine') || t.includes('motor') || t.includes('piston') || t.includes('turbo')) {
+    const scale = size / 56;
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.engine3DWrapper}>
-          {/* Top Twin Chrome Intake Manifolds */}
+        <View style={[styles.engine3DWrapper, { transform: [{ scale }] }]}>
+          {/* Top Intake Manifold Tubes */}
           <View style={styles.engineIntakeManifoldRow}>
             <View style={styles.engineManifoldTube} />
             <View style={styles.engineManifoldTube} />
             <View style={styles.engineManifoldTube} />
           </View>
           
-          {/* V6 Cylinder Heads (Silver Left, Deep Blue Right) */}
+          {/* V6 Cylinder Heads (Silver/Slate Left, Royal Blue Right) */}
           <View style={styles.engineCylinderBlock}>
             <View style={styles.engineHeadSilver}>
               <View style={styles.engineFinHighlight} />
@@ -44,25 +45,25 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 })
             </View>
           </View>
 
-          {/* Cast Metallic Crankcase & Front Chrome Pulley */}
+          {/* Lower Crankcase with Front Metallic Pulley Wheels */}
           <View style={styles.engineLowerCase}>
             <View style={styles.enginePulleyOuter}>
               <View style={styles.enginePulleyCore} />
             </View>
             <View style={styles.engineTurboBoostHousing} />
           </View>
-          {/* Oil Sump Base */}
           <View style={styles.engineOilSump} />
         </View>
       </View>
     );
   }
 
-  // 2. BODY PARTS: Metallic Deep Blue Car Door with Aero Glass & Handle
+  // 2. BODY PARTS
   if (t.includes('body') || t.includes('door') || t.includes('bumper') || t.includes('fender') || t.includes('panel')) {
+    const scale = size / 56;
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.door3DWrapper}>
+        <View style={[styles.door3DWrapper, { transform: [{ scale }] }]}>
           {/* Top Window Frame with Curved Glass & Reflection */}
           <View style={styles.doorTopWindowFrame}>
             <View style={styles.doorGlassSurface}>
@@ -71,7 +72,7 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 })
             <View style={styles.doorBPillarBar} />
           </View>
 
-          {/* Metallic Deep Blue Door Panel with Curved Shadow */}
+          {/* Royal Blue Door Panel with Crease Line & Handle */}
           <View style={styles.doorMainPanel}>
             <View style={styles.doorCreaseLine} />
             <View style={styles.doorHandleBar}>
@@ -84,33 +85,35 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 })
     );
   }
 
-  // 3. ELECTRICALS: 3D Solid Chiseled Golden Energy Lightning Bolt
+  // 3. ELECTRICALS (Golden Lightning Bolt)
   if (t.includes('elect') || t.includes('battery') || t.includes('light') || t.includes('spark') || t.includes('bolt')) {
+    const iconSize = size * 0.78;
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
         <View style={styles.lightning3DWrapper}>
-          {/* Golden Warm Glow */}
-          <View style={styles.lightningDropShadow} />
-          {/* Beveled Main 3D Bolt */}
-          <View style={styles.lightningBevelBack}>
-            <Icon source="flash" size={size * 0.88} color="#D97706" />
+          {/* Warm Amber Drop Glow */}
+          <View style={styles.lightningGlowBack}>
+            <Icon source="flash" size={iconSize} color="#F59E0B" />
           </View>
-          <View style={styles.lightningFacetFront}>
-            <Icon source="flash" size={size * 0.82} color="#FBBF24" />
+          {/* Front Golden Bolt */}
+          <View style={styles.lightningFront}>
+            <Icon source="flash" size={iconSize * 0.94} color="#FBBF24" />
           </View>
-          <View style={styles.lightningSpecularGlint}>
-            <Icon source="flash" size={size * 0.68} color="#FEF08A" />
+          {/* Highlight Specular Bolt */}
+          <View style={styles.lightningHighlight}>
+            <Icon source="flash" size={iconSize * 0.76} color="#FEF08A" />
           </View>
         </View>
       </View>
     );
   }
 
-  // 4. SUSPENSION: Metallic Blue Coilover Strut + Slotted Brake Rotor
+  // 4. SUSPENSION (Slotted Rotor + Blue Coilover)
   if (t.includes('suspension') || t.includes('shock') || t.includes('strut') || t.includes('spring') || t.includes('brake') || t.includes('steering')) {
+    const scale = size / 56;
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.suspension3DWrapper}>
+        <View style={[styles.suspension3DWrapper, { transform: [{ scale }] }]}>
           {/* Slotted & Drilled Brake Disc Rotor (Bottom Left) */}
           <View style={styles.slottedBrakeRotor}>
             <View style={styles.rotorHub}>
@@ -131,18 +134,18 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 })
               <View style={styles.strutSpringCoil} />
             </View>
             <View style={styles.strutChromeRod} />
-            <View style={styles.strutBottomBushing} />
           </View>
         </View>
       </View>
     );
   }
 
-  // 5. EXHAUST: 3D Polished Stainless Steel Dual-Tip Performance Muffler
+  // 5. EXHAUST (Stainless Steel Dual-Tip Performance Muffler)
   if (t.includes('exhaust') || t.includes('muffler') || t.includes('silencer') || t.includes('pipe')) {
+    const scale = size / 56;
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.exhaust3DWrapper}>
+        <View style={[styles.exhaust3DWrapper, { transform: [{ scale }] }]}>
           <View style={styles.exhaustInletTube} />
           {/* Stainless Steel Oval Drum with Chrome Sheen */}
           <View style={styles.exhaustOvalDrum}>
@@ -163,17 +166,18 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 })
     );
   }
 
-  // 6. MORE: 4 Glossy Royal Blue Rounded Squares (2x2 Matrix)
+  // 6. MORE: 4 Glossy Blue Rounded Squares (2x2 Matrix)
+  const cubeSize = size * 0.24;
   return (
     <View style={[styles.canvas, { width: size, height: size }]}>
       <View style={styles.moreMatrixBox}>
         <View style={styles.matrixRow}>
-          <View style={styles.matrixCube} />
-          <View style={styles.matrixCube} />
+          <View style={[styles.matrixCube, { width: cubeSize, height: cubeSize, borderRadius: cubeSize * 0.35 }]} />
+          <View style={[styles.matrixCube, { width: cubeSize, height: cubeSize, borderRadius: cubeSize * 0.35 }]} />
         </View>
         <View style={styles.matrixRow}>
-          <View style={styles.matrixCube} />
-          <View style={styles.matrixCube} />
+          <View style={[styles.matrixCube, { width: cubeSize, height: cubeSize, borderRadius: cubeSize * 0.35 }]} />
+          <View style={[styles.matrixCube, { width: cubeSize, height: cubeSize, borderRadius: cubeSize * 0.35 }]} />
         </View>
       </View>
     </View>
@@ -195,8 +199,8 @@ const styles = StyleSheet.create({
 
   // 1. ENGINE 3D STYLES
   engine3DWrapper: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -218,8 +222,8 @@ const styles = StyleSheet.create({
   },
   engineCylinderBlock: {
     flexDirection: 'row',
-    width: 40,
-    height: 20,
+    width: 42,
+    height: 22,
     borderRadius: 4,
     overflow: 'hidden',
     borderWidth: 1.5,
@@ -257,7 +261,7 @@ const styles = StyleSheet.create({
   engineLowerCase: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: 36,
+    width: 38,
     height: 14,
     backgroundColor: '#0F172A',
     borderBottomLeftRadius: 4,
@@ -283,9 +287,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F172A',
   },
   engineTurboBoostHousing: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 11,
+    height: 11,
+    borderRadius: 5.5,
     backgroundColor: '#38BDF8',
     borderWidth: 1,
     borderColor: '#0284C7',
@@ -301,14 +305,14 @@ const styles = StyleSheet.create({
 
   // 2. DOOR 3D STYLES
   door3DWrapper: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   doorTopWindowFrame: {
-    width: 34,
+    width: 36,
     height: 18,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 3,
@@ -342,7 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F172A',
   },
   doorMainPanel: {
-    width: 38,
+    width: 40,
     height: 24,
     backgroundColor: '#0284C7',
     borderBottomLeftRadius: 6,
@@ -351,10 +355,6 @@ const styles = StyleSheet.create({
     borderColor: '#0369A1',
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
   },
   doorCreaseLine: {
     position: 'absolute',
@@ -393,41 +393,28 @@ const styles = StyleSheet.create({
 
   // 3. LIGHTNING 3D STYLES
   lightning3DWrapper: {
-    width: 44,
-    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
-  lightningDropShadow: {
+  lightningGlowBack: {
     position: 'absolute',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F59E0B',
-    opacity: 0.25,
+    opacity: 0.9,
+    transform: [{ scale: 1.05 }],
   },
-  lightningBevelBack: {
+  lightningFront: {
     position: 'absolute',
-    top: 2,
-    left: 2,
+    opacity: 1,
   },
-  lightningFacetFront: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  lightningSpecularGlint: {
-    position: 'absolute',
-    top: -1,
-    left: -1,
+  lightningHighlight: {
+    position: 'relative',
     opacity: 0.85,
   },
 
   // 4. SUSPENSION 3D STYLES
   suspension3DWrapper: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -436,18 +423,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 2,
     left: 2,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#CBD5E1',
     borderWidth: 2,
     borderColor: '#64748B',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   rotorHub: {
     width: 10,
@@ -505,19 +488,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#94A3B8',
   },
-  strutBottomEyelet: {
-    width: 8,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#0F172A',
-    borderWidth: 1,
-    borderColor: '#64748B',
-  },
 
   // 5. EXHAUST 3D STYLES
   exhaust3DWrapper: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -534,7 +509,7 @@ const styles = StyleSheet.create({
     borderColor: '#475569',
   },
   exhaustOvalDrum: {
-    width: 26,
+    width: 28,
     height: 18,
     borderRadius: 9,
     backgroundColor: '#CBD5E1',
@@ -554,7 +529,7 @@ const styles = StyleSheet.create({
   },
   exhaustWeldSeam: {
     position: 'absolute',
-    left: 12,
+    left: 13,
     top: 0,
     bottom: 0,
     width: 1.5,
@@ -584,8 +559,6 @@ const styles = StyleSheet.create({
 
   // 6. MORE MATRIX STYLES
   moreMatrixBox: {
-    width: 32,
-    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,
@@ -595,17 +568,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   matrixCube: {
-    width: 12,
-    height: 12,
-    borderRadius: 4,
     backgroundColor: '#2563EB',
-    borderWidth: 1,
-    borderColor: '#3B82F6',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 2,
   },
 });
 
 export default Category3DIcon;
+
