@@ -762,9 +762,20 @@ export default function HomeScreen({ navigation, route, user }: any) {
           )}
         </View>
 
+        {/* Categories Section Header */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Categories</Text>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('AllCategories', { categories: categoryGridItems.filter(c => c.id !== 'More') })}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.seeAllText}>See All &gt;</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* 6 Category Grid (3 Columns x 2 Rows) */}
         <View style={styles.categoryGrid}>
-          {categoryGridItems.map((cat) => {
+          {categoryGridItems.slice(0, 6).map((cat) => {
             const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
             const isMore = cat.id === 'More';
 
@@ -804,6 +815,16 @@ export default function HomeScreen({ navigation, route, user }: any) {
               </TouchableOpacity>
             );
           })}
+        </View>
+
+        {/* Popular Brands Section Header */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Popular Brands</Text>
+          {selectedBrand !== 'All' && (
+            <TouchableOpacity onPress={() => setSelectedBrand('All')} activeOpacity={0.7}>
+              <Text style={styles.seeAllText}>All Brands</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Horizontal Brand Selector Chips */}
