@@ -88,12 +88,19 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
       >
         {/* Top Image Container */}
         <View style={styles.imageContainer}>
-          <Image 
-            source={{ uri: primaryUri }} 
-            style={styles.cardImage} 
-            resizeMode="cover"
-            onError={() => setImgError(true)}
-          />
+          {item.imageUrl && !imgError ? (
+            <Image 
+              source={{ uri: item.imageUrl }} 
+              style={styles.cardImage} 
+              resizeMode="cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <View style={[styles.cardImage, { backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' }]}>
+              <Icon source="car-cog" size={32} color="#94A3B8" />
+              <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748B', marginTop: 4 }}>OEM Spare Part</Text>
+            </View>
+          )}
 
           {/* Verified Dealer Badge or Condition Badge */}
           {isVerified ? (
@@ -1231,7 +1238,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-    overflow: 'hidden',
   },
   catImage: {
     width: '100%',
