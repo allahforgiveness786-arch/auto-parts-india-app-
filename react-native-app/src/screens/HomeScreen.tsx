@@ -603,23 +603,10 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 style={styles.megaDealBanner}
               >
                 <View style={styles.bannerLeftContent}>
-                  <View style={[styles.megaDealsBadge, { backgroundColor: curBanner.badgeColor || '#1565FF' }]}>
-                    <Text style={styles.megaDealsBadgeText}>{curBanner.badge}</Text>
-                  </View>
-                  <Text style={styles.megaDealHeadline}>
-                    {curBanner.headline1}{'\n'}
-                    <Text style={styles.megaDealDiscount}>{curBanner.discount}</Text>{'\n'}
-                    {curBanner.headline2}
-                  </Text>
-
-                  <View style={styles.bannerChecklist}>
-                    {curBanner.features.map((feat, fIdx) => (
-                      <View key={fIdx} style={styles.checkItem}>
-                        <Icon source="check-circle" size={13} color="#10B981" />
-                        <Text style={styles.checkText}>{feat}</Text>
-                      </View>
-                    ))}
-                  </View>
+                  <Text style={styles.bannerSubHeadSmall}>UP TO</Text>
+                  <Text style={styles.megaDealDiscount}>50% OFF</Text>
+                  <Text style={styles.megaDealHeadline}>ON GENUINE PARTS</Text>
+                  <Text style={styles.bannerSubFeatures}>Top Quality • Best Prices • Fast Delivery</Text>
 
                   <TouchableOpacity 
                     style={styles.shopNowBtn}
@@ -1099,47 +1086,33 @@ const styles = StyleSheet.create({
   },
   bannerLeftContent: {
     flex: 1.25,
-    paddingRight: 8,
+    paddingRight: 6,
   },
-  megaDealsBadge: {
-    backgroundColor: '#1565FF',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  megaDealsBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  megaDealHeadline: {
-    color: '#FFFFFF',
-    fontSize: 15,
+  bannerSubHeadSmall: {
+    color: '#CBD5E1',
+    fontSize: 12,
     fontWeight: '800',
-    lineHeight: 20,
-    letterSpacing: -0.3,
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   megaDealDiscount: {
     color: '#FACC15',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '900',
+    lineHeight: 32,
   },
-  bannerChecklist: {
-    marginTop: 8,
-    gap: 3,
+  megaDealHeadline: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+    marginTop: 2,
   },
-  checkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  checkText: {
-    color: '#CBD5E1',
-    fontSize: 10.5,
+  bannerSubFeatures: {
+    color: '#94A3B8',
+    fontSize: 9.5,
     fontWeight: '600',
+    marginTop: 6,
   },
   shopNowBtn: {
     flexDirection: 'row',

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, StatusBar, Platform, Image } from 'react-native';
-import { Text, Icon, Appbar } from 'react-native-paper';
+import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { Text, Appbar } from 'react-native-paper';
+import { Category3DIcon } from '../components/Category3DIcon';
 
 export default function AllCategoriesScreen({ navigation, route }: any) {
   const { categories } = route.params || { categories: [] };
@@ -16,8 +17,8 @@ export default function AllCategoriesScreen({ navigation, route }: any) {
         }}
         activeOpacity={0.7}
       >
-        <View style={[styles.iconContainer, { backgroundColor: (item.iconColor || '#1565FF') + '15' }]}>
-          <Icon source={item.icon || 'apps'} size={32} color={item.iconColor || '#1565FF'} />
+        <View style={styles.iconContainer}>
+          <Category3DIcon type={item.is3DGraphic || item.name} size={50} />
         </View>
         <Text style={styles.categoryLabel}>{item.name}</Text>
       </TouchableOpacity>
@@ -55,13 +56,14 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'flex-start',
     marginBottom: 16,
+    gap: 12,
   },
   categoryCard: {
-    width: '31%',
-    marginRight: '2%',
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -70,20 +72,18 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    marginBottom: 8,
   },
   iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 58,
+    height: 58,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   categoryLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#334155',
+    fontWeight: '700',
+    color: '#0F172A',
     textAlign: 'center',
   },
 });
