@@ -277,22 +277,13 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
   // Entrance Animations
   const headerFade = useRef(new Animated.Value(0)).current;
-  const searchSlide = useRef(new Animated.Value(-10)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(headerFade, {
-        toValue: 1,
-        duration: 350,
-        useNativeDriver: true,
-      }),
-      Animated.timing(searchSlide, {
-        toValue: 0,
-        duration: 400,
-        easing: Easing.out(Easing.back(1.4)),
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(headerFade, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   // Promotional Banners Carousel Data
@@ -562,7 +553,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
         </Animated.View>
 
         {/* Search Bar & Integrated Filter Adjustments Sliders Icon */}
-        <Animated.View style={[styles.searchContainer, { transform: [{ translateY: searchSlide }] }]}>
+        <View style={styles.searchContainer}>
           <View style={styles.searchBarBox}>
             <Icon source="magnify" size={22} color="#64748B" />
             <TextInput
@@ -586,7 +577,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
               <Icon source="tune-variant" color="#0F172A" size={20} />
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
       </View>
 
       <ScrollView 
@@ -692,8 +683,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
                   }
                 }}
               >
-                <View style={[styles.catVisualBox, { backgroundColor: isSelected ? '#DBEAFE' : '#F8FAFC' }]}>
-                  <Category3DIcon type={cat.is3DGraphic || 'more'} size={48} />
+                <View style={styles.catVisualBox}>
+                  <Category3DIcon type={cat.is3DGraphic || 'more'} size={52} />
                 </View>
                 <Text 
                   style={[styles.catLabel, isSelected && styles.catLabelSelected]} 
@@ -1093,7 +1084,7 @@ const styles = StyleSheet.create({
   },
   bannerOuterContainer: {
     marginHorizontal: 14,
-    marginTop: 14,
+    marginTop: 18,
     marginBottom: 16,
   },
   megaDealBanner: {
@@ -1214,8 +1205,8 @@ const styles = StyleSheet.create({
   catGridCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -1232,12 +1223,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
   catVisualBox: {
-    width: 54,
-    height: 54,
-    borderRadius: 14,
+    width: 64,
+    height: 64,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   catImage: {
     width: '100%',

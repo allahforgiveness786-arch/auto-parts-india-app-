@@ -4,46 +4,33 @@ import { Icon } from 'react-native-paper';
 
 export const BannerPartsCollage: React.FC = () => {
   return (
-    <View style={styles.collageWrapper}>
-      {/* Background Soft Blue Radial Glow Flare */}
-      <View style={styles.flareGlow} />
+    <View style={styles.container}>
+      {/* Background Radial Glow */}
+      <View style={styles.glowBackdrop} />
 
-      {/* Modern High-End Automotive Parts Composition */}
-      <View style={styles.showcaseCard}>
-        {/* 1. Top Brake Rotor & Shock Strut */}
-        <View style={styles.topRow}>
-          <View style={styles.partPill}>
-            <Icon source="car-brake-disc" size={24} color="#60A5FA" />
-            <Text style={styles.partLabel}>Brakes</Text>
-          </View>
-          <View style={[styles.partPill, { backgroundColor: 'rgba(59, 130, 246, 0.25)' }]}>
-            <Icon source="car-turbocharger" size={24} color="#FBBF24" />
-            <Text style={[styles.partLabel, { color: '#FDE047' }]}>Turbo</Text>
+      {/* Main Studio Render Composition */}
+      <View style={styles.compositionBox}>
+        {/* Top Floating Badge */}
+        <View style={styles.floatingTag}>
+          <Icon source="check-decagram" size={14} color="#10B981" />
+          <Text style={styles.floatingTagText}>100% GENUINE</Text>
+        </View>
+
+        {/* Central Graphic: Turbo & Engine Core */}
+        <View style={styles.centerDisc}>
+          <View style={styles.innerDiscRing}>
+            <Icon source="car-turbocharger" size={48} color="#60A5FA" />
           </View>
         </View>
 
-        {/* 2. Center Hero Badge */}
-        <View style={styles.centerBadge}>
-          <Icon source="car-sports" size={44} color="#FFFFFF" />
-          <View style={styles.oemVerifiedPill}>
-            <Text style={styles.oemVerifiedText}>100% OEM</Text>
-          </View>
-        </View>
+        {/* Speed streak accents */}
+        <View style={styles.streakLine1} />
+        <View style={styles.streakLine2} />
 
-        {/* 3. Bottom Row Parts */}
-        <View style={styles.bottomRow}>
-          <View style={[styles.miniPartChip, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
-            <Icon source="car-battery" size={16} color="#34D399" />
-            <Text style={[styles.miniChipText, { color: '#6EE7B7' }]}>12V</Text>
-          </View>
-          <View style={[styles.miniPartChip, { backgroundColor: 'rgba(239, 68, 68, 0.2)' }]}>
-            <Icon source="engine" size={16} color="#F87171" />
-            <Text style={[styles.miniChipText, { color: '#FCA5A5' }]}>V6</Text>
-          </View>
-          <View style={[styles.miniPartChip, { backgroundColor: 'rgba(168, 85, 247, 0.2)' }]}>
-            <Icon source="lightning-bolt" size={16} color="#C084FC" />
-            <Text style={[styles.miniChipText, { color: '#E9D5FF' }]}>ECU</Text>
-          </View>
+        {/* Bottom Specs Pill */}
+        <View style={styles.bottomSpecPill}>
+          <Icon source="shield-car" size={13} color="#FBBF24" />
+          <Text style={styles.bottomSpecText}>OEM VERIFIED</Text>
         </View>
       </View>
     </View>
@@ -51,96 +38,114 @@ export const BannerPartsCollage: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  collageWrapper: {
+  container: {
     width: '100%',
-    height: 140,
-    position: 'relative',
+    height: 135,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
-  flareGlow: {
+  glowBackdrop: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: '#1E40AF',
-    opacity: 0.6,
-    top: 0,
-    right: 0,
+    opacity: 0.5,
   },
-  showcaseCard: {
-    width: 130,
-    height: 130,
-    borderRadius: 20,
+  compositionBox: {
+    width: 120,
+    height: 120,
+    borderRadius: 24,
     backgroundColor: 'rgba(15, 23, 42, 0.75)',
     borderWidth: 1.5,
-    borderColor: 'rgba(96, 165, 250, 0.35)',
-    padding: 8,
-    justifyContent: 'space-between',
+    borderColor: 'rgba(96, 165, 250, 0.3)',
+    justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#1565FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    position: 'relative',
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
     elevation: 4,
   },
-  topRow: {
-    flexDirection: 'row',
-    gap: 6,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  partPill: {
+  floatingTag: {
+    position: 'absolute',
+    top: -8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(30, 58, 138, 0.5)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
     gap: 3,
+    backgroundColor: '#064E3B',
     borderWidth: 1,
-    borderColor: 'rgba(147, 197, 253, 0.3)',
+    borderColor: '#059669',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    zIndex: 10,
   },
-  partLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#93C5FD',
-  },
-  centerBadge: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 2,
-  },
-  oemVerifiedPill: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 6,
-    marginTop: -4,
-  },
-  oemVerifiedText: {
+  floatingTagText: {
+    color: '#6EE7B7',
     fontSize: 8,
     fontWeight: '900',
-    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
-  bottomRow: {
-    flexDirection: 'row',
-    gap: 4,
-    width: '100%',
+  centerDisc: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(30, 58, 138, 0.6)',
+    borderWidth: 2,
+    borderColor: '#3B82F6',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  miniPartChip: {
+  innerDiscRing: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#0F172A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  streakLine1: {
+    position: 'absolute',
+    left: 8,
+    top: 36,
+    width: 14,
+    height: 2,
+    backgroundColor: '#60A5FA',
+    borderRadius: 1,
+    opacity: 0.7,
+  },
+  streakLine2: {
+    position: 'absolute',
+    right: 8,
+    bottom: 36,
+    width: 18,
+    height: 2,
+    backgroundColor: '#FBBF24',
+    borderRadius: 1,
+    opacity: 0.7,
+  },
+  bottomSpecPill: {
+    position: 'absolute',
+    bottom: -8,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    gap: 4,
+    backgroundColor: '#78350F',
+    borderWidth: 1,
+    borderColor: '#D97706',
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 6,
-    gap: 2,
+    borderRadius: 10,
+    zIndex: 10,
   },
-  miniChipText: {
+  bottomSpecText: {
+    color: '#FDE68A',
     fontSize: 8,
-    fontWeight: '800',
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });
 

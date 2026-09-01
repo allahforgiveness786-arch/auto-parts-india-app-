@@ -8,151 +8,99 @@ export interface CategoryIconProps {
   active?: boolean;
 }
 
-interface CategoryStyleConfig {
-  icon: string;
-  bgGradient: string;
-  borderColor: string;
-  iconColor: string;
-  badgeBg: string;
-}
-
-const CATEGORY_CONFIGS: Record<string, CategoryStyleConfig> = {
-  engine: {
-    icon: 'engine',
-    bgGradient: '#EEF2FF',
-    borderColor: '#C7D2FE',
-    iconColor: '#3730A3',
-    badgeBg: '#4F46E5',
-  },
-  body: {
-    icon: 'car-door',
-    bgGradient: '#F0F9FF',
-    borderColor: '#BAE6FD',
-    iconColor: '#0369A1',
-    badgeBg: '#0284C7',
-  },
-  electrical: {
-    icon: 'lightning-bolt',
-    bgGradient: '#FEFCE8',
-    borderColor: '#FEF08A',
-    iconColor: '#CA8A04',
-    badgeBg: '#EAB308',
-  },
-  suspension: {
-    icon: 'car-brake-disc',
-    bgGradient: '#F1F5F9',
-    borderColor: '#CBD5E1',
-    iconColor: '#334155',
-    badgeBg: '#475569',
-  },
-  exhaust: {
-    icon: 'smoke',
-    bgGradient: '#FFF1F2',
-    borderColor: '#FECDD3',
-    iconColor: '#E11D48',
-    badgeBg: '#F43F5E',
-  },
-  more: {
-    icon: 'view-grid',
-    bgGradient: '#EFF6FF',
-    borderColor: '#BFDBFE',
-    iconColor: '#1565FF',
-    badgeBg: '#1565FF',
-  },
-};
-
 export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 52 }) => {
   const t = (type || 'more').toLowerCase().trim();
 
-  let key = 'more';
-  if (t.includes('engine') || t.includes('motor') || t.includes('piston') || t.includes('turbo')) key = 'engine';
-  else if (t.includes('body') || t.includes('door') || t.includes('bumper') || t.includes('fender')) key = 'body';
-  else if (t.includes('elect') || t.includes('battery') || t.includes('light') || t.includes('spark') || t.includes('bolt')) key = 'electrical';
-  else if (t.includes('suspension') || t.includes('shock') || t.includes('strut') || t.includes('spring') || t.includes('brake')) key = 'suspension';
-  else if (t.includes('exhaust') || t.includes('muffler') || t.includes('silencer') || t.includes('pipe')) key = 'exhaust';
-
-  const config = CATEGORY_CONFIGS[key] || CATEGORY_CONFIGS.more;
-  const containerSize = size;
-  const iconSize = Math.max(22, Math.floor(size * 0.52));
-
-  // Custom crafted visual for each category for a high-end, crisp auto look
-  if (key === 'engine') {
+  // 1. Engine & Mechanical
+  if (t.includes('engine') || t.includes('motor') || t.includes('piston') || t.includes('turbo')) {
     return (
-      <View style={[styles.outerContainer, { width: containerSize, height: containerSize, backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-        <View style={styles.engineBadge}>
-          <Icon source="engine" size={iconSize} color="#1565FF" />
+      <View style={[styles.iconCard, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+        <View style={[styles.innerCircle, { backgroundColor: '#DBEAFE' }]}>
+          <Icon source="engine" size={28} color="#1D4ED8" />
         </View>
-        <View style={styles.miniPistonPill}>
-          <Text style={styles.miniPillText}>V6</Text>
+        <View style={[styles.badgePill, { backgroundColor: '#1E40AF' }]}>
+          <Icon source="flash" size={10} color="#FDE047" />
+          <Text style={styles.badgeText}>CORE</Text>
         </View>
       </View>
     );
   }
 
-  if (key === 'body') {
+  // 2. Body Parts & Panels
+  if (t.includes('body') || t.includes('door') || t.includes('bumper') || t.includes('fender')) {
     return (
-      <View style={[styles.outerContainer, { width: containerSize, height: containerSize, backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
-        <View style={styles.bodyBadge}>
-          <Icon source="car-door" size={iconSize} color="#16A34A" />
+      <View style={[styles.iconCard, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
+        <View style={[styles.innerCircle, { backgroundColor: '#DCFCE7' }]}>
+          <Icon source="car-side" size={28} color="#15803D" />
         </View>
-        <View style={[styles.miniPistonPill, { backgroundColor: '#DCFCE7', borderColor: '#86EFAC' }]}>
-          <Text style={[styles.miniPillText, { color: '#15803D' }]}>OEM</Text>
+        <View style={[styles.badgePill, { backgroundColor: '#166534' }]}>
+          <Icon source="shield-check" size={10} color="#86EFAC" />
+          <Text style={styles.badgeText}>PANELS</Text>
         </View>
       </View>
     );
   }
 
-  if (key === 'electrical') {
+  // 3. Electricals & Electronics
+  if (t.includes('elect') || t.includes('battery') || t.includes('light') || t.includes('spark') || t.includes('bolt')) {
     return (
-      <View style={[styles.outerContainer, { width: containerSize, height: containerSize, backgroundColor: '#FEFCE8', borderColor: '#FEF08A' }]}>
-        <View style={styles.electricalBadge}>
-          <Icon source="lightning-bolt" size={iconSize} color="#D97706" />
+      <View style={[styles.iconCard, { backgroundColor: '#FEFCE8', borderColor: '#FEF08A' }]}>
+        <View style={[styles.innerCircle, { backgroundColor: '#FEF9C3' }]}>
+          <Icon source="car-battery" size={28} color="#B45309" />
         </View>
-        <View style={[styles.miniPistonPill, { backgroundColor: '#FEF9C3', borderColor: '#FDE047' }]}>
-          <Text style={[styles.miniPillText, { color: '#A16207' }]}>12V</Text>
+        <View style={[styles.badgePill, { backgroundColor: '#854D0E' }]}>
+          <Icon source="lightning-bolt" size={10} color="#FDE047" />
+          <Text style={styles.badgeText}>12V / ECU</Text>
         </View>
       </View>
     );
   }
 
-  if (key === 'suspension') {
+  // 4. Suspension & Steering (Fixed valid icon: tire & shock)
+  if (t.includes('suspension') || t.includes('shock') || t.includes('strut') || t.includes('spring') || t.includes('brake') || t.includes('steering')) {
     return (
-      <View style={[styles.outerContainer, { width: containerSize, height: containerSize, backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' }]}>
-        <View style={styles.suspensionBadge}>
-          <Icon source="car-brake-disc" size={iconSize} color="#7C3AED" />
+      <View style={[styles.iconCard, { backgroundColor: '#FAF5FF', borderColor: '#E9D5FF' }]}>
+        <View style={[styles.innerCircle, { backgroundColor: '#F3E8FF' }]}>
+          <Icon source="tire" size={28} color="#7E22CE" />
         </View>
-        <View style={[styles.miniPistonPill, { backgroundColor: '#EDE9FE', borderColor: '#C4B5FD' }]}>
-          <Text style={[styles.miniPillText, { color: '#6D28D9' }]}>STRUT</Text>
+        <View style={[styles.badgePill, { backgroundColor: '#6B21A8' }]}>
+          <Icon source="car-traction-control" size={10} color="#D8B4FE" />
+          <Text style={styles.badgeText}>STRUTS</Text>
         </View>
       </View>
     );
   }
 
-  if (key === 'exhaust') {
+  // 5. Exhaust & Performance
+  if (t.includes('exhaust') || t.includes('muffler') || t.includes('silencer') || t.includes('pipe')) {
     return (
-      <View style={[styles.outerContainer, { width: containerSize, height: containerSize, backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}>
-        <View style={styles.exhaustBadge}>
-          <Icon source="pipe" size={iconSize} color="#E11D48" />
+      <View style={[styles.iconCard, { backgroundColor: '#FFF1F2', borderColor: '#FECDD3' }]}>
+        <View style={[styles.innerCircle, { backgroundColor: '#FFE4E6' }]}>
+          <Icon source="car-turbocharger" size={28} color="#BE123C" />
         </View>
-        <View style={[styles.miniPistonPill, { backgroundColor: '#FFE4E6', borderColor: '#FDA4AF' }]}>
-          <Text style={[styles.miniPillText, { color: '#BE123C' }]}>FLOW</Text>
+        <View style={[styles.badgePill, { backgroundColor: '#9F1239' }]}>
+          <Icon source="fire" size={10} color="#FDA4AF" />
+          <Text style={styles.badgeText}>EXHAUST</Text>
         </View>
       </View>
     );
   }
 
-  // 6. More Category
+  // 6. More Categories (2x2 Matrix)
   return (
-    <View style={[styles.outerContainer, { width: containerSize, height: containerSize, backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
-      <View style={styles.moreGrid}>
-        <View style={styles.moreRow}>
-          <View style={[styles.moreDot, { backgroundColor: '#1565FF' }]} />
-          <View style={[styles.moreDot, { backgroundColor: '#1565FF' }]} />
+    <View style={[styles.iconCard, { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
+      <View style={styles.grid2x2}>
+        <View style={styles.gridRow}>
+          <View style={[styles.gridDot, { backgroundColor: '#1565FF' }]} />
+          <View style={[styles.gridDot, { backgroundColor: '#1565FF' }]} />
         </View>
-        <View style={styles.moreRow}>
-          <View style={[styles.moreDot, { backgroundColor: '#1565FF' }]} />
-          <View style={[styles.moreDot, { backgroundColor: '#1565FF' }]} />
+        <View style={styles.gridRow}>
+          <View style={[styles.gridDot, { backgroundColor: '#1565FF' }]} />
+          <View style={[styles.gridDot, { backgroundColor: '#1565FF' }]} />
         </View>
+      </View>
+      <View style={[styles.badgePill, { backgroundColor: '#1E293B' }]}>
+        <Text style={styles.badgeText}>ALL (20+)</Text>
       </View>
     </View>
   );
@@ -166,67 +114,63 @@ export const ExhaustSvg = () => <Category3DIcon type="exhaust" />;
 export const MoreGridSvg = () => <Category3DIcon type="more" />;
 
 const styles = StyleSheet.create({
-  outerContainer: {
-    borderRadius: 16,
+  iconCard: {
+    width: 62,
+    height: 62,
+    borderRadius: 18,
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  engineBadge: {
+  innerCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 4,
   },
-  bodyBadge: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  electricalBadge: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  suspensionBadge: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  exhaustBadge: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  miniPistonPill: {
+  badgePill: {
     position: 'absolute',
     bottom: -6,
-    backgroundColor: '#DBEAFE',
-    borderWidth: 1,
-    borderColor: '#93C5FD',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  miniPillText: {
-    fontSize: 8,
+  badgeText: {
+    fontSize: 7.5,
     fontWeight: '900',
-    color: '#1D4ED8',
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    letterSpacing: 0.4,
   },
-  moreGrid: {
+  grid2x2: {
     gap: 4,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 4,
   },
-  moreRow: {
+  gridRow: {
     flexDirection: 'row',
     gap: 4,
   },
-  moreDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 3,
+  gridDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 4,
   },
 });
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
+import { Icon } from 'react-native-paper';
 
 export interface CarBrandBadgeProps {
   brand?: string;
@@ -10,146 +11,153 @@ export interface CarBrandBadgeProps {
 
 export const CarBrandBadge: React.FC<CarBrandBadgeProps> = ({
   brand = 'All',
-  size = 38,
+  size = 44,
   active = false,
   style,
 }) => {
   const b = (brand || '').toLowerCase().trim();
 
-  // Custom high-fidelity brand emblem vectors
-  const renderBrandEmblem = () => {
-    // 1. Maruti Suzuki (Red & Blue Suzuki 'S' Emblem)
+  const renderBadge = () => {
+    // 1. Maruti Suzuki
     if (b.includes('maruti') || b.includes('suzuki')) {
       return (
-        <View style={styles.center}>
-          <Text style={{ fontSize: size * 0.44, fontWeight: '900', color: '#E11D48', fontStyle: 'italic' }}>
-            S
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#FEF2F2', borderColor: active ? '#DC2626' : '#FECACA' }]}>
+          <View style={styles.suzukiSWrapper}>
+            <Text style={styles.suzukiSText}>S</Text>
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#DC2626' }]}>SUZUKI</Text>
+          </View>
         </View>
       );
     }
 
-    // 2. Hyundai (Slanted Blue 'H' Emblem)
+    // 2. Hyundai
     if (b.includes('hyundai')) {
       return (
-        <View style={[styles.center, styles.hyundaiOval, { width: size * 0.72, height: size * 0.48 }]}>
-          <Text style={{ fontSize: size * 0.36, fontWeight: '900', color: '#002C6C', transform: [{ skewX: '-14deg' }] }}>
-            H
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#F0F9FF', borderColor: active ? '#0284C7' : '#BAE6FD' }]}>
+          <View style={styles.hyundaiOval}>
+            <Text style={styles.hyundaiHText}>H</Text>
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#0284C7' }]}>HYUNDAI</Text>
+          </View>
         </View>
       );
     }
 
-    // 3. Tata Motors (Royal Blue Tata Emblem with Ring)
+    // 3. Tata Motors
     if (b.includes('tata')) {
       return (
-        <View style={[styles.center, styles.tataRing, { width: size * 0.68, height: size * 0.68 }]}>
-          <Text style={{ fontSize: size * 0.36, fontWeight: '900', color: '#00539B' }}>
-            T
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#EFF6FF', borderColor: active ? '#2563EB' : '#BFDBFE' }]}>
+          <View style={styles.tataCircle}>
+            <Icon source="shield-car" size={20} color="#1D4ED8" />
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#1D4ED8' }]}>TATA</Text>
+          </View>
         </View>
       );
     }
 
-    // 4. Mahindra (Crimson Twin Peaks / 'M' Badge)
+    // 4. Mahindra
     if (b.includes('mahindra')) {
       return (
-        <View style={styles.center}>
-          <Text style={{ fontSize: size * 0.38, fontWeight: '900', color: '#D32F2F', letterSpacing: -1 }}>
-            M
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#FFF1F2', borderColor: active ? '#E11D48' : '#FECDD3' }]}>
+          <View style={styles.mahindraChevron}>
+            <Icon source="chevron-triple-up" size={22} color="#BE123C" />
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#BE123C' }]}>MAHINDRA</Text>
+          </View>
         </View>
       );
     }
 
-    // 5. Toyota (Triple Oval Red/Black Toyota 'T')
+    // 5. Toyota
     if (b.includes('toyota')) {
       return (
-        <View style={[styles.center, styles.toyotaOval, { width: size * 0.72, height: size * 0.52 }]}>
-          <Text style={{ fontSize: size * 0.36, fontWeight: '900', color: '#EB0A1E' }}>
-            T
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#FEF2F2', borderColor: active ? '#DC2626' : '#FECACA' }]}>
+          <View style={styles.toyotaOval}>
+            <Icon source="car-traction-control" size={20} color="#DC2626" />
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#DC2626' }]}>TOYOTA</Text>
+          </View>
         </View>
       );
     }
 
-    // 6. Honda (Classic Red/Chrome Bold 'H')
+    // 6. Honda
     if (b.includes('honda')) {
       return (
-        <View style={styles.center}>
-          <Text style={{ fontSize: size * 0.44, fontWeight: '900', color: '#CC0000' }}>
-            H
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#F8FAFC', borderColor: active ? '#0F172A' : '#E2E8F0' }]}>
+          <View style={styles.hondaSquare}>
+            <Text style={styles.hondaHText}>H</Text>
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#0F172A' }]}>HONDA</Text>
+          </View>
         </View>
       );
     }
 
-    // 7. Kia (Modern Bold Typography)
+    // 7. Kia
     if (b.includes('kia')) {
       return (
-        <View style={styles.center}>
-          <Text style={{ fontSize: size * 0.28, fontWeight: '900', color: '#05141F', letterSpacing: 0.5 }}>
-            KIA
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#F8FAFC', borderColor: active ? '#0F172A' : '#E2E8F0' }]}>
+          <View style={styles.kiaBadge}>
+            <Text style={styles.kiaText}>KIA</Text>
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#0F172A' }]}>MOTORS</Text>
+          </View>
         </View>
       );
     }
 
-    // 8. Volkswagen (VW Double Letter in Circle)
+    // 8. Volkswagen
     if (b.includes('volkswagen') || b.includes('vw')) {
       return (
-        <View style={[styles.center, styles.vwRing, { width: size * 0.68, height: size * 0.68 }]}>
-          <Text style={{ fontSize: size * 0.28, fontWeight: '900', color: '#001E50', lineHeight: size * 0.32 }}>
-            VW
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#EFF6FF', borderColor: active ? '#1D4ED8' : '#BFDBFE' }]}>
+          <View style={styles.vwCircle}>
+            <Text style={styles.vwText}>VW</Text>
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#1D4ED8' }]}>VW</Text>
+          </View>
         </View>
       );
     }
 
-    // 9. Ford (Blue Oval)
+    // 9. Ford
     if (b.includes('ford')) {
       return (
-        <View style={[styles.center, styles.fordOval, { width: size * 0.74, height: size * 0.46 }]}>
-          <Text style={{ fontSize: size * 0.26, fontWeight: '900', color: '#FFFFFF', fontStyle: 'italic' }}>
-            Ford
-          </Text>
+        <View style={[styles.brandCard, { backgroundColor: '#EFF6FF', borderColor: active ? '#1D4ED8' : '#BFDBFE' }]}>
+          <View style={styles.fordOval}>
+            <Text style={styles.fordText}>Ford</Text>
+          </View>
+          <View style={styles.brandMicroTag}>
+            <Text style={[styles.brandMicroLabel, { color: '#1D4ED8' }]}>FORD</Text>
+          </View>
         </View>
       );
     }
 
-    // Default Fallback Initial
+    // Fallback
     const initial = (brand || 'A').charAt(0).toUpperCase();
     return (
-      <View style={styles.center}>
-        <Text style={{ fontSize: size * 0.42, fontWeight: '800', color: active ? '#1565FF' : '#334155' }}>
-          {initial}
-        </Text>
+      <View style={[styles.brandCard, { backgroundColor: '#F1F5F9', borderColor: active ? '#1565FF' : '#CBD5E1' }]}>
+        <Text style={{ fontSize: 18, fontWeight: '900', color: '#334155' }}>{initial}</Text>
       </View>
     );
   };
 
-  const badgeContent = (
-    <View
-      style={[
-        styles.badgeContainer,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: active ? '#EFF6FF' : '#FFFFFF',
-          borderColor: active ? '#1565FF' : '#E2E8F0',
-        },
-      ]}
-    >
-      {renderBrandEmblem()}
-    </View>
-  );
-
   if (style) {
-    return <View style={style}>{badgeContent}</View>;
+    return <View style={style}>{renderBadge()}</View>;
   }
 
-  return badgeContent;
+  return renderBadge();
 };
 
 export const SuzukiEmblemSvg = () => <CarBrandBadge brand="suzuki" />;
@@ -159,43 +167,124 @@ export const MahindraEmblemSvg = () => <CarBrandBadge brand="mahindra" />;
 export const ToyotaEmblemSvg = () => <CarBrandBadge brand="toyota" />;
 
 const styles = StyleSheet.create({
-  center: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  brandCard: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    position: 'relative',
+  },
+  suzukiSWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  suzukiSText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#DC2626',
+    fontStyle: 'italic',
+    transform: [{ skewX: '-10deg' }],
   },
   hyundaiOval: {
+    width: 32,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#002C6C',
-    borderRadius: 14,
+    borderColor: '#0284C7',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  tataRing: {
-    borderWidth: 1.5,
-    borderColor: '#00539B',
-    borderRadius: 20,
+  hyundaiHText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#0284C7',
+    fontStyle: 'italic',
+    transform: [{ skewX: '-12deg' }],
+  },
+  tataCircle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mahindraChevron: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   toyotaOval: {
-    borderWidth: 1.5,
-    borderColor: '#EB0A1E',
-    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  vwRing: {
+  hondaSquare: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: '#001E50',
-    borderRadius: 20,
+    borderColor: '#0F172A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hondaHText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  kiaBadge: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  kiaText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: 1,
+  },
+  vwCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1.5,
+    borderColor: '#1D4ED8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  vwText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#1D4ED8',
+    letterSpacing: -0.5,
   },
   fordOval: {
-    backgroundColor: '#002C6C',
-    borderRadius: 14,
+    backgroundColor: '#1D4ED8',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 10,
+  },
+  fordText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    fontStyle: 'italic',
+  },
+  brandMicroTag: {
+    position: 'absolute',
+    bottom: -5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 4,
+    paddingHorizontal: 3,
+    paddingVertical: 0.5,
+    borderWidth: 0.5,
+    borderColor: '#E2E8F0',
+  },
+  brandMicroLabel: {
+    fontSize: 6.5,
+    fontWeight: '900',
+    letterSpacing: 0.3,
   },
 });
 
