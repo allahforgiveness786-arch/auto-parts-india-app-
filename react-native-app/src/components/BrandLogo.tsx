@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
+import { BRAND_EMBLEM_ASSETS } from '../data/assetCatalog';
 
 // 1. Maruti Suzuki Emblem
 export const SuzukiEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
@@ -92,7 +93,6 @@ export const ToyotaEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
 };
 
 // Combined Brand Component supporting both High-Res 3D Emblem Assets and Direct Vector Fallbacks
-import { BRAND_EMBLEM_ASSETS } from '../data/assetCatalog';
 
 export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: boolean }> = ({ brand, size = 38, active = false }) => {
   const b = (brand || '').toLowerCase().trim();

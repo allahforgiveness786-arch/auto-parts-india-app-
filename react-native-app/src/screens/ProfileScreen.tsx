@@ -161,7 +161,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
           {/* Admin Panel & Version Management Entry */}
           <TouchableOpacity 
             style={[styles.menuItem, styles.adminMenuItem]} 
-            onPress={() => navigation.navigate('AdminTab')}
+            onPress={() => navigation.navigate('Admin')}
           >
             <View style={[styles.menuIconBox, { backgroundColor: '#FEF3C7' }]}>
               <Icon source="shield-crown" size={22} color="#D97706" />
