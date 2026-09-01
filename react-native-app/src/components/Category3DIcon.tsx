@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Image } from 'react-native';
 import { Icon } from 'react-native-paper';
 
 export interface CategoryIconProps {
@@ -10,13 +10,13 @@ export interface CategoryIconProps {
 
 /**
  * High-definition 3D Automotive Category Visuals
- * Matches user's exact uploaded 3D assets:
- * 1. lv_0_...0953.png: 3D V6 Engine Block (Silver manifolds, blue cylinder head, pulley)
- * 2. lv_0_...1204.png: 3D Metallic Blue Car Door with aero glass & black B-pillar
- * 3. lv_0_...1308.png: 3D Solid Beveled Golden Power Lightning Bolt
- * 4. lv_0_...1507.png: 3D Blue Coilover Suspension Strut + Perforated Brake Rotor
- * 5. Exhaust: 3D Stainless Performance Twin-Pipe Muffler
- * 6. More: Clean Royal Blue 2x2 App Matrix
+ * Matches the photorealistic 3D reference mockup:
+ * 1. Engine & Parts: 3D Metallic V6 Turbo Engine with Chrome Manifolds
+ * 2. Body Parts: 3D Deep Metallic Blue Car Door with Aero Glass & Handle
+ * 3. Electricals: 3D Chiseled Solid Golden Lightning Bolt with Specular Sheen
+ * 4. Suspension: 3D Performance Blue Coilover Damper + Slotted Rotor Disc
+ * 5. Exhaust: 3D Stainless Steel Dual-Tip Performance Muffler
+ * 6. More: 3D Glossy Blue 2x2 Rounded Matrix
  */
 export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 }) => {
   const t = (type || 'more').toLowerCase().trim();
@@ -25,158 +25,137 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 })
   if (t.includes('engine') || t.includes('motor') || t.includes('piston') || t.includes('turbo')) {
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.engineBlockContainer}>
-          {/* Top Twin Intake Manifold Boxes */}
-          <View style={styles.engineIntakeRow}>
-            <View style={styles.engineIntakeBoxLeft} />
-            <View style={styles.engineIntakeBoxRight} />
+        <View style={styles.engine3DWrapper}>
+          {/* Top Twin Chrome Intake Manifolds */}
+          <View style={styles.engineIntakeManifoldRow}>
+            <View style={styles.engineManifoldTube} />
+            <View style={styles.engineManifoldTube} />
+            <View style={styles.engineManifoldTube} />
           </View>
           
-          {/* V-Angle Cylinder Heads (Silver Left, Deep Blue Right) */}
-          <View style={styles.engineHeadsRow}>
+          {/* V6 Cylinder Heads (Silver Left, Deep Blue Right) */}
+          <View style={styles.engineCylinderBlock}>
             <View style={styles.engineHeadSilver}>
-              <View style={styles.engineHeadRidget1} />
-              <View style={styles.engineHeadRidget2} />
+              <View style={styles.engineFinHighlight} />
+              <View style={styles.engineFinHighlight} />
             </View>
             <View style={styles.engineHeadBlue}>
-              <View style={styles.engineHeadBlueGleam} />
+              <View style={styles.engineGleamStreak} />
             </View>
           </View>
 
-          {/* Dark Cast Iron Engine Crankcase */}
-          <View style={styles.engineCrankcase}>
-            {/* Front Harmonic Balancer / Crank Pulley */}
+          {/* Cast Metallic Crankcase & Front Chrome Pulley */}
+          <View style={styles.engineLowerCase}>
             <View style={styles.enginePulleyOuter}>
-              <View style={styles.enginePulleyInner} />
+              <View style={styles.enginePulleyCore} />
             </View>
-            {/* Side Alternator / Bellhousing Ring */}
-            <View style={styles.engineSideFlange} />
+            <View style={styles.engineTurboBoostHousing} />
           </View>
-          {/* Oil Pan Sump Base */}
-          <View style={styles.engineOilPan} />
+          {/* Oil Sump Base */}
+          <View style={styles.engineOilSump} />
         </View>
       </View>
     );
   }
 
-  // 2. BODY PARTS: Metallic Deep Blue Car Door with Aero Glass Frame & Handle
+  // 2. BODY PARTS: Metallic Deep Blue Car Door with Aero Glass & Handle
   if (t.includes('body') || t.includes('door') || t.includes('bumper') || t.includes('fender') || t.includes('panel')) {
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.carDoorContainer}>
-          {/* Window Glass Area (Aero Swept Top Curve) */}
-          <View style={styles.doorWindowFrame}>
-            <View style={styles.doorGlassPane}>
-              {/* Glass Reflection Highlight Streak */}
-              <View style={styles.doorGlassReflection} />
+        <View style={styles.door3DWrapper}>
+          {/* Top Window Frame with Curved Glass & Reflection */}
+          <View style={styles.doorTopWindowFrame}>
+            <View style={styles.doorGlassSurface}>
+              <View style={styles.doorGlassSheen} />
             </View>
-            {/* Black B-Pillar Frame */}
-            <View style={styles.doorBPillar} />
-            {/* Side View Mirror */}
-            <View style={styles.doorSideMirror} />
+            <View style={styles.doorBPillarBar} />
           </View>
 
-          {/* Metallic Deep Blue Door Lower Panel */}
-          <View style={styles.doorLowerSkin}>
-            {/* Horizontal Dynamic Body Character Crease */}
-            <View style={styles.doorCharacterLine} />
-            {/* Door Handle with Lock Cylinder Pocket */}
-            <View style={styles.doorHandle}>
-              <View style={styles.doorHandleKeyhole} />
+          {/* Metallic Deep Blue Door Panel with Curved Shadow */}
+          <View style={styles.doorMainPanel}>
+            <View style={styles.doorCreaseLine} />
+            <View style={styles.doorHandleBar}>
+              <View style={styles.doorKeySlot} />
             </View>
-            {/* Bottom Metallic Shadow Refraction */}
-            <View style={styles.doorLowerShadow} />
+            <View style={styles.doorBottomShade} />
           </View>
         </View>
       </View>
     );
   }
 
-  // 3. ELECTRICALS: 3D Beveled Solid Golden Energy Lightning Bolt
+  // 3. ELECTRICALS: 3D Solid Chiseled Golden Energy Lightning Bolt
   if (t.includes('elect') || t.includes('battery') || t.includes('light') || t.includes('spark') || t.includes('bolt')) {
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.lightning3DContainer}>
-          {/* Ambient Golden Corona Glow */}
-          <View style={styles.lightningAura} />
-          
-          {/* Main 3D Beveled Golden Bolt */}
-          <View style={styles.lightningCore}>
-            <Icon source="flash" size={size * 0.9} color="#FBBF24" />
+        <View style={styles.lightning3DWrapper}>
+          {/* Golden Warm Glow */}
+          <View style={styles.lightningDropShadow} />
+          {/* Beveled Main 3D Bolt */}
+          <View style={styles.lightningBevelBack}>
+            <Icon source="flash" size={size * 0.88} color="#D97706" />
           </View>
-
-          {/* 3D Highlight Bevel overlay */}
-          <View style={styles.lightningBevelFacet}>
-            <Icon source="flash" size={size * 0.76} color="#FEF08A" />
+          <View style={styles.lightningFacetFront}>
+            <Icon source="flash" size={size * 0.82} color="#FBBF24" />
+          </View>
+          <View style={styles.lightningSpecularGlint}>
+            <Icon source="flash" size={size * 0.68} color="#FEF08A" />
           </View>
         </View>
       </View>
     );
   }
 
-  // 4. SUSPENSION: Metallic Blue Coilover Strut + Perforated Brake Rotor
+  // 4. SUSPENSION: Metallic Blue Coilover Strut + Slotted Brake Rotor
   if (t.includes('suspension') || t.includes('shock') || t.includes('strut') || t.includes('spring') || t.includes('brake') || t.includes('steering')) {
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.suspension3DContainer}>
-          {/* Slotted & Drilled Brake Disc Rotor (Bottom Right) */}
-          <View style={styles.brakeRotorDisc}>
-            <View style={styles.brakeHubCenter}>
-              <View style={styles.hubBolt1} />
-              <View style={styles.hubBolt2} />
-              <View style={styles.hubBolt3} />
+        <View style={styles.suspension3DWrapper}>
+          {/* Slotted & Drilled Brake Disc Rotor (Bottom Left) */}
+          <View style={styles.slottedBrakeRotor}>
+            <View style={styles.rotorHub}>
+              <View style={styles.hubNut} />
+              <View style={styles.hubNut} />
             </View>
-            {/* Drilled Rotor Cooling Holes */}
-            <View style={styles.rotorHole1} />
-            <View style={styles.rotorHole2} />
-            <View style={styles.rotorHole3} />
-            <View style={styles.rotorHole4} />
+            <View style={styles.rotorVentHole1} />
+            <View style={styles.rotorVentHole2} />
+            <View style={styles.rotorVentHole3} />
           </View>
 
-          {/* High-Performance Metallic Blue Coilover Spring Shock Strut (Diagonal) */}
-          <View style={styles.coiloverStrut}>
-            {/* Top Mount Bushing */}
-            <View style={styles.strutTopMount} />
-            {/* Blue Hydraulic Damper Cylinder */}
-            <View style={styles.strutDamperBody}>
-              {/* Coiled Suspension Heavy Spring Rings */}
-              <View style={styles.springCoilRing} />
-              <View style={styles.springCoilRing} />
-              <View style={styles.springCoilRing} />
-              <View style={styles.springCoilRing} />
+          {/* Diagonal Sport Coilover Strut with Blue Springs */}
+          <View style={styles.coiloverStrutBody}>
+            <View style={styles.strutTopMountPill} />
+            <View style={styles.strutSpringChamber}>
+              <View style={styles.strutSpringCoil} />
+              <View style={styles.strutSpringCoil} />
+              <View style={styles.strutSpringCoil} />
             </View>
-            {/* Lower Chrome Shaft */}
-            <View style={styles.strutChromeShaft} />
-            {/* Lower Eyelet Mounting Bushing */}
-            <View style={styles.strutBottomEyelet} />
+            <View style={styles.strutChromeRod} />
+            <View style={styles.strutBottomBushing} />
           </View>
         </View>
       </View>
     );
   }
 
-  // 5. EXHAUST: 3D Polished Stainless Steel Performance Muffler & Dual Exhaust Tips
+  // 5. EXHAUST: 3D Polished Stainless Steel Dual-Tip Performance Muffler
   if (t.includes('exhaust') || t.includes('muffler') || t.includes('silencer') || t.includes('pipe')) {
     return (
       <View style={[styles.canvas, { width: size, height: size }]}>
-        <View style={styles.exhaust3DContainer}>
-          {/* Inlet Pipe */}
-          <View style={styles.exhaustInletPipe} />
-          
-          {/* Heavy Gauge Oval Stainless Muffler Chamber */}
-          <View style={styles.exhaustMufflerBody}>
-            {/* Metallic Brushed Reflection Sheen */}
-            <View style={styles.exhaustReflectionSheen} />
-            <View style={styles.exhaustSeamBand} />
+        <View style={styles.exhaust3DWrapper}>
+          <View style={styles.exhaustInletTube} />
+          {/* Stainless Steel Oval Drum with Chrome Sheen */}
+          <View style={styles.exhaustOvalDrum}>
+            <View style={styles.exhaustChromeSheen} />
+            <View style={styles.exhaustWeldSeam} />
           </View>
-
-          {/* Dual Polished Chrome Angle-Cut Exhaust Tips */}
-          <View style={styles.dualTipsBox}>
-            <View style={styles.exhaustTip}>
-              <View style={styles.exhaustTipBore} />
+          {/* Dual Angle-Cut Chrome Exhaust Tips */}
+          <View style={styles.exhaustTipsPair}>
+            <View style={styles.exhaustTipPipe}>
+              <View style={styles.exhaustInnerBore} />
             </View>
-            <View style={styles.exhaustTip}>
-              <View style={styles.exhaustTipBore} />
+            <View style={styles.exhaustTipPipe}>
+              <View style={styles.exhaustInnerBore} />
             </View>
           </View>
         </View>
@@ -184,17 +163,17 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56 })
     );
   }
 
-  // 6. MORE: Royal Blue 2x2 App Grid
+  // 6. MORE: 4 Glossy Royal Blue Rounded Squares (2x2 Matrix)
   return (
     <View style={[styles.canvas, { width: size, height: size }]}>
-      <View style={styles.moreGridContainer}>
-        <View style={styles.gridRow}>
-          <View style={styles.gridBlock} />
-          <View style={styles.gridBlock} />
+      <View style={styles.moreMatrixBox}>
+        <View style={styles.matrixRow}>
+          <View style={styles.matrixCube} />
+          <View style={styles.matrixCube} />
         </View>
-        <View style={styles.gridRow}>
-          <View style={styles.gridBlock} />
-          <View style={styles.gridBlock} />
+        <View style={styles.matrixRow}>
+          <View style={styles.matrixCube} />
+          <View style={styles.matrixCube} />
         </View>
       </View>
     </View>
@@ -214,226 +193,196 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // 1. ENGINE STYLES
-  engineBlockContainer: {
-    width: 48,
-    height: 48,
+  // 1. ENGINE 3D STYLES
+  engine3DWrapper: {
+    width: 46,
+    height: 46,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
-  engineIntakeRow: {
+  engineIntakeManifoldRow: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 3,
     marginBottom: -2,
+    zIndex: 4,
+  },
+  engineManifoldTube: {
+    width: 8,
+    height: 6,
+    backgroundColor: '#334155',
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+    borderWidth: 1,
+    borderColor: '#64748B',
+  },
+  engineCylinderBlock: {
+    flexDirection: 'row',
+    width: 40,
+    height: 20,
+    borderRadius: 4,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#1E293B',
     zIndex: 3,
   },
-  engineIntakeBoxLeft: {
-    width: 14,
-    height: 6,
-    backgroundColor: '#1E293B',
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: '#475569',
-  },
-  engineIntakeBoxRight: {
-    width: 14,
-    height: 6,
-    backgroundColor: '#0F172A',
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  engineHeadsRow: {
-    flexDirection: 'row',
-    gap: 2,
-    zIndex: 2,
-  },
   engineHeadSilver: {
-    width: 22,
-    height: 15,
+    flex: 1,
+    backgroundColor: '#94A3B8',
+    justifyContent: 'space-evenly',
+    paddingVertical: 2,
+    paddingLeft: 2,
+  },
+  engineFinHighlight: {
+    width: '80%',
+    height: 2,
     backgroundColor: '#E2E8F0',
-    borderTopLeftRadius: 6,
-    borderBottomLeftRadius: 2,
-    borderWidth: 1,
-    borderColor: '#94A3B8',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 2,
-  },
-  engineHeadRidget1: {
-    width: 14,
-    height: 2,
-    backgroundColor: '#94A3B8',
-    borderRadius: 1,
-    marginBottom: 2,
-  },
-  engineHeadRidget2: {
-    width: 10,
-    height: 2,
-    backgroundColor: '#94A3B8',
     borderRadius: 1,
   },
   engineHeadBlue: {
-    width: 18,
-    height: 15,
-    backgroundColor: '#1D4ED8',
-    borderTopRightRadius: 6,
-    borderBottomRightRadius: 2,
-    borderWidth: 1,
-    borderColor: '#3B82F6',
+    flex: 1,
+    backgroundColor: '#1E40AF',
     position: 'relative',
     overflow: 'hidden',
   },
-  engineHeadBlueGleam: {
+  engineGleamStreak: {
     position: 'absolute',
-    top: 1,
-    right: 2,
-    width: 10,
-    height: 3,
-    backgroundColor: '#93C5FD',
-    borderRadius: 1.5,
+    top: 0,
+    left: 2,
+    width: 6,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    transform: [{ skewX: '-20deg' }],
   },
-  engineCrankcase: {
-    width: 40,
-    height: 18,
-    backgroundColor: '#0F172A',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#334155',
+  engineLowerCase: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: 36,
+    height: 14,
+    backgroundColor: '#0F172A',
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
     justifyContent: 'space-between',
-    paddingHorizontal: 3,
-    marginTop: -2,
-    zIndex: 1,
+    paddingHorizontal: 4,
+    zIndex: 2,
   },
   enginePulleyOuter: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#94A3B8',
-    borderWidth: 2,
-    borderColor: '#CBD5E1',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#CBD5E1',
+    borderWidth: 1.5,
+    borderColor: '#475569',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  enginePulleyInner: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  enginePulleyCore: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#0F172A',
   },
-  engineSideFlange: {
+  engineTurboBoostHousing: {
     width: 10,
-    height: 14,
-    backgroundColor: '#64748B',
-    borderTopRightRadius: 3,
-    borderBottomRightRadius: 3,
-    borderLeftWidth: 1,
-    borderColor: '#94A3B8',
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#38BDF8',
+    borderWidth: 1,
+    borderColor: '#0284C7',
   },
-  engineOilPan: {
-    width: 30,
-    height: 5,
+  engineOilSump: {
+    width: 24,
+    height: 4,
     backgroundColor: '#020617',
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
     marginTop: -1,
   },
 
-  // 2. CAR DOOR STYLES
-  carDoorContainer: {
+  // 2. DOOR 3D STYLES
+  door3DWrapper: {
     width: 44,
-    height: 48,
+    height: 44,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  doorWindowFrame: {
-    width: 42,
-    height: 22,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 4,
-    borderWidth: 2.5,
-    borderColor: '#0F172A',
-    borderBottomWidth: 0,
     position: 'relative',
+  },
+  doorTopWindowFrame: {
+    width: 34,
+    height: 18,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 3,
+    borderWidth: 2,
+    borderColor: '#0F172A',
+    backgroundColor: '#0284C7',
     overflow: 'hidden',
-    backgroundColor: '#E0F2FE',
+    position: 'relative',
+    marginBottom: -1,
   },
-  doorGlassPane: {
+  doorGlassSurface: {
     flex: 1,
-    backgroundColor: '#BAE6FD',
-    opacity: 0.85,
+    backgroundColor: '#0284C7',
+    position: 'relative',
   },
-  doorGlassReflection: {
+  doorGlassSheen: {
     position: 'absolute',
-    top: -10,
+    top: 0,
     left: 4,
     width: 8,
-    height: 35,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    transform: [{ rotate: '28deg' }],
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    transform: [{ skewX: '-35deg' }],
   },
-  doorBPillar: {
+  doorBPillarBar: {
     position: 'absolute',
     right: 0,
     top: 0,
     bottom: 0,
-    width: 5,
+    width: 4,
     backgroundColor: '#0F172A',
   },
-  doorSideMirror: {
-    position: 'absolute',
-    left: -1,
-    bottom: -2,
-    width: 9,
-    height: 7,
-    borderRadius: 3,
+  doorMainPanel: {
+    width: 38,
+    height: 24,
     backgroundColor: '#0284C7',
-    borderWidth: 1,
-    borderColor: '#0369A1',
-    zIndex: 10,
-  },
-  doorLowerSkin: {
-    width: 44,
-    height: 26,
-    backgroundColor: '#0284C7',
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-    borderWidth: 1.5,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    borderWidth: 2,
     borderColor: '#0369A1',
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
-  doorCharacterLine: {
+  doorCreaseLine: {
     position: 'absolute',
-    top: 6,
-    left: 0,
-    right: 0,
+    top: 5,
+    left: 4,
+    right: 4,
     height: 1.5,
-    backgroundColor: '#38BDF8',
-    opacity: 0.9,
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
-  doorHandle: {
+  doorHandleBar: {
     position: 'absolute',
     top: 9,
     right: 6,
-    width: 14,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#0369A1',
-    borderWidth: 0.8,
-    borderColor: '#0284C7',
+    width: 10,
+    height: 3.5,
+    backgroundColor: '#0F172A',
+    borderRadius: 2,
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: 2,
+    alignItems: 'flex-start',
+    paddingLeft: 1,
   },
-  doorHandleKeyhole: {
-    width: 2,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: '#CBD5E1',
+  doorKeySlot: {
+    width: 1.5,
+    height: 1.5,
+    borderRadius: 0.75,
+    backgroundColor: '#94A3B8',
   },
-  doorLowerShadow: {
+  doorBottomShade: {
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -443,224 +392,219 @@ const styles = StyleSheet.create({
   },
 
   // 3. LIGHTNING 3D STYLES
-  lightning3DContainer: {
-    width: 48,
-    height: 48,
+  lightning3DWrapper: {
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
-  lightningAura: {
+  lightningDropShadow: {
     position: 'absolute',
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(250, 204, 21, 0.25)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F59E0B',
+    opacity: 0.25,
   },
-  lightningCore: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#D97706',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.6,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  lightningBevelFacet: {
+  lightningBevelBack: {
     position: 'absolute',
     top: 2,
     left: 2,
+  },
+  lightningFacetFront: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  lightningSpecularGlint: {
+    position: 'absolute',
+    top: -1,
+    left: -1,
     opacity: 0.85,
   },
 
-  // 4. SUSPENSION STYLES
-  suspension3DContainer: {
-    width: 50,
-    height: 50,
-    position: 'relative',
+  // 4. SUSPENSION 3D STYLES
+  suspension3DWrapper: {
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
-  brakeRotorDisc: {
+  slottedBrakeRotor: {
     position: 'absolute',
     bottom: 2,
-    right: 2,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    left: 2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#CBD5E1',
     borderWidth: 2,
     borderColor: '#64748B',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 2,
   },
-  brakeHubCenter: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+  rotorHub: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hubNut: {
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 1,
+  },
+  rotorVentHole1: { position: 'absolute', top: 3, width: 2, height: 4, backgroundColor: '#475569', borderRadius: 1 },
+  rotorVentHole2: { position: 'absolute', bottom: 3, width: 2, height: 4, backgroundColor: '#475569', borderRadius: 1 },
+  rotorVentHole3: { position: 'absolute', right: 3, width: 4, height: 2, backgroundColor: '#475569', borderRadius: 1 },
+  coiloverStrutBody: {
+    position: 'absolute',
+    top: 0,
+    right: 2,
+    width: 16,
+    height: 38,
+    alignItems: 'center',
+    transform: [{ rotate: '25deg' }],
+  },
+  strutTopMountPill: {
+    width: 12,
+    height: 4,
+    backgroundColor: '#0F172A',
+    borderRadius: 2,
+  },
+  strutSpringChamber: {
+    width: 14,
+    height: 22,
+    backgroundColor: '#1E40AF',
+    borderRadius: 3,
+    borderWidth: 1.5,
+    borderColor: '#1D4ED8',
+    justifyContent: 'space-evenly',
+    paddingVertical: 1,
+  },
+  strutSpringCoil: {
+    width: '100%',
+    height: 3,
+    backgroundColor: '#60A5FA',
+    borderRadius: 1,
+  },
+  strutChromeRod: {
+    width: 5,
+    height: 8,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
+    borderColor: '#94A3B8',
+  },
+  strutBottomEyelet: {
+    width: 8,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#64748B',
+  },
+
+  // 5. EXHAUST 3D STYLES
+  exhaust3DWrapper: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    transform: [{ rotate: '-18deg' }],
+  },
+  exhaustInletTube: {
+    position: 'absolute',
+    left: 0,
+    width: 10,
+    height: 7,
+    backgroundColor: '#94A3B8',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: '#475569',
+  },
+  exhaustOvalDrum: {
+    width: 26,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#CBD5E1',
+    borderWidth: 1.8,
+    borderColor: '#64748B',
+    position: 'relative',
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  exhaustChromeSheen: {
+    position: 'absolute',
+    top: 2,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#FFFFFF',
+  },
+  exhaustWeldSeam: {
+    position: 'absolute',
+    left: 12,
+    top: 0,
+    bottom: 0,
+    width: 1.5,
+    backgroundColor: '#64748B',
+  },
+  exhaustTipsPair: {
+    position: 'absolute',
+    right: -6,
+    gap: 3,
+  },
+  exhaustTipPipe: {
+    width: 10,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#E2E8F0',
+    borderWidth: 1.2,
     borderColor: '#475569',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  hubBolt1: { position: 'absolute', top: 1, width: 2, height: 2, borderRadius: 1, backgroundColor: '#E2E8F0' },
-  hubBolt2: { position: 'absolute', bottom: 1, left: 2, width: 2, height: 2, borderRadius: 1, backgroundColor: '#E2E8F0' },
-  hubBolt3: { position: 'absolute', bottom: 1, right: 2, width: 2, height: 2, borderRadius: 1, backgroundColor: '#E2E8F0' },
-  rotorHole1: { position: 'absolute', top: 3, left: 7, width: 2, height: 2, borderRadius: 1, backgroundColor: '#475569' },
-  rotorHole2: { position: 'absolute', top: 6, right: 4, width: 2, height: 2, borderRadius: 1, backgroundColor: '#475569' },
-  rotorHole3: { position: 'absolute', bottom: 4, left: 5, width: 2, height: 2, borderRadius: 1, backgroundColor: '#475569' },
-  rotorHole4: { position: 'absolute', bottom: 6, right: 7, width: 2, height: 2, borderRadius: 1, backgroundColor: '#475569' },
-  coiloverStrut: {
-    position: 'absolute',
-    top: 0,
-    left: 2,
-    width: 18,
-    height: 44,
-    transform: [{ rotate: '-32deg' }],
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  strutTopMount: {
-    width: 10,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#94A3B8',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-  },
-  strutDamperBody: {
-    width: 14,
-    height: 22,
-    backgroundColor: '#0284C7',
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: '#0369A1',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    paddingVertical: 1,
-  },
-  springCoilRing: {
-    width: 16,
+  exhaustInnerBore: {
+    width: 4,
     height: 3,
     borderRadius: 1.5,
     backgroundColor: '#0F172A',
-    borderWidth: 0.8,
-    borderColor: '#38BDF8',
   },
-  strutChromeShaft: {
-    width: 6,
-    height: 10,
-    backgroundColor: '#E2E8F0',
-    borderWidth: 0.8,
-    borderColor: '#94A3B8',
+
+  // 6. MORE MATRIX STYLES
+  moreMatrixBox: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
   },
-  strutBottomEyelet: {
-    width: 10,
-    height: 8,
+  matrixRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  matrixCube: {
+    width: 12,
+    height: 12,
     borderRadius: 4,
-    backgroundColor: '#64748B',
+    backgroundColor: '#2563EB',
     borderWidth: 1,
-    borderColor: '#94A3B8',
-  },
-
-  // 5. EXHAUST STYLES
-  exhaust3DContainer: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    transform: [{ rotate: '-20deg' }],
-  },
-  exhaustInletPipe: {
-    width: 8,
-    height: 10,
-    backgroundColor: '#64748B',
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
-    borderWidth: 1,
-    borderColor: '#94A3B8',
-    marginBottom: -1,
-  },
-  exhaustMufflerBody: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    backgroundColor: '#94A3B8',
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
-    position: 'relative',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  exhaustReflectionSheen: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 6,
-    width: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
-  },
-  exhaustSeamBand: {
-    width: '100%',
-    height: 2,
-    backgroundColor: '#475569',
-  },
-  dualTipsBox: {
-    flexDirection: 'row',
-    gap: 3,
-    marginTop: -1,
-  },
-  exhaustTip: {
-    width: 9,
-    height: 10,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: '#94A3B8',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  exhaustTipBore: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#0F172A',
-  },
-
-  // 6. MORE GRID STYLES
-  moreGridContainer: {
-    width: 42,
-    height: 42,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 5,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    gap: 5,
-  },
-  gridBlock: {
-    width: 14,
-    height: 14,
-    borderRadius: 4.5,
-    backgroundColor: '#1565FF',
-    shadowColor: '#1565FF',
-    shadowOffset: { width: 0, height: 2 },
+    borderColor: '#3B82F6',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.35,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 2,
   },
 });
 

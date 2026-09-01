@@ -177,6 +177,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [parts, setParts] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [topCategories, setTopCategories] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(3);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -286,8 +288,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
     }).start();
   }, []);
 
-  // Promotional Banners Carousel Data
-  const promoBanners = [
+  // Default Promotional Banners Carousel Data
+  const DEFAULT_PROMO_BANNERS = [
     {
       id: 'mega-deals',
       badge: 'MEGA DEALS',
@@ -323,16 +325,19 @@ export default function HomeScreen({ navigation, route, user }: any) {
     },
   ];
 
+  // Dynamic promo banners from Firestore or defaults
+  const promoBanners = banners.length > 0 ? banners : DEFAULT_PROMO_BANNERS;
+
   // Auto rotate banner
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveBannerIndex((prev) => (prev + 1) % promoBanners.length);
+      setActiveBannerIndex((prev) => (prev + 1) % Math.max(promoBanners.length, 1));
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [promoBanners.length]);
 
-  // 6 Categories with exact 3D automotive visuals
-  const categoryGridItems = [
+  // Default 6 Categories with exact 3D automotive visuals
+  const DEFAULT_CATEGORY_GRID_ITEMS = [
     { 
       id: 'Engine & Parts', 
       name: 'Engine & Parts', 
@@ -370,6 +375,44 @@ export default function HomeScreen({ navigation, route, user }: any) {
       is3DGraphic: 'more',
     },
   ];
+
+  // Helper to map category names or custom icons to 3D graphic types
+  const get3DGraphicForCategory = (cat: any) => {
+    if (cat.is3DGraphic) return cat.is3DGraphic;
+    const name = (cat.name || cat.title || '').toLowerCase();
+    if (name.includes('engine') || name.includes('motor')) return 'engine';
+    if (name.includes('body') || name.includes('door') || name.includes('bumper')) return 'body';
+    if (name.includes('elect') || name.includes('light') || name.includes('battery')) return 'electrical';
+    if (name.includes('suspens') || name.includes('brake') || name.includes('wheel')) return 'suspension';
+    if (name.includes('exhaust') || name.includes('silencer') || name.includes('pipe')) return 'exhaust';
+    if (name.includes('more') || name.includes('other') || name.includes('all')) return 'more';
+    return 'more';
+  };
+
+  // Dynamic category grid items from Firestore or defaults
+  const categoryGridItems = React.useMemo(() => {
+    if (topCategories && topCategories.length > 0) {
+      const formatted = topCategories.map((c) => ({
+        id: c.id || c.name || c.title,
+        name: c.name || c.title,
+        icon: c.icon || 'car-cog',
+        imageUrl: c.imageUrl,
+        is3DGraphic: get3DGraphicForCategory(c),
+      }));
+      // Ensure 'More' is always present at the end for easy catalog browsing
+      if (!formatted.some(c => c.name?.toLowerCase() === 'more')) {
+        formatted.push({
+          id: 'More',
+          name: 'More',
+          icon: 'apps',
+          imageUrl: undefined,
+          is3DGraphic: 'more',
+        });
+      }
+      return formatted;
+    }
+    return DEFAULT_CATEGORY_GRID_ITEMS;
+  }, [topCategories]);
 
   // Brand items for horizontal brand selector matching the reference image
   const brandList = [
@@ -419,6 +462,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
   useEffect(() => {
     setLoading(true);
     let unsubscribeParts = () => {};
+    let unsubscribeBanners = () => {};
+    let unsubscribeCategories = () => {};
 
     try {
       const db = getFirebaseFirestore();
@@ -428,6 +473,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
         return;
       }
       
+      // 1. Listen for Spare Parts
       const qParts = db.collection('spareParts').orderBy('createdAt', 'desc');
       unsubscribeParts = qParts.onSnapshot((snapshot: any) => {
         const list: any[] = [];
@@ -444,6 +490,41 @@ export default function HomeScreen({ navigation, route, user }: any) {
         setRefreshing(false);
       });
 
+      // 2. Listen for Admin Banners
+      try {
+        const qBanners = db.collection('banners');
+        unsubscribeBanners = qBanners.onSnapshot((snapshot: any) => {
+          const bannerList: any[] = [];
+          snapshot.forEach((doc: any) => {
+            bannerList.push({ id: doc.id, ...doc.data() });
+          });
+          // Sort by displayOrder or createdAt
+          bannerList.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          setBanners(bannerList);
+        }, (bErr: any) => {
+          console.warn('Notice from banners listener:', bErr);
+        });
+      } catch (bCatch) {
+        console.warn('Could not listen to banners collection:', bCatch);
+      }
+
+      // 3. Listen for Admin Categories (topCategories collection)
+      try {
+        const qCategories = db.collection('topCategories');
+        unsubscribeCategories = qCategories.onSnapshot((snapshot: any) => {
+          const catList: any[] = [];
+          snapshot.forEach((doc: any) => {
+            catList.push({ id: doc.id, ...doc.data() });
+          });
+          catList.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          setTopCategories(catList);
+        }, (cErr: any) => {
+          console.warn('Notice from categories listener:', cErr);
+        });
+      } catch (cCatch) {
+        console.warn('Could not listen to topCategories collection:', cCatch);
+      }
+
     } catch (queryErr) {
       console.warn('Failed to query Firestore:', queryErr);
       setParts((current) => current.length > 0 ? current : INITIAL_SPARE_PARTS);
@@ -453,6 +534,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
     return () => {
       try { unsubscribeParts(); } catch (_) {}
+      try { unsubscribeBanners(); } catch (_) {}
+      try { unsubscribeCategories(); } catch (_) {}
     };
   }, []);
 
@@ -592,37 +675,71 @@ export default function HomeScreen({ navigation, route, user }: any) {
         <View style={styles.bannerOuterContainer}>
           {(() => {
             const curBanner = promoBanners[activeBannerIndex] || promoBanners[0];
+            const badgeText = curBanner.badge || curBanner.tag || 'MEGA DEALS';
+            const headline1 = curBanner.headline1 || (curBanner.title ? '' : 'UP TO');
+            const discountText = curBanner.discount || curBanner.subtitle || '50% OFF';
+            const headline2 = curBanner.headline2 || curBanner.title || 'ON GENUINE PARTS';
+            const bannerFeatures = Array.isArray(curBanner.features) && curBanner.features.length > 0
+              ? curBanner.features
+              : ['100% Genuine Parts', 'Best Prices Guaranteed', 'Fast & Safe Delivery'];
+            const ctaText = curBanner.cta || curBanner.buttonText || 'SHOP NOW';
+            const targetCat = curBanner.targetCategory || curBanner.category || 'All';
+
             return (
               <TouchableOpacity
                 activeOpacity={0.92}
                 onPress={() => {
-                  if (curBanner.targetCategory) {
-                    setSelectedCategory(curBanner.targetCategory);
+                  if (targetCat) {
+                    setSelectedCategory(targetCat);
                   }
                 }}
-                style={styles.megaDealBanner}
+                style={[
+                  styles.megaDealBanner,
+                  curBanner.backgroundColor ? { backgroundColor: curBanner.backgroundColor } : null
+                ]}
               >
                 <View style={styles.bannerLeftContent}>
-                  <Text style={styles.bannerSubHeadSmall}>UP TO</Text>
-                  <Text style={styles.megaDealDiscount}>50% OFF</Text>
-                  <Text style={styles.megaDealHeadline}>ON GENUINE PARTS</Text>
-                  <Text style={styles.bannerSubFeatures}>Top Quality • Best Prices • Fast Delivery</Text>
+                  <View style={[
+                    styles.megaDealsBadge,
+                    curBanner.badgeColor ? { borderColor: curBanner.badgeColor } : null
+                  ]}>
+                    <Text style={styles.megaDealsBadgeText}>{badgeText}</Text>
+                  </View>
+                  {headline1 ? <Text style={styles.bannerSubHeadSmall}>{headline1}</Text> : null}
+                  <Text style={styles.megaDealDiscount}>{discountText}</Text>
+                  <Text style={styles.megaDealHeadline}>{headline2}</Text>
+                  
+                  <View style={styles.bannerBulletsColumn}>
+                    {bannerFeatures.map((feat: string, fIdx: number) => (
+                      <View key={fIdx} style={styles.bannerBulletRow}>
+                        <Icon source="check-circle" size={11} color="#38BDF8" />
+                        <Text style={styles.bannerBulletText}>{feat}</Text>
+                      </View>
+                    ))}
+                  </View>
 
                   <TouchableOpacity 
                     style={styles.shopNowBtn}
                     activeOpacity={0.85}
                     onPress={() => {
-                      setSelectedCategory(curBanner.targetCategory || 'All');
+                      setSelectedCategory(targetCat || 'All');
                     }}
                   >
-                    <Text style={styles.shopNowBtnText}>{curBanner.cta}</Text>
-                    <Icon source="chevron-right" size={16} color="#0F172A" />
+                    <Text style={styles.shopNowBtnText}>{ctaText}</Text>
+                    <Icon source="chevron-right" size={14} color="#0F172A" />
                   </TouchableOpacity>
                 </View>
 
-                {/* Banner Right Composition 3D Collage matching mockup */}
+                {/* Banner Right Composition: Image URL or 3D Collage */}
                 <View style={styles.bannerRightArt}>
-                  <BannerPartsCollage />
+                  {curBanner.imageUrl ? (
+                    <Image
+                      source={{ uri: curBanner.imageUrl }}
+                      style={{ width: 140, height: 130, borderRadius: 12, resizeMode: 'cover' }}
+                    />
+                  ) : (
+                    <BannerPartsCollage />
+                  )}
                 </View>
               </TouchableOpacity>
             );
@@ -671,7 +788,14 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 }}
               >
                 <View style={styles.catVisualBox}>
-                  <Category3DIcon type={cat.is3DGraphic || 'more'} size={52} />
+                  {cat.imageUrl ? (
+                    <Image
+                      source={{ uri: cat.imageUrl }}
+                      style={{ width: 48, height: 48, borderRadius: 10, resizeMode: 'cover' }}
+                    />
+                  ) : (
+                    <Category3DIcon type={cat.is3DGraphic || 'more'} size={52} />
+                  )}
                 </View>
                 <Text 
                   style={[styles.catLabel, isSelected && styles.catLabelSelected]} 
@@ -1088,25 +1212,56 @@ const styles = StyleSheet.create({
     flex: 1.25,
     paddingRight: 6,
   },
+  megaDealsBadge: {
+    backgroundColor: '#1E40AF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+  },
+  megaDealsBadgeText: {
+    color: '#93C5FD',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
   bannerSubHeadSmall: {
     color: '#CBD5E1',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   megaDealDiscount: {
     color: '#FACC15',
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
-    lineHeight: 32,
+    lineHeight: 28,
   },
   megaDealHeadline: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.2,
     marginTop: 2,
+    marginBottom: 6,
+  },
+  bannerBulletsColumn: {
+    gap: 3,
+    marginVertical: 4,
+  },
+  bannerBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  bannerBulletText: {
+    color: '#E2E8F0',
+    fontSize: 9,
+    fontWeight: '700',
   },
   bannerSubFeatures: {
     color: '#94A3B8',
