@@ -341,7 +341,7 @@ export default function ChatsScreen({ navigation, user: initialUser }: any) {
       {/* Modern Navy Header matching Web & App Theme */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <BrandLogo size="sm" variant="horizontal" theme="dark" showTagline={false} />
+          <BrandLogo size={32} />
           <TouchableOpacity
             style={styles.notifIconBtn}
             onPress={() => navigation.navigate('Notifications')}

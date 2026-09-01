@@ -692,7 +692,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
     return (
       <View style={styles.limitContainer}>
         <View style={styles.nativeHeader}>
-          <BrandLogo size="sm" variant="icon" theme="dark" showTagline={false} />
+          <BrandLogo size={32} />
           <View style={{ marginLeft: 10 }}>
             <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF' }}>Sell Spare Part</Text>
             <Text style={{ fontSize: 12, color: '#94A3B8' }}>Post ads across India</Text>

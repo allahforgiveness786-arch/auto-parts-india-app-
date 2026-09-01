@@ -697,5 +697,3 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
 });
-
-export default MapLocationModal;

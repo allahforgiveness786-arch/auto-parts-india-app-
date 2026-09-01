@@ -892,11 +892,11 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
       {inAppNotification && (
         <InAppNotification
-          data={inAppNotification}
-          onDismiss={() => setInAppNotification(null)}
-          onPress={() => {
-            if (inAppNotification.targetScreen) {
-              navigation.navigate(inAppNotification.targetScreen, inAppNotification.params);
+          notification={inAppNotification}
+          onClose={() => setInAppNotification(null)}
+          onPress={(item) => {
+            if (item?.chatId) {
+              navigation.navigate('ChatRoom', { chatId: item.chatId });
             }
             setInAppNotification(null);
           }}

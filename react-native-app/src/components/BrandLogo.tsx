@@ -93,32 +93,33 @@ export const ToyotaEmblemSvg: React.FC<{ size?: number }> = ({ size = 38 }) => {
 
 // Combined Brand Component supporting both High-Res 3D Emblem Assets and Direct Vector Fallbacks
 
-export const CarBrandBadge: React.FC<{ brand: string; size?: number; active?: boolean }> = ({ brand, size = 38, active = false }) => {
+export const CarBrandBadge: React.FC<{ brand?: string; size?: number; active?: boolean; style?: any }> = ({ brand = 'auto', size = 38, active = false, style }) => {
   const b = (brand || '').toLowerCase().trim();
 
-  if (b.includes('maruti') || b.includes('suzuki')) {
-    return <SuzukiEmblemSvg size={size} />;
-  }
-  if (b.includes('hyundai')) {
-    return <HyundaiEmblemSvg size={size} />;
-  }
-  if (b.includes('tata')) {
-    return <TataEmblemSvg size={size} />;
-  }
-  if (b.includes('mahindra')) {
-    return <MahindraEmblemSvg size={size} />;
-  }
-  if (b.includes('toyota')) {
-    return <ToyotaEmblemSvg size={size} />;
-  }
-
-  return (
+  let inner = (
     <View style={[styles.center, { width: size, height: size, backgroundColor: '#F8FAFC', borderRadius: size / 2 }]}>
       <Text style={{ fontSize: size * 0.42, fontWeight: '800', color: active ? '#1565FF' : '#0F172A' }}>
-        {(brand || 'C').charAt(0).toUpperCase()}
+        {(brand || 'A').charAt(0).toUpperCase()}
       </Text>
     </View>
   );
+
+  if (b.includes('maruti') || b.includes('suzuki')) {
+    inner = <SuzukiEmblemSvg size={size} />;
+  } else if (b.includes('hyundai')) {
+    inner = <HyundaiEmblemSvg size={size} />;
+  } else if (b.includes('tata')) {
+    inner = <TataEmblemSvg size={size} />;
+  } else if (b.includes('mahindra')) {
+    inner = <MahindraEmblemSvg size={size} />;
+  } else if (b.includes('toyota')) {
+    inner = <ToyotaEmblemSvg size={size} />;
+  }
+
+  if (style) {
+    return <View style={style}>{inner}</View>;
+  }
+  return inner;
 };
 
 export const BrandLogo = CarBrandBadge;
