@@ -183,15 +183,15 @@ const GMap: React.FC<GMapProps> = ({
       {/* Map Canvas */}
       <View style={[styles.mapCanvas, { height }]}>
         <View pointerEvents={interactive ? "auto" : "none"} style={StyleSheet.absoluteFill}>
-          <WebView
-            ref={webViewRef}
-            originWhitelist={['*']}
-            source={{ html: mapHtml }}
-            style={{ flex: 1, backgroundColor: '#F1F5F9' }}
-            scrollEnabled={false}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-          />
+          {React.createElement(WebView as any, {
+            ref: webViewRef,
+            originWhitelist: ['*'],
+            source: { html: mapHtml },
+            style: { flex: 1, backgroundColor: '#F1F5F9' },
+            scrollEnabled: false,
+            showsHorizontalScrollIndicator: false,
+            showsVerticalScrollIndicator: false,
+          })}
         </View>
 
         {/* Action Controls Bar */}

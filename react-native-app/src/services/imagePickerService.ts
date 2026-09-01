@@ -73,7 +73,7 @@ export async function openNativeCamera(options?: Partial<CameraOptions>): Promis
   const cameraOptions: CameraOptions = {
     mediaType: 'photo',
     cameraType: 'back',
-    quality: 0.85,
+    quality: 0.8 as any,
     maxWidth: 1600,
     maxHeight: 1600,
     saveToPhotos: false,
@@ -112,7 +112,7 @@ export async function openNativeGallery(options?: Partial<ImageLibraryOptions>):
 
   const libraryOptions: ImageLibraryOptions = {
     mediaType: 'photo',
-    quality: 0.85,
+    quality: 0.8 as any,
     maxWidth: 1600,
     maxHeight: 1600,
     selectionLimit: 1,

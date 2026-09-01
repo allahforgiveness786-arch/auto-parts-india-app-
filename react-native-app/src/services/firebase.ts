@@ -60,7 +60,9 @@ export async function clearAppCache() {
       k === '@autoparts_current_user'
     );
     if (cacheKeys.length > 0) {
-      await AsyncStorage.multiRemove(cacheKeys);
+      for (const k of cacheKeys) {
+        await AsyncStorage.removeItem(k);
+      }
     }
   } catch (err) {
     console.warn('[firebase.ts] Cache clear error:', err);
@@ -264,7 +266,7 @@ async function fetchCloudCollection(collPath: string): Promise<any[]> {
       console.warn(`[Firestore Cloud] HTTP ${res.status} reading ${targetPath}`);
       return Object.values(cloudCache[collPath] || {});
     }
-    const data = await res.json();
+    const data: any = await res.json();
     const rawDocs = data.documents || [];
     const parsedDocs: any[] = [];
     if (!cloudCache[collPath]) cloudCache[collPath] = {};

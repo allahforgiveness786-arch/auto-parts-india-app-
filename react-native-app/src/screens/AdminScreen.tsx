@@ -226,7 +226,6 @@ export default function AdminScreen({ navigation }: any) {
     return () => {
       try { unsubListings(); } catch (_) {}
       try { unsubBanners(); } catch (_) {}
-      try { unsubTopCategories(); } catch (_) {}
       try { unsubUsers(); } catch (_) {}
       try { unsubAnnouncements(); } catch (_) {}
     };

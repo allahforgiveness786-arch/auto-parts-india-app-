@@ -1000,7 +1000,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
               placeholderTextColor="#94A3B8"
               style={[
                 styles.nativeTextInput,
-                submittedAttempt && !finalTitle && styles.fieldError,
+                submittedAttempt && !title && styles.fieldError,
               ]}
             />
           </View>
@@ -1119,7 +1119,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
             placeholderTextColor="#94A3B8"
             style={[
               styles.descriptionInput,
-              submittedAttempt && !finalDesc && styles.fieldError,
+              submittedAttempt && !description && styles.fieldError,
             ]}
           />
         </View>
@@ -1230,7 +1230,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
               placeholderTextColor="#94A3B8"
               style={[
                 styles.nativeTextInput,
-                submittedAttempt && !finalContactName && styles.fieldError,
+                submittedAttempt && !contactName && styles.fieldError,
               ]}
             />
           </View>
@@ -1245,7 +1245,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
               placeholderTextColor="#94A3B8"
               style={[
                 styles.nativeTextInput,
-                submittedAttempt && (!finalContactPhone || finalContactPhone.length < 8) && styles.fieldError,
+                submittedAttempt && (!contactPhone || contactPhone.length < 8) && styles.fieldError,
               ]}
             />
           </View>

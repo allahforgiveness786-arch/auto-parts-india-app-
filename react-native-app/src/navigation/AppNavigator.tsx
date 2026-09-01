@@ -176,7 +176,7 @@ const tabStyles = StyleSheet.create({
   },
 });
 
-export default function AppNavigator() {
+export default function AppNavigator({ user }: { user?: any } = {}) {
   return (
     <Stack.Navigator id="MainStack"
       initialRouteName="Splash"

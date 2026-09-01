@@ -346,7 +346,7 @@ export async function reverseGeocodeLatLng(
     clearTimeout(timeoutId);
 
     if (response.ok) {
-      const data = await response.json();
+      const data: any = await response.json();
       const addr = data?.address || {};
 
       const rawState = addr.state || addr.region || addr.territory || "";

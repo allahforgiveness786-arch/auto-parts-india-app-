@@ -128,7 +128,7 @@ export default function App() {
 
   return (
     <SafeErrorBoundary>
-      <GestureHandlerRootView style={styles.container}>
+      <GestureHandlerRootView style={styles.container as any}>
         <SafeAreaProvider>
           <LanguageProvider>
             <StatusBar barStyle="light-content" backgroundColor="#0B1220" />
