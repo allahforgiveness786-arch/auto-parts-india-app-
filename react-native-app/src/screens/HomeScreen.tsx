@@ -671,97 +671,95 @@ export default function HomeScreen({ navigation, route, user }: any) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565FF']} />
         }
       >
-        {/* Mega Deals Promotional Banner */}
+        {/* Mega Deals / Admin Promotional Banner */}
         <View style={styles.bannerOuterContainer}>
           {(() => {
             const curBanner = promoBanners[activeBannerIndex] || promoBanners[0];
+            if (!curBanner) return null;
+
+            const targetCat = curBanner.targetLink || curBanner.targetCategory || curBanner.category || '';
+
+            const handleBannerPress = () => {
+              if (targetCat) {
+                setSelectedCategory(targetCat);
+              }
+            };
+
+            // 1. If banner has an imageUrl (Uploaded via Admin CMS):
+            // Show the complete banner image edge-to-edge without any obscuring layers or cropped layouts
+            if (curBanner.imageUrl) {
+              return (
+                <TouchableOpacity
+                  activeOpacity={0.92}
+                  onPress={handleBannerPress}
+                  style={styles.fullImageBannerCard}
+                >
+                  <Image
+                    source={{ uri: curBanner.imageUrl }}
+                    style={styles.fullBannerImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              );
+            }
+
+            // 2. Fallback text banner if no image is present
             const badgeText = curBanner.badge || curBanner.tag || 'MEGA DEALS';
             const headline1 = curBanner.headline1 || (curBanner.title ? '' : 'UP TO');
             const discountText = curBanner.discount || curBanner.subtitle || '50% OFF';
             const headline2 = curBanner.headline2 || curBanner.title || 'ON GENUINE PARTS';
-            const bannerFeatures = Array.isArray(curBanner.features) && curBanner.features.length > 0
-              ? curBanner.features
-              : ['100% Genuine Parts', 'Best Prices Guaranteed', 'Fast & Safe Delivery'];
             const ctaText = curBanner.cta || curBanner.buttonText || 'SHOP NOW';
-            const targetCat = curBanner.targetCategory || curBanner.category || 'All';
 
             return (
               <TouchableOpacity
                 activeOpacity={0.92}
-                onPress={() => {
-                  if (targetCat) {
-                    setSelectedCategory(targetCat);
-                  }
-                }}
+                onPress={handleBannerPress}
                 style={[
                   styles.megaDealBanner,
                   curBanner.backgroundColor ? { backgroundColor: curBanner.backgroundColor } : null
                 ]}
               >
                 <View style={styles.bannerLeftContent}>
-                  <View style={[
-                    styles.megaDealsBadge,
-                    curBanner.badgeColor ? { borderColor: curBanner.badgeColor } : null
-                  ]}>
-                    <Text style={styles.megaDealsBadgeText}>{badgeText}</Text>
-                  </View>
+                  {badgeText ? (
+                    <View style={[
+                      styles.megaDealsBadge,
+                      curBanner.badgeColor ? { borderColor: curBanner.badgeColor } : null
+                    ]}>
+                      <Text style={styles.megaDealsBadgeText}>{badgeText}</Text>
+                    </View>
+                  ) : null}
                   {headline1 ? <Text style={styles.bannerSubHeadSmall}>{headline1}</Text> : null}
                   <Text style={styles.megaDealDiscount}>{discountText}</Text>
                   <Text style={styles.megaDealHeadline}>{headline2}</Text>
-                  
-                  <View style={styles.bannerBulletsColumn}>
-                    {bannerFeatures.map((feat: string, fIdx: number) => (
-                      <View key={fIdx} style={styles.bannerBulletRow}>
-                        <Icon source="check-circle" size={11} color="#38BDF8" />
-                        <Text style={styles.bannerBulletText}>{feat}</Text>
-                      </View>
-                    ))}
-                  </View>
 
-                  <TouchableOpacity 
-                    style={styles.shopNowBtn}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      setSelectedCategory(targetCat || 'All');
-                    }}
-                  >
+                  <View style={styles.shopNowBtn}>
                     <Text style={styles.shopNowBtnText}>{ctaText}</Text>
                     <Icon source="chevron-right" size={14} color="#0F172A" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Banner Right Composition: Image URL or 3D Collage */}
-                <View style={styles.bannerRightArt}>
-                  {curBanner.imageUrl ? (
-                    <Image
-                      source={{ uri: curBanner.imageUrl }}
-                      style={{ width: 140, height: 130, borderRadius: 12, resizeMode: 'cover' }}
-                    />
-                  ) : (
-                    <BannerPartsCollage />
-                  )}
+                  </View>
                 </View>
               </TouchableOpacity>
             );
           })()}
 
           {/* Carousel Pagination Dots */}
-          <View style={styles.dotsRow}>
-            {promoBanners.map((bItem, idx) => (
-              <TouchableOpacity
-                key={bItem.id}
-                onPress={() => setActiveBannerIndex(idx)}
-                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-              >
-                <View 
-                  style={[
-                    styles.dot, 
-                    idx === activeBannerIndex && styles.activeDot
-                  ]} 
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
+          {promoBanners.length > 1 && (
+            <View style={styles.dotsRow}>
+              {promoBanners.map((bItem, idx) => (
+                <TouchableOpacity
+                  key={bItem.id || idx}
+                  onPress={() => setActiveBannerIndex(idx)}
+                  hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                >
+                  <View 
+                    style={[
+                      styles.dot, 
+                      idx === activeBannerIndex && styles.activeDot
+                    ]} 
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* 6 Category Grid (3 Columns x 2 Rows) */}
@@ -794,7 +792,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
                       style={{ width: 48, height: 48, borderRadius: 10, resizeMode: 'cover' }}
                     />
                   ) : (
-                    <Category3DIcon type={cat.is3DGraphic || 'more'} size={52} />
+                    <Category3DIcon type={cat.is3DGraphic || 'more'} size={50} active={isSelected} />
                   )}
                 </View>
                 <Text 
@@ -829,7 +827,9 @@ export default function HomeScreen({ navigation, route, user }: any) {
                     setSelectedBrand(isBrandSelected ? 'All' : b.name);
                   }}
                 >
-                  <CarBrandBadge brand={b.name} size={38} active={isBrandSelected} />
+                  <View style={styles.brandLogoBox}>
+                    <CarBrandBadge brand={b.name} size={28} active={isBrandSelected} />
+                  </View>
                   <Text style={[styles.brandChipText, isBrandSelected && styles.brandChipTextSelected]} numberOfLines={1}>
                     {b.name}
                   </Text>
@@ -1198,6 +1198,24 @@ const styles = StyleSheet.create({
     marginTop: 18,
     marginBottom: 16,
   },
+  fullImageBannerCard: {
+    width: '100%',
+    aspectRatio: 2.5,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  fullBannerImage: {
+    width: '100%',
+    height: '100%',
+  },
   megaDealBanner: {
     backgroundColor: '#071530',
     borderRadius: 18,
@@ -1351,11 +1369,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
   catVisualBox: {
-    width: 64,
-    height: 64,
+    width: 52,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   catImage: {
     width: '100%',
@@ -1372,12 +1390,13 @@ const styles = StyleSheet.create({
   },
   catLabel: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontWeight: '600',
+    color: '#1E293B',
     textAlign: 'center',
   },
   catLabelSelected: {
     color: '#1565FF',
+    fontWeight: '700',
   },
   brandsSection: {
     marginBottom: 16,
@@ -1392,11 +1411,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
     paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    minWidth: 80,
+    minWidth: 82,
+    height: 76,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -1408,15 +1428,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
   },
+  brandLogoBox: {
+    width: 46,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   brandChipText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontWeight: '600',
+    color: '#1E293B',
     marginTop: 6,
     textAlign: 'center',
   },
   brandChipTextSelected: {
     color: '#1565FF',
+    fontWeight: '700',
   },
   activeFiltersBar: {
     flexDirection: 'row',
