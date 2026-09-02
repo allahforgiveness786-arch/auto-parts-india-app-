@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="cubeT" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <linearGradient id="cubeL" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1D4ED8" />
+      <stop offset="100%" stop-color="#1E40AF" />
+    </linearGradient>
+    <linearGradient id="cubeR" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="64" cy="106" rx="42" ry="12" fill="#000000" opacity="0.3" />
+  <g filter="drop-shadow(0px 8px 12px rgba(0,0,0,0.3))">
+    <!-- Top 3D Isometric Cube -->
+    <g transform="translate(32, 16)">
+      <path d="M 32 0 L 64 16 L 32 32 L 0 16 Z" fill="url(#cubeT)"/>
+      <path d="M 0 16 L 32 32 L 32 64 L 0 48 Z" fill="url(#cubeL)"/>
+      <path d="M 32 32 L 64 16 L 64 48 L 32 64 Z" fill="url(#cubeR)"/>
+      <path d="M 32 0 L 0 16 L 32 32 L 64 16 Z" stroke="#FFFFFF" stroke-width="1.5" fill="none" opacity="0.5"/>
+    </g>
+    <!-- Bottom Left 3D Isometric Cube -->
+    <g transform="translate(8, 48)">
+      <path d="M 28 0 L 56 14 L 28 28 L 0 14 Z" fill="url(#cubeT)"/>
+      <path d="M 0 14 L 28 28 L 28 56 L 0 42 Z" fill="url(#cubeL)"/>
+      <path d="M 28 28 L 56 14 L 56 42 L 28 56 Z" fill="url(#cubeR)"/>
+      <path d="M 28 0 L 0 14 L 28 28 L 56 14 Z" stroke="#FFFFFF" stroke-width="1.5" fill="none" opacity="0.5"/>
+    </g>
+    <!-- Bottom Right 3D Isometric Cube -->
+    <g transform="translate(60, 48)">
+      <path d="M 28 0 L 56 14 L 28 28 L 0 14 Z" fill="url(#cubeT)"/>
+      <path d="M 0 14 L 28 28 L 28 56 L 0 42 Z" fill="url(#cubeL)"/>
+      <path d="M 28 28 L 56 14 L 56 42 L 28 56 Z" fill="url(#cubeR)"/>
+      <path d="M 28 0 L 0 14 L 28 28 L 56 14 Z" stroke="#FFFFFF" stroke-width="1.5" fill="none" opacity="0.5"/>
+    </g>
+  </g>
+</svg>
