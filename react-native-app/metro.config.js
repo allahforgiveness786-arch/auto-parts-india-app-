@@ -5,6 +5,9 @@ const defaultConfig = getDefaultConfig(__dirname);
 const { assetExts, sourceExts } = defaultConfig.resolver;
 
 const config = {
+  watchFolders: [
+    path.resolve(__dirname, '..'),
+  ],
   resolver: {
     nodeModulesPaths: [
       path.resolve(__dirname, 'node_modules'),
