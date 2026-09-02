@@ -1,52 +1,65 @@
 import React from 'react';
+import { Grid } from 'lucide-react';
 
 export interface CategoryIconProps {
   type?: string;
   size?: number;
   className?: string;
+  active?: boolean;
 }
 
-const CATEGORY_3D_IMAGE_URLS: Record<string, string> = {
-  'engine': 'https://images.unsplash.com/photo-1597766333694-88339b1a03a7?auto=format&fit=crop&w=400&q=80',
-  'body': 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=400&q=80',
-  'electrical': 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=400&q=80',
-  'suspension': 'https://images.unsplash.com/photo-1600706432502-77821c97a55f?auto=format&fit=crop&w=400&q=80',
-  'exhaust': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=400&q=80',
-  'more': 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80',
+const CATEGORY_IMAGE_PATHS: Record<string, string> = {
+  engine: '/assets/categories/engine.png',
+  body: '/assets/categories/body.png',
+  electrical: '/assets/categories/electricals.png',
+  electricals: '/assets/categories/electricals.png',
+  suspension: '/assets/categories/suspension.png',
+  exhaust: '/assets/categories/exhaust.png',
+  more: '/assets/categories/more.png',
 };
 
-export function Category3DIcon({ type = 'more', size = 52, className = '' }: CategoryIconProps) {
-  const safeSize = Number.isFinite(size) && size > 0 ? size : 52;
-  const key = String(type || 'more').toLowerCase().trim();
-  
-  let imageUrl = CATEGORY_3D_IMAGE_URLS['more'];
-  if (key.includes('engine') || key.includes('motor') || key.includes('piston')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['engine'];
-  } else if (key.includes('body') || key.includes('door') || key.includes('bumper')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['body'];
-  } else if (key.includes('elect') || key.includes('battery') || key.includes('bolt') || key.includes('light')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['electrical'];
-  } else if (key.includes('suspension') || key.includes('brake') || key.includes('shock') || key.includes('strut')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['suspension'];
-  } else if (key.includes('exhaust') || key.includes('muffler') || key.includes('pipe')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['exhaust'];
+export const Category3DIcon: React.FC<CategoryIconProps> = ({
+  type = 'more',
+  size = 52,
+  className = '',
+  active = false,
+}) => {
+  const normType = String(type || '').toLowerCase().trim();
+
+  let matchedSrc = CATEGORY_IMAGE_PATHS[normType];
+  if (!matchedSrc) {
+    if (normType.includes('engine')) matchedSrc = CATEGORY_IMAGE_PATHS.engine;
+    else if (normType.includes('body') || normType.includes('door')) matchedSrc = CATEGORY_IMAGE_PATHS.body;
+    else if (normType.includes('elect') || normType.includes('light')) matchedSrc = CATEGORY_IMAGE_PATHS.electrical;
+    else if (normType.includes('susp') || normType.includes('brake')) matchedSrc = CATEGORY_IMAGE_PATHS.suspension;
+    else if (normType.includes('exh') || normType.includes('muffler')) matchedSrc = CATEGORY_IMAGE_PATHS.exhaust;
+    else matchedSrc = CATEGORY_IMAGE_PATHS.more;
+  }
+
+  if (matchedSrc) {
+    return (
+      <div 
+        className={`flex items-center justify-center transition-transform duration-200 ${className}`}
+        style={{ width: size, height: size }}
+      >
+        <img
+          src={matchedSrc}
+          alt={normType}
+          style={{ width: size, height: size, objectFit: 'contain' }}
+          className="drop-shadow-md"
+        />
+      </div>
+    );
   }
 
   return (
-    <div className={`inline-flex items-center justify-center overflow-hidden rounded-xl ${className}`}>
-      <img
-        src={imageUrl}
-        alt={type}
-        style={{
-          width: safeSize,
-          height: safeSize,
-          borderRadius: 12,
-          objectFit: 'cover',
-        }}
-        referrerPolicy="no-referrer"
-      />
+    <div 
+      className={`flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <Grid size={size * 0.55} />
     </div>
   );
-}
+};
 
 export default Category3DIcon;

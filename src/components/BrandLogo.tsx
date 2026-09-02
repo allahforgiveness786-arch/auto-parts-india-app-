@@ -2,58 +2,66 @@ import React from 'react';
 
 export interface BrandLogoProps {
   name?: string;
+  brand?: string;
   size?: number;
   className?: string;
   active?: boolean;
 }
 
-const BRAND_LOGO_URLS: Record<string, string> = {
-  'maruti suzuki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2016.svg/320px-Suzuki_logo_2016.svg.png',
-  'maruti': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2016.svg/320px-Suzuki_logo_2016.svg.png',
-  'suzuki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2016.svg/320px-Suzuki_logo_2016.svg.png',
-  'hyundai': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/320px-Hyundai_Motor_Company_logo.svg.png',
-  'tata': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/320px-Tata_logo.svg.png',
-  'tata motors': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/320px-Tata_logo.svg.png',
-  'mahindra': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Mahindra_Rise_logo.svg/320px-Mahindra_Rise_logo.svg.png',
-  'toyota': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Toyota_car_logo.svg/320px-Toyota_car_logo.svg.png',
-  'honda': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Honda_logo.svg/320px-Honda_logo.svg.png',
-  'kia': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/KIA_logo2021.svg/320px-KIA_logo2021.svg.png',
-  'volkswagen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/320px-Volkswagen_logo_2019.svg.png',
+const BRAND_IMAGE_PATHS: Record<string, string> = {
+  maruti: '/assets/brands/maruti_suzuki.png',
+  suzuki: '/assets/brands/maruti_suzuki.png',
+  'maruti suzuki': '/assets/brands/maruti_suzuki.png',
+  hyundai: '/assets/brands/hyundai.png',
+  tata: '/assets/brands/tata.png',
+  mahindra: '/assets/brands/mahindra.png',
+  toyota: '/assets/brands/toyota.png',
 };
 
-export function BrandLogo({ name = '', size = 32, className = '' }: BrandLogoProps) {
+export function BrandLogo({ name = '', brand = '', size = 32, className = '', active }: BrandLogoProps) {
   const safeSize = Number.isFinite(size) && size > 0 ? size : 32;
-  const brandKey = String(name || '').toLowerCase().trim();
-  const logoUrl = BRAND_LOGO_URLS[brandKey] || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2016.svg/320px-Suzuki_logo_2016.svg.png';
+  const brandKey = String(brand || name || '').toLowerCase().trim();
 
+  let matchedSrc = BRAND_IMAGE_PATHS[brandKey];
+  if (!matchedSrc) {
+    for (const key of Object.keys(BRAND_IMAGE_PATHS)) {
+      if (brandKey.includes(key) || key.includes(brandKey)) {
+        matchedSrc = BRAND_IMAGE_PATHS[key];
+        break;
+      }
+    }
+  }
+
+  if (matchedSrc) {
+    return (
+      <div className={`flex items-center justify-center ${className}`}>
+        <img
+          src={matchedSrc}
+          alt={brand || name}
+          style={{ width: safeSize * 1.25, height: safeSize * 1.25, objectFit: 'contain' }}
+          className="transition-transform duration-200"
+        />
+      </div>
+    );
+  }
+
+  const initial = (brand || name || 'A').charAt(0).toUpperCase();
   return (
-    <div className={`inline-flex items-center justify-center ${className}`}>
-      <img 
-        src={logoUrl} 
-        alt={name} 
-        style={{ width: safeSize * 1.2, height: safeSize * 0.85, objectFit: 'contain' }}
-        referrerPolicy="no-referrer"
-      />
+    <div 
+      className={`flex items-center justify-center bg-slate-800 border border-slate-700 rounded-md text-white font-bold text-xs shadow-xs ${className}`}
+      style={{ width: safeSize, height: safeSize }}
+    >
+      {initial}
     </div>
   );
 }
-
-export default BrandLogo;
 
 export function CarBrandBadge(props: BrandLogoProps) {
   return <BrandLogo {...props} />;
 }
 
-export function GearSpeedLogoIcon({ size = 32, className = '' }: { size?: number; className?: string }) {
-  return (
-    <div className={`inline-flex items-center justify-center ${className}`}>
-      <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2016.svg/320px-Suzuki_logo_2016.svg.png" 
-        alt="GearSpeed" 
-        style={{ width: size, height: size, objectFit: 'contain' }}
-        referrerPolicy="no-referrer"
-      />
-    </div>
-  );
+export function GearSpeedLogoIcon({ size = 32 }: { size?: number }) {
+  return <BrandLogo name="suzuki" size={size} />;
 }
 
+export default BrandLogo;

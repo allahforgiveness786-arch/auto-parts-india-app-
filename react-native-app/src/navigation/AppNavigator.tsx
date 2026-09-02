@@ -39,7 +39,7 @@ function CustomSellTabBarButton({ onPress, accessibilityState }: any) {
         <Icon source="plus" color="#FFFFFF" size={28} />
       </View>
       <Text style={[tabStyles.sellButtonLabel, { color: focused ? '#1565FF' : '#64748B' }]}>
-        SELL
+        Sell Part
       </Text>
     </TouchableOpacity>
   );
@@ -88,6 +88,26 @@ function TabNavigator() {
       />
 
       <Tab.Screen 
+        name="SearchTab" 
+        component={SearchScreen}
+        options={{ 
+          title: 'Search',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Icon source="magnify" color={color} size={24} />
+          )
+        }}
+      />
+
+      <Tab.Screen 
+        name="SellTab" 
+        component={SellPartScreen}
+        options={{ 
+          title: 'Sell Part',
+          tabBarButton: (props) => <CustomSellTabBarButton {...props} />,
+        }}
+      />
+
+      <Tab.Screen 
         name="ChatsTab" 
         component={ChatsScreen}
         options={{ 
@@ -105,26 +125,6 @@ function TabNavigator() {
           },
           tabBarIcon: ({ color, size, focused }) => (
             <Icon source={focused ? "message-text" : "message-text-outline"} color={color} size={23} />
-          )
-        }}
-      />
-
-      <Tab.Screen 
-        name="SellTab" 
-        component={SellPartScreen}
-        options={{ 
-          title: 'SELL',
-          tabBarButton: (props) => <CustomSellTabBarButton {...props} />,
-        }}
-      />
-
-      <Tab.Screen 
-        name="MyAdsTab" 
-        component={MyAdsScreen}
-        options={{ 
-          title: 'My Ads',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Icon source={focused ? "clipboard-text" : "clipboard-text-outline"} color={color} size={23} />
           )
         }}
       />
@@ -251,6 +251,12 @@ export default function AppNavigator({ user }: { user?: any } = {}) {
         name="AllCategories" 
         component={AllCategoriesScreen}
         options={{ headerShown: false }}
+      />
+
+      <Stack.Screen 
+        name="MyAds" 
+        component={MyAdsScreen}
+        options={{ title: 'My Ads' }}
       />
 
       <Stack.Screen 

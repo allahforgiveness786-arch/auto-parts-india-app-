@@ -414,6 +414,18 @@ export default function HomeScreen({
   const [activeBanner, setActiveBanner] = useState(0);
   const [firestoreBanners, setFirestoreBanners] = useState<Banner[]>([]);
 
+  const DEFAULT_HERO_BANNER: Banner = {
+    id: "hero-mega-deals",
+    title: "ON GENUINE PARTS",
+    subtitle: "Top Quality • Best Prices • Fast Delivery",
+    tag: "MEGA DEALS",
+    imageUrl: "/assets/banner/hero_parts_collage.png",
+    active: true,
+    order: 1,
+  };
+
+  const displayBanners = firestoreBanners.length > 0 ? firestoreBanners : [DEFAULT_HERO_BANNER];
+
   React.useEffect(() => {
     const unsub = subscribeToBanners((loaded) => {
       setFirestoreBanners(loaded);
@@ -422,12 +434,12 @@ export default function HomeScreen({
   }, []);
 
   React.useEffect(() => {
-    if (firestoreBanners.length <= 1) return;
+    if (displayBanners.length <= 1) return;
     const timer = setInterval(() => {
-      setActiveBanner((prev) => (prev + 1) % firestoreBanners.length);
+      setActiveBanner((prev) => (prev + 1) % displayBanners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [firestoreBanners.length]);
+  }, [displayBanners.length]);
 
   // Search and Multi-tier Fallback Filter Logic
   const activeParts = React.useMemo(() => {
@@ -1057,13 +1069,15 @@ export default function HomeScreen({
           </div>
         </div>
 
-        {/* Hero Promotional Banner Carousel (Compact 140px-150px Height, 2.8:1 Aspect Ratio) */}
-        {firestoreBanners.length > 0 && (
+        {/* Hero Promotional Banner Carousel (Matching Reference Mockup) */}
+        {displayBanners.length > 0 && (
           <div className="px-3 my-2 bg-slate-50">
             <AnimatePresence mode="wait">
               {(() => {
-                const currentBanner = firestoreBanners[activeBanner] || firestoreBanners[0];
+                const currentBanner = displayBanners[activeBanner] || displayBanners[0];
                 if (!currentBanner) return null;
+
+                const isCompositeHero = currentBanner.imageUrl?.includes('hero_parts_collage') || currentBanner.id === 'hero-mega-deals';
 
                 return (
                   <motion.div
@@ -1083,9 +1097,50 @@ export default function HomeScreen({
                         }
                       }
                     }}
-                    className={`relative overflow-hidden rounded-xl border border-slate-200/80 shadow-2xs bg-slate-900 ${currentBanner.targetLink ? "cursor-pointer" : ""}`}
+                    className={`relative overflow-hidden rounded-2xl border border-slate-200/80 shadow-xs bg-slate-900 ${currentBanner.targetLink ? "cursor-pointer" : ""}`}
                   >
-                    {currentBanner.imageUrl ? (
+                    {isCompositeHero ? (
+                      /* Exact Match 3D Composite Hero Banner from Reference Image */
+                      <div className="relative w-full overflow-hidden bg-gradient-to-r from-[#031535] via-[#0A2558] to-[#0B1E48] p-3.5 sm:p-4 flex items-center justify-between min-h-[142px]">
+                        {/* Background radial luminous aura */}
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
+
+                        {/* Left Side Promotional Typography */}
+                        <div className="space-y-1 z-10 max-w-[62%]">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                              {currentBanner.tag || 'MEGA DEALS'}
+                            </span>
+                            <span className="text-[11px] font-black text-blue-200 tracking-wider">
+                              UP TO
+                            </span>
+                          </div>
+                          <div className="text-2xl sm:text-3xl font-black text-amber-400 leading-none tracking-tight font-sans">
+                            50% OFF
+                          </div>
+                          <div className="text-xs sm:text-sm font-black text-white tracking-wide">
+                            {currentBanner.title || 'ON GENUINE PARTS'}
+                          </div>
+                          <div className="text-[9px] sm:text-[10px] text-blue-200/90 font-medium line-clamp-1">
+                            {currentBanner.subtitle || 'Top Quality • Best Prices • Fast Delivery'}
+                          </div>
+                          <div className="pt-1">
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-white text-blue-950 font-black text-[10px] rounded-full shadow-xs hover:bg-blue-50 transition-all">
+                              SHOP NOW <ChevronRight size={12} strokeWidth={3} />
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right Side 3D Automotive Parts Composite Graphic */}
+                        <div className="relative w-[36%] h-28 sm:h-32 flex items-center justify-center shrink-0">
+                          <img
+                            src="/assets/banner/hero_parts_collage.png"
+                            alt="Genuine Auto Parts"
+                            className="w-full h-full object-contain drop-shadow-2xl select-none"
+                          />
+                        </div>
+                      </div>
+                    ) : currentBanner.imageUrl ? (
                       /* Clean 100% Brightness Banner Container - Aspect Ratio 2.8:1, max 140px-150px height */
                       <div className="relative w-full aspect-[2.8/1] max-h-[150px] overflow-hidden rounded-xl bg-slate-900">
                         <img
@@ -1124,9 +1179,9 @@ export default function HomeScreen({
                     )}
 
                     {/* Indicator Dots - Minimal Floating Pill at Bottom */}
-                    {firestoreBanners.length > 1 && (
+                    {displayBanners.length > 1 && (
                       <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-2 py-0.5 rounded-full bg-slate-950/40 backdrop-blur-xs z-20">
-                        {firestoreBanners.map((_, idx) => (
+                        {displayBanners.map((_, idx) => (
                           <button
                             key={idx}
                             onClick={(e) => {
@@ -1179,14 +1234,15 @@ export default function HomeScreen({
                 <button
                   key={b}
                   onClick={() => handleBrandChange(b)}
-                  className={`shrink-0 flex-none snap-start px-2.5 py-1 rounded-full text-[10.5px] transition-colors cursor-pointer border ${
+                  className={`shrink-0 flex-none snap-start flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] transition-all cursor-pointer border ${
                     isSel
-                      ? "bg-slate-900 border-slate-900 text-white font-bold shadow-2xs"
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
+                      ? "bg-slate-900 border-slate-900 text-white font-bold shadow-xs scale-102"
+                      : "bg-white border-slate-200 text-slate-800 hover:bg-slate-50 hover:border-slate-300 font-semibold"
                   }`}
                   id={`brand-chip-${b.replace(/\s+/g, '-').toLowerCase()}`}
                 >
-                  {b}
+                  <BrandLogo brand={b} size={22} />
+                  <span>{b}</span>
                 </button>
               );
             })

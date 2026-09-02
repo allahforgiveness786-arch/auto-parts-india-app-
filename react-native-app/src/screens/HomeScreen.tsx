@@ -743,8 +743,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
                 {/* Right 3D Spare Parts Collage Graphic */}
                 <View style={styles.bannerRightArt}>
-                  <View style={styles.bannerGlowCircle} />
-                  <Category3DIcon type="suspension" size={85} />
+                  <BannerPartsCollage />
                 </View>
               </TouchableOpacity>
             );

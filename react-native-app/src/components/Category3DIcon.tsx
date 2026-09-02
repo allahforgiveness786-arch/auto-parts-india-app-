@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle, Image } from 'react-native';
+import { Icon } from 'react-native-paper';
 
 export interface CategoryIconProps {
   type?: string;
@@ -8,50 +9,69 @@ export interface CategoryIconProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/*
-  Photorealistic 3D Studio Rendered Auto Part Images for Categories
-  Replaces flat vector drawings with real high-resolution 3D studio cutout images
-*/
-const CATEGORY_3D_IMAGE_URLS: Record<string, string> = {
-  'engine': 'https://images.unsplash.com/photo-1597766333694-88339b1a03a7?auto=format&fit=crop&w=400&q=80',
-  'body': 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=400&q=80',
-  'electrical': 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=400&q=80',
-  'suspension': 'https://images.unsplash.com/photo-1600706432502-77821c97a55f?auto=format&fit=crop&w=400&q=80',
-  'exhaust': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=400&q=80',
-  'more': 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80',
+// 3D Category PNG Assets matching the reference design
+const CATEGORY_3D_IMAGES: Record<string, any> = {
+  engine: require('../assets/categories/engine.png'),
+  body: require('../assets/categories/body.png'),
+  electrical: require('../assets/categories/electricals.png'),
+  electricals: require('../assets/categories/electricals.png'),
+  suspension: require('../assets/categories/suspension.png'),
+  exhaust: require('../assets/categories/exhaust.png'),
+  more: require('../assets/categories/more.png'),
 };
 
-export function Category3DIcon({ type = 'more', size = 52, style }: CategoryIconProps) {
-  const safeSize = Number.isFinite(size) && size > 0 ? size : 52;
-  const key = String(type || 'more').toLowerCase().trim();
-  
-  let imageUrl = CATEGORY_3D_IMAGE_URLS['more'];
-  if (key.includes('engine') || key.includes('motor') || key.includes('piston')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['engine'];
-  } else if (key.includes('body') || key.includes('door') || key.includes('bumper')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['body'];
-  } else if (key.includes('elect') || key.includes('battery') || key.includes('bolt') || key.includes('light')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['electrical'];
-  } else if (key.includes('suspension') || key.includes('brake') || key.includes('shock') || key.includes('strut')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['suspension'];
-  } else if (key.includes('exhaust') || key.includes('muffler') || key.includes('pipe')) {
-    imageUrl = CATEGORY_3D_IMAGE_URLS['exhaust'];
+const CATEGORY_FALLBACK_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
+  engine: { icon: 'engine', color: '#B45309', bg: '#FEF3C7' },
+  body: { icon: 'car-door', color: '#0284C7', bg: '#E0F2FE' },
+  electrical: { icon: 'lightning-bolt', color: '#CA8A04', bg: '#FEF9C3' },
+  suspension: { icon: 'car-brake-alert', color: '#E11D48', bg: '#FFE4E6' },
+  exhaust: { icon: 'pipe', color: '#475569', bg: '#F1F5F9' },
+  more: { icon: 'apps', color: '#2563EB', bg: '#EFF6FF' },
+};
+
+/**
+ * 3D Isometric Automotive Category Icon Renderer
+ * Renders high-definition, realistic 3D assets for all 6 home categories.
+ */
+export const Category3DIcon: React.FC<CategoryIconProps> = ({
+  type = 'more',
+  size = 46,
+  active = false,
+  style,
+}) => {
+  const normType = String(type || '').toLowerCase().trim();
+
+  // Find corresponding 3D image asset
+  let imageSource = CATEGORY_3D_IMAGES[normType];
+  if (!imageSource) {
+    if (normType.includes('engine')) imageSource = CATEGORY_3D_IMAGES.engine;
+    else if (normType.includes('body') || normType.includes('door')) imageSource = CATEGORY_3D_IMAGES.body;
+    else if (normType.includes('elect') || normType.includes('light')) imageSource = CATEGORY_3D_IMAGES.electrical;
+    else if (normType.includes('susp') || normType.includes('brake')) imageSource = CATEGORY_3D_IMAGES.suspension;
+    else if (normType.includes('exh') || normType.includes('muffler')) imageSource = CATEGORY_3D_IMAGES.exhaust;
+    else imageSource = CATEGORY_3D_IMAGES.more;
   }
 
+  if (imageSource) {
+    return (
+      <View style={[styles.container, { width: size, height: size }, style]}>
+        <Image
+          source={imageSource}
+          style={{ width: size, height: size }}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
+
+  // Fallback vector icon
+  const fallback = CATEGORY_FALLBACK_ICONS[normType] || CATEGORY_FALLBACK_ICONS.more;
   return (
-    <View style={[styles.container, { width: safeSize, height: safeSize }, style]}>
-      <Image
-        source={{ uri: imageUrl }}
-        resizeMode="cover"
-        style={{
-          width: safeSize,
-          height: safeSize,
-          borderRadius: 12,
-        }}
-      />
+    <View style={[styles.container, { width: size, height: size, backgroundColor: fallback.bg, borderRadius: size * 0.35 }, style]}>
+      <Icon source={fallback.icon} size={size * 0.55} color={fallback.color} />
     </View>
   );
-}
+};
 
 export default Category3DIcon;
 
@@ -59,7 +79,5 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    borderRadius: 12,
   },
 });
