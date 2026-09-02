@@ -56,6 +56,7 @@ import { translateDynamic } from "../lib/translations";
 import LanguageSelector from "./LanguageSelector";
 import GMap from "./GMap";
 import BrandLogo from "./BrandLogo";
+import Category3DIcon from "./Category3DIcon";
 
 // No fallback categories helper is needed as we only display real uploaded images.
 
@@ -1032,14 +1033,20 @@ export default function HomeScreen({
                       setSelectedCategory(cat);
                       setSelectedPartName("All Parts");
                     }}
-                    className={`shrink-0 flex-none snap-start group flex flex-col items-center justify-center p-1.5 rounded-xl w-[76px] sm:w-[84px] h-[76px] sm:h-[80px] transition-all duration-150 cursor-pointer text-center border shadow-2xs ${theme.card}`}
+                    className={`shrink-0 flex-none snap-start group flex flex-col items-center justify-center p-1.5 rounded-2xl w-[78px] sm:w-[86px] h-[82px] sm:h-[86px] transition-all duration-150 cursor-pointer text-center border shadow-xs ${
+                      isActive 
+                        ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/20 ring-2 ring-blue-500 ring-offset-1" 
+                        : "bg-white border-slate-200/90 hover:border-slate-300 text-slate-800"
+                    }`}
                     id={`category-pill-${cat.replace(/\s+/g, '-').toLowerCase()}`}
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-150 group-hover:scale-105 ${theme.iconBg}`}>
-                      {getCategoryIcon(cat, 17)}
+                    <div className="w-11 h-11 flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
+                      <Category3DIcon type={cat} size={42} />
                     </div>
-                    <div className="flex flex-col items-center w-full mt-1">
-                      <span className={`text-[10px] sm:text-[11px] font-bold text-center leading-tight whitespace-normal break-words line-clamp-2 px-0.5 ${theme.titleColor}`}>
+                    <div className="flex flex-col items-center w-full mt-0.5">
+                      <span className={`text-[10px] sm:text-[11px] font-bold text-center leading-tight whitespace-normal break-words line-clamp-1 px-0.5 ${
+                        isActive ? "text-white" : "text-slate-800"
+                      }`}>
                         {translateDynamic(shortLabel, language)}
                       </span>
                     </div>

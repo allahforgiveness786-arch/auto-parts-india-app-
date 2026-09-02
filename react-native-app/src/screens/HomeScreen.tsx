@@ -731,11 +731,20 @@ export default function HomeScreen({ navigation, route, user }: any) {
                   {headline1 ? <Text style={styles.bannerSubHeadSmall}>{headline1}</Text> : null}
                   <Text style={styles.megaDealDiscount}>{discountText}</Text>
                   <Text style={styles.megaDealHeadline}>{headline2}</Text>
+                  <Text style={{ color: '#94A3B8', fontSize: 9.5, fontWeight: '600', marginBottom: 8 }}>
+                    Top Quality • Best Prices • Fast Delivery
+                  </Text>
 
                   <View style={styles.shopNowBtn}>
                     <Text style={styles.shopNowBtnText}>{ctaText}</Text>
                     <Icon source="chevron-right" size={14} color="#0F172A" />
                   </View>
+                </View>
+
+                {/* Right 3D Spare Parts Collage Graphic */}
+                <View style={styles.bannerRightArt}>
+                  <View style={styles.bannerGlowCircle} />
+                  <Category3DIcon type="suspension" size={85} />
                 </View>
               </TouchableOpacity>
             );
@@ -797,14 +806,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 }}
               >
                 <View style={styles.catVisualBox}>
-                  {cat.imageUrl ? (
-                    <Image
-                      source={{ uri: cat.imageUrl }}
-                      style={{ width: 48, height: 48, borderRadius: 10, resizeMode: 'cover' }}
-                    />
-                  ) : (
-                    <Category3DIcon type={cat.is3DGraphic || 'more'} size={50} active={isSelected} />
-                  )}
+                  <Category3DIcon type={cat.is3DGraphic || cat.name || 'more'} size={52} active={isSelected} />
                 </View>
                 <Text 
                   style={[styles.catLabel, isSelected && styles.catLabelSelected]} 
@@ -1370,19 +1372,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   catGridCard: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#F1F5F9',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   catGridCardSelected: {
     borderColor: '#002F34',
@@ -1435,12 +1437,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
     minWidth: 84,
     height: 78,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
   },
