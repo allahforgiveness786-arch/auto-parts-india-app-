@@ -15,8 +15,9 @@ const CATEGORY_3D_IMAGE_URLS: Record<string, string> = {
   'more': 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80',
 };
 
-export default function Category3DIcon({ type = 'more', size = 52, className = '' }: CategoryIconProps) {
-  const key = type.toLowerCase().trim();
+export function Category3DIcon({ type = 'more', size = 52, className = '' }: CategoryIconProps) {
+  const safeSize = Number.isFinite(size) && size > 0 ? size : 52;
+  const key = String(type || 'more').toLowerCase().trim();
   
   let imageUrl = CATEGORY_3D_IMAGE_URLS['more'];
   if (key.includes('engine') || key.includes('motor') || key.includes('piston')) {
@@ -37,8 +38,8 @@ export default function Category3DIcon({ type = 'more', size = 52, className = '
         src={imageUrl}
         alt={type}
         style={{
-          width: size,
-          height: size,
+          width: safeSize,
+          height: safeSize,
           borderRadius: 12,
           objectFit: 'cover',
         }}
@@ -47,3 +48,5 @@ export default function Category3DIcon({ type = 'more', size = 52, className = '
     </div>
   );
 }
+
+export default Category3DIcon;

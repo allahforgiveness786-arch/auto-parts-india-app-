@@ -26,19 +26,23 @@ const BRAND_LOGO_URLS: Record<string, string> = {
   'audi': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Audi-Logo_2016.svg/320px-Audi-Logo_2016.svg.png',
 };
 
-export default function BrandLogo({ name = '', size = 32, style, active }: BrandLogoProps) {
-  const brandKey = name.toLowerCase().trim();
+export function BrandLogo({ name = '', size = 32, style, active }: BrandLogoProps) {
+  const safeSize = Number.isFinite(size) && size > 0 ? size : 32;
+  const brandKey = String(name || '').toLowerCase().trim();
   const logoUrl = BRAND_LOGO_URLS[brandKey] || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2016.svg/320px-Suzuki_logo_2016.svg.png';
 
   return (
-    <View style={[styles.container, { width: size * 1.3, height: size }, style]}>
+    <View style={[styles.container, { width: safeSize * 1.3, height: safeSize }, style]}>
       <Image 
         source={{ uri: logoUrl }} 
-        style={{ width: size * 1.2, height: size * 0.85, resizeMode: 'contain' }}
+        resizeMode="contain"
+        style={{ width: safeSize * 1.2, height: safeSize * 0.85 }}
       />
     </View>
   );
 }
+
+export default BrandLogo;
 
 export function CarBrandBadge(props: BrandLogoProps) {
   return <BrandLogo {...props} />;

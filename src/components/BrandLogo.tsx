@@ -21,8 +21,9 @@ const BRAND_LOGO_URLS: Record<string, string> = {
   'volkswagen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/320px-Volkswagen_logo_2019.svg.png',
 };
 
-export default function BrandLogo({ name = '', size = 32, className = '' }: BrandLogoProps) {
-  const brandKey = name.toLowerCase().trim();
+export function BrandLogo({ name = '', size = 32, className = '' }: BrandLogoProps) {
+  const safeSize = Number.isFinite(size) && size > 0 ? size : 32;
+  const brandKey = String(name || '').toLowerCase().trim();
   const logoUrl = BRAND_LOGO_URLS[brandKey] || 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2016.svg/320px-Suzuki_logo_2016.svg.png';
 
   return (
@@ -30,12 +31,14 @@ export default function BrandLogo({ name = '', size = 32, className = '' }: Bran
       <img 
         src={logoUrl} 
         alt={name} 
-        style={{ width: size * 1.2, height: size * 0.85, objectFit: 'contain' }}
+        style={{ width: safeSize * 1.2, height: safeSize * 0.85, objectFit: 'contain' }}
         referrerPolicy="no-referrer"
       />
     </div>
   );
 }
+
+export default BrandLogo;
 
 export function CarBrandBadge(props: BrandLogoProps) {
   return <BrandLogo {...props} />;
