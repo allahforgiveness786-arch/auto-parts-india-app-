@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, Text } from 'react-native';
-import Svg, { Path, Circle, Rect, G, Polygon, Ellipse } from 'react-native-svg';
+import { View, StyleSheet, Image, ViewStyle, StyleProp } from 'react-native';
+import Svg, { Path, Circle, Rect, Ellipse } from 'react-native-svg';
 
 export interface BrandLogoProps {
   name?: string;
   size?: number;
-  color?: string;
-  showText?: boolean;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
   active?: boolean;
 }
 
