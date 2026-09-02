@@ -292,12 +292,12 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           REACT_NATIVE_MAX_WORKERS: 4
           CMAKE_BUILD_PARALLEL_LEVEL: 4
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.jvmargs=\"-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseParallelGC\""
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false -Dorg.gradle.caching=true -Dorg.gradle.jvmargs=\"-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseParallelGC\""
           ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/26.1.10909125
         run: |
           cd react-native-app/android
           chmod +x ./gradlew || true
-          ./gradlew assembleRelease --no-daemon --parallel --build-cache \
+          ./gradlew assembleRelease --no-daemon --no-parallel --build-cache \
             -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseParallelGC"
 
       - name: Upload APK Artifacts
