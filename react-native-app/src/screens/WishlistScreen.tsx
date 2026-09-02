@@ -108,7 +108,7 @@ export default function WishlistScreen({ navigation }: any) {
             </View>
             <Text style={styles.emptyTitle}>No Saved Parts</Text>
             <Text style={styles.emptySubtitle}>Items you favorite will appear here.</Text>
-            <TouchableOpacity style={styles.emptyActionBtn} onPress={() => navigation.navigate('HomeTab')}>
+            <TouchableOpacity style={styles.emptyActionBtn} onPress={() => navigation.navigate('MainTabs', { screen: 'HomeTab' })}>
               <Text style={styles.emptyActionBtnText}>Browse Marketplace</Text>
             </TouchableOpacity>
           </View>

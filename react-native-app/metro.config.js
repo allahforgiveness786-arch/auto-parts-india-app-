@@ -6,6 +6,10 @@ const { assetExts, sourceExts } = defaultConfig.resolver;
 
 const config = {
   resolver: {
+    nodeModulesPaths: [
+      path.resolve(__dirname, 'node_modules'),
+      path.resolve(__dirname, '../node_modules'),
+    ],
     assetExts: [...assetExts.filter(ext => ext !== 'svg'), 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'],
     sourceExts: [...sourceExts, 'cjs', 'mjs'],
   },

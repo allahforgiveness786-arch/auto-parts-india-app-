@@ -3,8 +3,24 @@ import { View, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, StatusBar }
 import { Text, Appbar } from 'react-native-paper';
 import { Category3DIcon } from '../components/Category3DIcon';
 
+const DEFAULT_CATEGORIES = [
+  { id: 'engine', name: 'Engine & Parts', is3DGraphic: 'engine' },
+  { id: 'body', name: 'Body Parts', is3DGraphic: 'body' },
+  { id: 'electricals', name: 'Electricals', is3DGraphic: 'electricals' },
+  { id: 'suspension', name: 'Suspension', is3DGraphic: 'suspension' },
+  { id: 'exhaust', name: 'Exhaust', is3DGraphic: 'exhaust' },
+  { id: 'brakes', name: 'Brakes', is3DGraphic: 'brakes' },
+  { id: 'filters', name: 'Filters', is3DGraphic: 'filters' },
+  { id: 'accessories', name: 'Accessories', is3DGraphic: 'more' },
+  { id: 'tyres', name: 'Tyres & Wheels', is3DGraphic: 'suspension' },
+  { id: 'transmission', name: 'Transmission', is3DGraphic: 'engine' },
+  { id: 'cooling', name: 'AC & Cooling', is3DGraphic: 'electricals' },
+  { id: 'lighting', name: 'Lights & Indicators', is3DGraphic: 'electricals' },
+];
+
 export default function AllCategoriesScreen({ navigation, route }: any) {
-  const { categories } = route.params || { categories: [] };
+  const passedCats = route?.params?.categories;
+  const categories = (Array.isArray(passedCats) && passedCats.length > 0) ? passedCats : DEFAULT_CATEGORIES;
 
   const renderItem = ({ item }: { item: any }) => {
     if (item.name === 'More') return null;
@@ -18,9 +34,9 @@ export default function AllCategoriesScreen({ navigation, route }: any) {
         activeOpacity={0.7}
       >
         <View style={styles.iconContainer}>
-          <Category3DIcon type={item.is3DGraphic || item.name} size={50} />
+          <Category3DIcon type={item.is3DGraphic || item.name} size={48} />
         </View>
-        <Text style={styles.categoryLabel}>{item.name}</Text>
+        <Text style={styles.categoryLabel} numberOfLines={2}>{item.name}</Text>
       </TouchableOpacity>
     );
   };
@@ -29,13 +45,19 @@ export default function AllCategoriesScreen({ navigation, route }: any) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <Appbar.Header style={{ backgroundColor: '#FFFFFF', elevation: 0 }}>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
+        <Appbar.BackAction onPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('MainTabs', { screen: 'HomeTab' });
+          }
+        }} />
         <Appbar.Content title="All Categories" titleStyle={{ fontWeight: '700', fontSize: 18 }} />
       </Appbar.Header>
 
       <FlatList
-        data={categories}
-        keyExtractor={(item, index) => item.id || index.toString()}
+        data={categories.filter((c: any) => c.name !== 'More')}
+        keyExtractor={(item, index) => item.id || item.name || index.toString()}
         renderItem={renderItem}
         numColumns={3}
         contentContainerStyle={styles.listContainer}

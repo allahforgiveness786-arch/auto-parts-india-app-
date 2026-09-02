@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert, Linking, Image, Share, TouchableOpacity } from "react-native";
+import { View, ScrollView, StyleSheet, Alert, Linking, Image, Share, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Text, Button, Card, Avatar, Divider, Chip, IconButton, useTheme } from 'react-native-paper';
 import GMap from '../components/GMap';
 import { EditListingModal } from '../components/EditListingModal';

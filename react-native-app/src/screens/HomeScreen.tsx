@@ -17,6 +17,7 @@ import {
   Linking,
   Share,
   Alert,
+  FlatList,
   useWindowDimensions
 } from "react-native";
 import { 
@@ -177,21 +178,9 @@ const AnimatedPartCard = React.memo(({
             </View>
           )}
 
-          {/* Top Left Badge - Verified Dealer Badge for verified products (like Turbocharger) */}
-          {isVerified ? (
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedBadgeText}>VERIFIED DEALER</Text>
-            </View>
-          ) : null}
-
-          {/* Floating Circle Heart Wishlist Button matching reference */}
+          {/* Floating Transparent Heart Wishlist Button matching reference */}
           <TouchableOpacity
-            style={[
-              styles.favoriteCircleButton,
-              activeFavorited 
-                ? styles.favoriteCircleButtonActive 
-                : styles.favoriteCircleButtonInactive
-            ]}
+            style={styles.favoriteCircleButton}
             activeOpacity={0.8}
             delayPressIn={0}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -202,7 +191,7 @@ const AnimatedPartCard = React.memo(({
           >
             <Icon 
               source={activeFavorited ? "heart" : "heart-outline"} 
-              size={18} 
+              size={22} 
               color={activeFavorited ? "#EF4444" : "#FFFFFF"} 
             />
           </TouchableOpacity>
@@ -914,18 +903,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
           </View>
         </View>
 
-        {/* Categories Section Header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('AllCategories', { categories: categoryGridItems.filter(c => c.id !== 'More') })}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.seeAllText}>See All &gt;</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 8 Compact Category Cards (4 Columns x 2 Rows) - Smaller footprint */}
+        {/* 8 Compact Category Cards (4 Columns x 2 Rows) matching reference layout */}
         <View style={styles.categoryGrid}>
           {categoryGridItems.slice(0, 8).map((cat) => {
             const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
@@ -962,11 +940,6 @@ export default function HomeScreen({ navigation, route, user }: any) {
           })}
         </View>
 
-        {/* Popular Brands Section Header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Popular Brands</Text>
-        </View>
-
         {/* 5 Popular Brands in a horizontal scroll matching reference */}
         <ScrollView 
           horizontal 
@@ -989,7 +962,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 }}
               >
                 <View style={styles.brandLogoBox}>
-                  <CarBrandBadge brand={b.name} size={30} active={isBrandSelected} />
+                  <CarBrandBadge brand={b.name} size={36} active={isBrandSelected} />
                 </View>
                 <Text 
                   style={[styles.brandChipText, isBrandSelected && styles.brandChipTextSelected]} 
@@ -1036,14 +1009,16 @@ export default function HomeScreen({ navigation, route, user }: any) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Fresh Recommendations</Text>
           <TouchableOpacity 
+            style={styles.viewAllRow}
             onPress={() => navigation.navigate('Search', { initialCategory: selectedCategory !== 'All' ? selectedCategory : undefined })}
             activeOpacity={0.7}
           >
-            <Text style={styles.seeAllText}>View All &gt;</Text>
+            <Text style={styles.seeAllText}>View All</Text>
+            <Icon source="chevron-right" size={18} color="#0066FF" />
           </TouchableOpacity>
         </View>
 
-        {/* Real Horizontal FlatList for Products */}
+        {/* Fresh Recommendations 2-Column Grid matching reference */}
         {loading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color="#0066FF" />
@@ -1072,13 +1047,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
             </Button>
           </View>
         ) : (
-          <FlatList
-            horizontal
-            data={filteredParts}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalProductsList}
-            renderItem={({ item, index }) => (
+          <View style={styles.partsGrid}>
+            {filteredParts.map((item, index) => (
               <AnimatedPartCard 
                 key={item.id} 
                 item={item} 
@@ -1090,8 +1060,8 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 selectedCity={selectedCity}
                 cardWidth={productCardWidth}
               />
-            )}
-          />
+            ))}
+          </View>
         )}
       </ScrollView>
 
@@ -1766,7 +1736,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    height: 74,
+    height: 80,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -1779,8 +1749,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   brandLogoBox: {
-    width: 44,
-    height: 32,
+    width: 48,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1849,6 +1819,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.3,
+  },
+  viewAllRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   seeAllText: {
     fontSize: 13,
@@ -1932,16 +1907,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.35,
+    shadowRadius: 3,
     elevation: 4,
-  },
-  favoriteCircleButtonActive: {
-    backgroundColor: '#FFFFFF',
-  },
-  favoriteCircleButtonInactive: {
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
   },
   cardContent: {
     padding: 10,

@@ -94,27 +94,36 @@ const svgHyundai = `
 </svg>
 `;
 
-// Tata: The blue oval with dual curved arcs
+// Tata: The official blue oval with dual curved wings forming the iconic T emblem
 const svgTata = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
-    <linearGradient id="tataBlue" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="tataBlue" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#0284C7"/>
       <stop offset="50%" stop-color="#0369A1"/>
       <stop offset="100%" stop-color="#075985"/>
     </linearGradient>
+    <linearGradient id="tataSilver" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="60%" stop-color="#F1F5F9"/>
+      <stop offset="100%" stop-color="#CBD5E1"/>
+    </linearGradient>
+    <filter id="tataShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
   </defs>
-  <!-- Outer Blue Oval -->
-  <ellipse cx="100" cy="100" rx="88" ry="58" fill="url(#tataBlue)"/>
-  <ellipse cx="100" cy="100" rx="84" ry="54" fill="none" stroke="#BAE6FD" stroke-width="2" opacity="0.6"/>
-  <!-- Authentic TATA Dual Curved Wings / Arcs -->
-  <g fill="#FFFFFF">
-    <!-- Left wing -->
-    <path d="M 100 60 C 80 62, 50 78, 50 102 C 50 120, 72 135, 96 138 C 76 132, 62 118, 62 102 C 62 86, 82 72, 100 68 Z"/>
-    <!-- Right wing -->
-    <path d="M 100 60 C 120 62, 150 78, 150 102 C 150 120, 128 135, 104 138 C 124 132, 138 118, 138 102 C 138 86, 118 72, 100 68 Z"/>
-    <!-- Center vertical bar -->
-    <path d="M 97 68 L 103 68 L 103 136 L 97 136 Z"/>
+  <g filter="url(#tataShadow)">
+    <!-- Outer Royal Blue Oval -->
+    <ellipse cx="100" cy="100" rx="90" ry="60" fill="url(#tataBlue)"/>
+    <ellipse cx="100" cy="100" rx="86" ry="56" fill="none" stroke="#7DD3FC" stroke-width="2" opacity="0.6"/>
+    
+    <!-- Authentic Official Tata Motors 'T' Split Wings Motif -->
+    <!-- Left Wing -->
+    <path d="M 100 56 C 72 56, 32 78, 32 104 C 32 118, 52 136, 88 142 C 60 134, 46 118, 46 104 C 46 88, 76 72, 100 68 Z" fill="url(#tataSilver)"/>
+    <!-- Right Wing -->
+    <path d="M 100 56 C 128 56, 168 78, 168 104 C 168 118, 148 136, 112 142 C 140 134, 154 118, 154 104 C 154 88, 124 72, 100 68 Z" fill="url(#tataSilver)"/>
+    <!-- Center Dividing Stem -->
+    <path d="M 97 66 L 103 66 L 103 140 L 97 140 Z" fill="url(#tataSilver)"/>
   </g>
 </svg>
 `;
@@ -453,50 +462,72 @@ const svgCatSuspension = `
 </svg>
 `;
 
-// Category 5: Exhaust (3D Polished Chrome Muffler & Dual Tailpipes)
+// Category 5: Exhaust (3D High-Polish Chrome Dual Exhaust Muffler System)
 const svgCatExhaust = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="chromeCylinder" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="chromeCanister" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="20%" stop-color="#E2E8F0"/>
+      <stop offset="45%" stop-color="#64748B"/>
+      <stop offset="70%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="pipeChrome" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#F8FAFC"/>
-      <stop offset="25%" stop-color="#CBD5E1"/>
-      <stop offset="50%" stop-color="#475569"/>
-      <stop offset="75%" stop-color="#94A3B8"/>
-      <stop offset="100%" stop-color="#1E293B"/>
+      <stop offset="35%" stop-color="#94A3B8"/>
+      <stop offset="70%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#0F172A"/>
     </linearGradient>
-    <linearGradient id="pipeGleam" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#94A3B8"/>
-      <stop offset="40%" stop-color="#FFFFFF"/>
-      <stop offset="80%" stop-color="#475569"/>
-      <stop offset="100%" stop-color="#1E293B"/>
+    <linearGradient id="titaniumBlue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="40%" stop-color="#60A5FA"/>
+      <stop offset="70%" stop-color="#93C5FD"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
     </linearGradient>
-    <filter id="exhShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="4" dy="12" stdDeviation="10" flood-color="#000" flood-opacity="0.25"/>
+    <filter id="exhShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="3" dy="10" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/>
     </filter>
   </defs>
 
-  <g filter="url(#exhShadow)" transform="translate(30, 25) rotate(-20, 110, 110)">
-    <!-- Inlet Pipe from Engine (Curving into muffler) -->
-    <path d="M 185 100 C 185 100, 160 100, 140 100" stroke="url(#chromeCylinder)" stroke-width="22" stroke-linecap="round"/>
+  <g filter="url(#exhShadow)" transform="translate(18, 28) rotate(-14, 110, 100)">
+    <!-- Inlet Pipe from Engine Header (Front Right) -->
+    <path d="M 180 96 C 210 96, 215 125, 205 155" stroke="url(#pipeChrome)" stroke-width="26" fill="none" stroke-linecap="round"/>
+    <ellipse cx="205" cy="155" rx="13" ry="10" fill="#0F172A"/>
 
-    <!-- Main Oval Muffler Canister Body (3D Cylinder) -->
-    <rect x="55" y="70" width="95" height="60" rx="28" fill="url(#chromeCylinder)"/>
-    <!-- Muffler Seam Rib Bands -->
-    <line x1="68" y1="70" x2="68" y2="130" stroke="#FFFFFF" stroke-width="2" opacity="0.6"/>
-    <line x1="138" y1="70" x2="138" y2="130" stroke="#0F172A" stroke-width="2" opacity="0.6"/>
+    <!-- Main Oval Muffler Silencer Body (3D Cylinder) -->
+    <rect x="52" y="58" width="135" height="78" rx="36" fill="url(#chromeCanister)"/>
+    
+    <!-- Polished Weld Seams & Ribs -->
+    <line x1="68" y1="60" x2="68" y2="134" stroke="#FFFFFF" stroke-width="2.5" opacity="0.8"/>
+    <line x1="172" y1="60" x2="172" y2="134" stroke="#334155" stroke-width="2.5" opacity="0.8"/>
+    <line x1="120" y1="60" x2="120" y2="134" stroke="#CBD5E1" stroke-width="1.5" opacity="0.5"/>
 
-    <!-- Dual Polished Stainless Tailpipes -->
-    <!-- Top Pipe -->
-    <path d="M 60 85 L 15 85" stroke="url(#pipeGleam)" stroke-width="18" stroke-linecap="round"/>
-    <ellipse cx="14" cy="85" rx="6" ry="9" fill="#0F172A"/>
-    <ellipse cx="14" cy="85" rx="4" ry="7" fill="#020617"/>
-    <!-- Bottom Pipe -->
-    <path d="M 60 115 L 15 115" stroke="url(#pipeGleam)" stroke-width="18" stroke-linecap="round"/>
-    <ellipse cx="14" cy="115" rx="6" ry="9" fill="#0F172A"/>
-    <ellipse cx="14" cy="115" rx="4" ry="7" fill="#020617"/>
+    <!-- Dual Sport Chrome Exhaust Tips (Left) -->
+    <!-- Top Tailpipe -->
+    <g>
+      <path d="M 60 76 L 12 76" stroke="url(#pipeChrome)" stroke-width="22" stroke-linecap="round"/>
+      <!-- Burnt Titanium Tip Trim -->
+      <rect x="10" y="65" width="16" height="22" rx="4" fill="url(#titaniumBlue)" opacity="0.85"/>
+      <!-- Exhaust Tip Opening & Depth -->
+      <ellipse cx="12" cy="76" rx="7" ry="11" fill="#0F172A"/>
+      <ellipse cx="12" cy="76" rx="4" ry="8" fill="#020617"/>
+    </g>
 
-    <!-- Heat Shield Bracket -->
-    <path d="M 85 64 L 115 64" stroke="#94A3B8" stroke-width="5" stroke-linecap="round"/>
+    <!-- Bottom Tailpipe -->
+    <g>
+      <path d="M 60 118 L 12 118" stroke="url(#pipeChrome)" stroke-width="22" stroke-linecap="round"/>
+      <!-- Burnt Titanium Tip Trim -->
+      <rect x="10" y="107" width="16" height="22" rx="4" fill="url(#titaniumBlue)" opacity="0.85"/>
+      <!-- Exhaust Tip Opening & Depth -->
+      <ellipse cx="12" cy="118" rx="7" ry="11" fill="#0F172A"/>
+      <ellipse cx="12" cy="118" rx="4" ry="8" fill="#020617"/>
+    </g>
+
+    <!-- Heavy Duty Metal Mounting Bracket -->
+    <path d="M 90 50 L 134 50" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="90" cy="50" r="4" fill="#475569"/>
+    <circle cx="134" cy="50" r="4" fill="#475569"/>
   </g>
 </svg>
 `;

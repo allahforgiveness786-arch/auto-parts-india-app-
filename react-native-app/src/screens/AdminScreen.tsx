@@ -120,7 +120,7 @@ export default function AdminScreen({ navigation }: any) {
             if (navigation.canGoBack()) {
               navigation.goBack();
             } else {
-              navigation.navigate('HomeTab');
+              navigation.navigate('MainTabs', { screen: 'HomeTab' });
             }
           }}
         >

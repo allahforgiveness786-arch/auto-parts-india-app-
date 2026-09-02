@@ -640,7 +640,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
       setTimeout(() => {
         setShowSuccessScreen(false);
         resetForm();
-        navigation.navigate('HomeTab');
+        navigation.navigate('MainTabs', { screen: 'HomeTab' });
       }, 1000);
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to post ad. Please check internet connection.');
@@ -729,7 +729,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
           <Button
             mode="contained"
             buttonColor="#0F172A"
-            onPress={() => navigation.navigate('ProfileTab')}
+            onPress={() => navigation.navigate('MainTabs', { screen: 'MyAdsTab' })}
             style={{ marginTop: 20, borderRadius: 12, width: '100%' }}
           >
             Manage My Listings

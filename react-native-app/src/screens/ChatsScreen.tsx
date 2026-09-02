@@ -401,7 +401,7 @@ export default function ChatsScreen({ navigation, user: initialUser }: any) {
               {!searchQuery && (
                 <Button
                   mode="contained-tonal"
-                  onPress={() => navigation.navigate('HomeTab')}
+                  onPress={() => navigation.navigate('MainTabs', { screen: 'HomeTab' })}
                   style={{ marginTop: 16 }}
                   buttonColor="#EFF6FF"
                   textColor="#1565FF"

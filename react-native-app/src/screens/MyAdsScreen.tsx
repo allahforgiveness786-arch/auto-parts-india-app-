@@ -359,7 +359,7 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
             activeOpacity={0.85}
             onPress={() => {
               if (navigation?.navigate) {
-                navigation.navigate('SellTab');
+                navigation.navigate('MainTabs', { screen: 'SellTab' });
               }
             }}
           >
@@ -586,7 +586,7 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
           activeOpacity={0.85}
           onPress={() => {
             if (navigation?.navigate) {
-              navigation.navigate('SellTab');
+              navigation.navigate('MainTabs', { screen: 'SellTab' });
             }
           }}
         >

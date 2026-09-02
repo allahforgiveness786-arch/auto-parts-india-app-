@@ -55,7 +55,7 @@ export default function RecentlyViewedScreen({ navigation }: any) {
             </View>
             <Text style={styles.emptyTitle}>No Recent Views</Text>
             <Text style={styles.emptySubtitle}>Parts you view will appear here so you can easily find them later.</Text>
-            <TouchableOpacity style={styles.emptyActionBtn} onPress={() => navigation.navigate('HomeTab')}>
+            <TouchableOpacity style={styles.emptyActionBtn} onPress={() => navigation.navigate('MainTabs', { screen: 'HomeTab' })}>
               <Text style={styles.emptyActionBtnText}>Explore Parts</Text>
             </TouchableOpacity>
           </View>
