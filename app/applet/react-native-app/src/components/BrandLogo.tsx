@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Image, ViewStyle, StyleProp } from 'react-native';
 import Svg, { Path, Circle, Rect, Ellipse, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 export interface BrandLogoProps {
@@ -9,7 +9,25 @@ export interface BrandLogoProps {
   active?: boolean;
 }
 
-// 1. Official Suzuki 'S' Emblem Vector
+// 1. Official High-Resolution Manufacturer Logo CDN URLs
+const BRAND_OFFICIAL_LOGOS: Record<string, string> = {
+  maruti: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2021.svg/320px-Suzuki_logo_2021.svg.png',
+  suzuki: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Suzuki_logo_2021.svg/320px-Suzuki_logo_2021.svg.png',
+  hyundai: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/320px-Hyundai_Motor_Company_logo.svg.png',
+  tata: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Tata_logo.svg/320px-Tata_logo.svg.png',
+  mahindra: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Mahindra_Auto_logo.svg/320px-Mahindra_Auto_logo.svg.png',
+  toyota: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Toyota.svg/320px-Toyota.svg.png',
+  honda: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Honda_Logo.svg/320px-Honda_Logo.svg.png',
+  kia: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/KIA_logo2021.svg/320px-KIA_logo2021.svg.png',
+  volkswagen: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/320px-Volkswagen_logo_2019.svg.png',
+  vw: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Volkswagen_logo_2019.svg/320px-Volkswagen_logo_2019.svg.png',
+  ford: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ford_logo_flat.svg/320px-Ford_logo_flat.svg.png',
+  bmw: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/320px-BMW.svg.png',
+  mercedes: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Mercedes-Logo.svg/320px-Mercedes-Logo.svg.png',
+  audi: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Audi-Logo_2016.svg/320px-Audi-Logo_2016.svg.png',
+};
+
+// Fallback SVG Vectors
 const SuzukiVector = ({ color = '#E62D31', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.2} height={size} viewBox="0 0 100 80">
     <Defs>
@@ -25,7 +43,6 @@ const SuzukiVector = ({ color = '#E62D31', size = 32 }: { color?: string; size?:
   </Svg>
 );
 
-// 2. Official Hyundai Tilted 'H' Emblem Vector
 const HyundaiVector = ({ color = '#002C5F', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.3} height={size} viewBox="0 0 120 80">
     <Defs>
@@ -42,7 +59,6 @@ const HyundaiVector = ({ color = '#002C5F', size = 32 }: { color?: string; size?
   </Svg>
 );
 
-// 3. Official Tata Motors 'T' Emblem Vector
 const TataVector = ({ color = '#1E40AF', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.3} height={size} viewBox="0 0 120 80">
     <Defs>
@@ -59,7 +75,6 @@ const TataVector = ({ color = '#1E40AF', size = 32 }: { color?: string; size?: n
   </Svg>
 );
 
-// 4. Official Mahindra Twin Peaks 'M' Emblem Vector
 const MahindraVector = ({ color = '#E21836', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.3} height={size} viewBox="0 0 120 80">
     <Defs>
@@ -75,7 +90,6 @@ const MahindraVector = ({ color = '#E21836', size = 32 }: { color?: string; size
   </Svg>
 );
 
-// 5. Official Toyota Ellipses Emblem Vector
 const ToyotaVector = ({ color = '#EB0A1E', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.3} height={size} viewBox="0 0 120 80">
     <Defs>
@@ -90,7 +104,6 @@ const ToyotaVector = ({ color = '#EB0A1E', size = 32 }: { color?: string; size?:
   </Svg>
 );
 
-// 6. Official Honda 'H' Emblem Vector
 const HondaVector = ({ color = '#0F172A', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.2} height={size} viewBox="0 0 100 80">
     <Path 
@@ -106,7 +119,6 @@ const HondaVector = ({ color = '#0F172A', size = 32 }: { color?: string; size?: 
   </Svg>
 );
 
-// 7. Official KIA Wordmark Vector
 const KiaVector = ({ color = '#05141F', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.4} height={size} viewBox="0 0 120 60">
     <Path 
@@ -116,7 +128,6 @@ const KiaVector = ({ color = '#05141F', size = 32 }: { color?: string; size?: nu
   </Svg>
 );
 
-// 8. Official Volkswagen Emblem Vector
 const VolkswagenVector = ({ color = '#001E50', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.2} height={size} viewBox="0 0 100 100">
     <Circle cx="50" cy="50" r="44" fill="none" stroke={color === '#1565FF' ? '#1565FF' : '#001E50'} strokeWidth="7" />
@@ -127,7 +138,6 @@ const VolkswagenVector = ({ color = '#001E50', size = 32 }: { color?: string; si
   </Svg>
 );
 
-// 9. Official Ford Oval Vector
 const FordVector = ({ color = '#003478', size = 32 }: { color?: string; size?: number }) => (
   <Svg width={size * 1.4} height={size} viewBox="0 0 120 70">
     <Ellipse cx="60" cy="35" rx="54" ry="28" fill={color === '#1565FF' ? '#1565FF' : '#003478'} stroke="#FFFFFF" strokeWidth="4" />
@@ -135,11 +145,26 @@ const FordVector = ({ color = '#003478', size = 32 }: { color?: string; size?: n
   </Svg>
 );
 
-export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 30, style, active = false }) => {
+export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 32, style, active = false }) => {
+  const [imageFailed, setImageFailed] = useState(false);
   const norm = (name || '').toLowerCase().trim();
   const activeColor = active ? '#1565FF' : undefined;
 
-  const renderLogoGraphic = () => {
+  let logoUrl = BRAND_OFFICIAL_LOGOS.suzuki;
+  if (norm.includes('maruti') || norm.includes('suzuki')) logoUrl = BRAND_OFFICIAL_LOGOS.maruti;
+  else if (norm.includes('hyundai')) logoUrl = BRAND_OFFICIAL_LOGOS.hyundai;
+  else if (norm.includes('tata')) logoUrl = BRAND_OFFICIAL_LOGOS.tata;
+  else if (norm.includes('mahindra')) logoUrl = BRAND_OFFICIAL_LOGOS.mahindra;
+  else if (norm.includes('toyota')) logoUrl = BRAND_OFFICIAL_LOGOS.toyota;
+  else if (norm.includes('honda')) logoUrl = BRAND_OFFICIAL_LOGOS.honda;
+  else if (norm.includes('kia')) logoUrl = BRAND_OFFICIAL_LOGOS.kia;
+  else if (norm.includes('volkswagen') || norm.includes('vw')) logoUrl = BRAND_OFFICIAL_LOGOS.volkswagen;
+  else if (norm.includes('ford')) logoUrl = BRAND_OFFICIAL_LOGOS.ford;
+  else if (norm.includes('bmw')) logoUrl = BRAND_OFFICIAL_LOGOS.bmw;
+  else if (norm.includes('mercedes')) logoUrl = BRAND_OFFICIAL_LOGOS.mercedes;
+  else if (norm.includes('audi')) logoUrl = BRAND_OFFICIAL_LOGOS.audi;
+
+  const renderFallbackGraphic = () => {
     if (norm.includes('maruti') || norm.includes('suzuki')) return <SuzukiVector color={activeColor} size={size} />;
     if (norm.includes('hyundai')) return <HyundaiVector color={activeColor} size={size} />;
     if (norm.includes('tata')) return <TataVector color={activeColor} size={size} />;
@@ -149,13 +174,20 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ name, size = 30, style, ac
     if (norm.includes('kia')) return <KiaVector color={activeColor} size={size} />;
     if (norm.includes('volkswagen') || norm.includes('vw')) return <VolkswagenVector color={activeColor} size={size} />;
     if (norm.includes('ford')) return <FordVector color={activeColor} size={size} />;
-    
     return <SuzukiVector color={activeColor} size={size} />;
   };
 
   return (
     <View style={[styles.container, style]}>
-      {renderLogoGraphic()}
+      {!imageFailed ? (
+        <Image 
+          source={{ uri: logoUrl }}
+          style={{ width: size * 1.5, height: size, resizeMode: 'contain' }}
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        renderFallbackGraphic()
+      )}
     </View>
   );
 };

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Image, Text } from 'react-native';
 import Svg, { 
   Path, Rect, Circle, Defs, LinearGradient, Stop, Ellipse, Line, G 
 } from 'react-native-svg';
@@ -10,7 +10,25 @@ export interface CategoryIconProps {
   active?: boolean;
 }
 
-// 1. 3D V8 Turbo Engine Block Graphic
+// 1. High-Resolution Real Studio Auto Parts Images (OLX / Marketplace Style)
+const CATEGORY_REAL_IMAGES: Record<string, string> = {
+  engine: 'https://images.unsplash.com/photo-1597739239353-50270a473397?auto=format&fit=crop&w=400&q=80',
+  motor: 'https://images.unsplash.com/photo-1597739239353-50270a473397?auto=format&fit=crop&w=400&q=80',
+  body: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=400&q=80',
+  door: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=400&q=80',
+  electrical: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=400&q=80',
+  battery: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=400&q=80',
+  suspension: 'https://images.unsplash.com/photo-1600706432523-9914c5b69ddc?auto=format&fit=crop&w=400&q=80',
+  brake: 'https://images.unsplash.com/photo-1600706432523-9914c5b69ddc?auto=format&fit=crop&w=400&q=80',
+  exhaust: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=400&q=80',
+  pipe: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=400&q=80',
+  ac: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=400&q=80',
+  wheel: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
+  tyre: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
+  more: 'https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?auto=format&fit=crop&w=400&q=80',
+};
+
+// 3D Metallic Graphic Fallbacks
 const Engine3DGraphic = ({ size = 52 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -52,7 +70,6 @@ const Engine3DGraphic = ({ size = 52 }: { size?: number }) => (
   </Svg>
 );
 
-// 2. 3D Metallic Car Shell / Door Graphic
 const Body3DGraphic = ({ size = 52 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -84,7 +101,6 @@ const Body3DGraphic = ({ size = 52 }: { size?: number }) => (
   </Svg>
 );
 
-// 3. 3D Car Battery with Lightning Glow Graphic
 const Electrical3DGraphic = ({ size = 52 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -115,7 +131,6 @@ const Electrical3DGraphic = ({ size = 52 }: { size?: number }) => (
   </Svg>
 );
 
-// 4. 3D Sport Red Coil Spring & Strut Graphic
 const Suspension3DGraphic = ({ size = 52 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -149,7 +164,6 @@ const Suspension3DGraphic = ({ size = 52 }: { size?: number }) => (
   </Svg>
 );
 
-// 5. 3D Titanium Burnt Blue Tip Muffler Graphic
 const Exhaust3DGraphic = ({ size = 52 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -180,7 +194,6 @@ const Exhaust3DGraphic = ({ size = 52 }: { size?: number }) => (
   </Svg>
 );
 
-// 6. 3D Isometric Mechanical Cubes Graphic
 const More3DGraphic = ({ size = 52 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -220,9 +233,20 @@ const More3DGraphic = ({ size = 52 }: { size?: number }) => (
 );
 
 export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56, active = false }) => {
+  const [imageFailed, setImageFailed] = useState(false);
   const t = (type || 'more').toLowerCase().trim();
   
-  const renderGraphic = () => {
+  // Find matching photorealistic image URL
+  let photoUrl = CATEGORY_REAL_IMAGES.more;
+  if (t.includes('engine') || t.includes('motor')) photoUrl = CATEGORY_REAL_IMAGES.engine;
+  else if (t.includes('body') || t.includes('door') || t.includes('bumper')) photoUrl = CATEGORY_REAL_IMAGES.body;
+  else if (t.includes('elect') || t.includes('battery') || t.includes('light')) photoUrl = CATEGORY_REAL_IMAGES.electrical;
+  else if (t.includes('suspension') || t.includes('shock') || t.includes('brake')) photoUrl = CATEGORY_REAL_IMAGES.suspension;
+  else if (t.includes('exhaust') || t.includes('pipe') || t.includes('silencer')) photoUrl = CATEGORY_REAL_IMAGES.exhaust;
+  else if (t.includes('ac') || t.includes('cool')) photoUrl = CATEGORY_REAL_IMAGES.ac;
+  else if (t.includes('wheel') || t.includes('tyre')) photoUrl = CATEGORY_REAL_IMAGES.wheel;
+
+  const renderFallbackGraphic = () => {
     if (t.includes('engine') || t.includes('motor')) return <Engine3DGraphic size={size - 8} />;
     if (t.includes('body') || t.includes('door') || t.includes('bumper')) return <Body3DGraphic size={size - 8} />;
     if (t.includes('elect') || t.includes('battery') || t.includes('light')) return <Electrical3DGraphic size={size - 8} />;
@@ -235,43 +259,57 @@ export const Category3DIcon: React.FC<CategoryIconProps> = ({ type, size = 56, a
     <View 
       style={[
         styles.iconBadge, 
-        { width: size, height: size, borderRadius: size / 2 },
+        { width: size, height: size, borderRadius: 14 },
         active && styles.iconBadgeActive
       ]}
     >
-      {renderGraphic()}
-      {active && <View style={[styles.activeOverlay, { borderRadius: size / 2 }]} />}
+      {!imageFailed ? (
+        <Image 
+          source={{ uri: photoUrl }}
+          style={[styles.realImage, { width: size - 4, height: size - 4, borderRadius: 12 }]}
+          resizeMode="cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        renderFallbackGraphic()
+      )}
+      {active && <View style={[styles.activeOverlay, { borderRadius: 14 }]} />}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   iconBadge: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#1E293B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4, 
-    borderWidth: 1.5,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3, 
+    borderWidth: 1,
     borderColor: '#E2E8F0',
+    overflow: 'hidden',
   },
   iconBadgeActive: {
     backgroundColor: '#EFF6FF',
     borderColor: '#2563EB',
+    borderWidth: 2,
     shadowColor: '#2563EB',
-    shadowOpacity: 0.28,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  realImage: {
+    backgroundColor: '#F1F5F9',
   },
   activeOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: '#2563EB',
-    opacity: 0.06,
+    opacity: 0.08,
   }
 });
 
