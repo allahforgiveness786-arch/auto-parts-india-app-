@@ -315,7 +315,7 @@ export const AdminTaxonomyCMS: React.FC = () => {
                         style={styles.modelChip}
                         textStyle={{ fontSize: 11, color: '#1E293B', fontWeight: '600' }}
                         onClose={() => handleDeleteModel(bIdx, m)}
-                        closeIconColor="#64748B"
+                        
                       >
                         {m}
                       </Chip>
