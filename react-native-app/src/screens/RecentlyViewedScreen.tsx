@@ -63,7 +63,7 @@ export default function RecentlyViewedScreen({ navigation }: any) {
         renderItem={({ item }) => (
           <TouchableOpacity 
             style={styles.adCard}
-            onPress={() => navigation.navigate('ProductDetail', { partId: item.id })}
+            onPress={() => navigation.navigate('ProductDetail', { part: item, partId: item.id })}
           >
             <View style={styles.cardHeaderArea}>
               <View style={styles.imageWrapper}>

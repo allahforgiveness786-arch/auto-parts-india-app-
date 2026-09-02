@@ -87,7 +87,7 @@ export interface Banner {
   activeStatus?: boolean;
   order: number;
   orderRank?: number;
-  createdAt: number;
+  createdAt?: number;
   updatedAt?: number;
 }
 

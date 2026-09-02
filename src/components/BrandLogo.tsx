@@ -3,9 +3,12 @@ import React from 'react';
 export interface BrandLogoProps {
   name?: string;
   brand?: string;
-  size?: number;
+  size?: number | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | string;
   className?: string;
   active?: boolean;
+  variant?: string;
+  theme?: string;
+  showTagline?: boolean;
 }
 
 const BRAND_IMAGE_PATHS: Record<string, string> = {
@@ -18,8 +21,29 @@ const BRAND_IMAGE_PATHS: Record<string, string> = {
   toyota: '/assets/brands/toyota.png',
 };
 
-export function BrandLogo({ name = '', brand = '', size = 32, className = '', active }: BrandLogoProps) {
-  const safeSize = Number.isFinite(size) && size > 0 ? size : 32;
+const SIZE_MAP: Record<string, number> = {
+  xs: 18,
+  sm: 24,
+  md: 32,
+  lg: 48,
+  xl: 64,
+  '2xl': 80,
+};
+
+export function BrandLogo({ 
+  name = '', 
+  brand = '', 
+  size = 32, 
+  className = '', 
+  active,
+  variant,
+  theme,
+  showTagline 
+}: BrandLogoProps) {
+  const numericSize = typeof size === 'number' 
+    ? size 
+    : (SIZE_MAP[size] || 32);
+  const safeSize = Number.isFinite(numericSize) && numericSize > 0 ? numericSize : 32;
   const brandKey = String(brand || name || '').toLowerCase().trim();
 
   let matchedSrc = BRAND_IMAGE_PATHS[brandKey];

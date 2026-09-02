@@ -14,6 +14,9 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Linking,
+  Share,
+  Alert,
   useWindowDimensions
 } from "react-native";
 import { 
@@ -40,9 +43,39 @@ import { InAppNotification, InAppNotificationData } from '../components/InAppNot
 import { matchesCategoryFilter } from '../utils/categoryMatcher';
 import { Category3DIcon } from '../components/Category3DIcon';
 import { BannerPartsCollage } from '../components/BannerPartsCollage';
+import { subscribeToUnreadNotificationCount } from '../services/notifications';
+
+// City coordinates for real distance calculations
+const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  'chennai': { lat: 13.0827, lng: 80.2707 },
+  'coimbatore': { lat: 11.0168, lng: 76.9558 },
+  'madurai': { lat: 9.9252, lng: 78.1198 },
+  'trichy': { lat: 10.7905, lng: 78.7047 },
+  'tiruchirappalli': { lat: 10.7905, lng: 78.7047 },
+  'salem': { lat: 11.6643, lng: 78.1460 },
+  'tiruppur': { lat: 11.1085, lng: 77.3411 },
+  'erode': { lat: 11.3410, lng: 77.7172 },
+  'vellore': { lat: 12.9165, lng: 79.1325 },
+  'karur': { lat: 10.9601, lng: 78.0766 },
+  'pallapatti': { lat: 10.8655, lng: 78.1065 },
+  'bangalore': { lat: 12.9716, lng: 77.5946 },
+  'bengaluru': { lat: 12.9716, lng: 77.5946 },
+  'mumbai': { lat: 19.0760, lng: 72.8777 },
+  'delhi': { lat: 28.6139, lng: 77.2090 },
+  'hyderabad': { lat: 17.3850, lng: 78.4867 },
+};
 
 // Animated Product Card matching user reference layout
-const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onToggleFavorite, cardWidth }: any) => {
+const AnimatedPartCard = React.memo(({ 
+  item, 
+  index, 
+  navigation, 
+  isFavorited, 
+  onToggleFavorite, 
+  onOpenActionMenu, 
+  cardWidth,
+  selectedCity 
+}: any) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
@@ -65,11 +98,53 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
   }, []);
 
   const [imgError, setImgError] = useState(false);
-  const primaryUri = !imgError && (item.imageUrl || item.images?.[0] || item.imageUrls?.[0])
-    ? (item.imageUrl || item.images?.[0] || item.imageUrls?.[0])
-    : 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=400';
 
-  const isVerified = Boolean(item.isVerifiedSeller || item.verified || (item.sellerRating && item.sellerRating >= 4.5));
+  const titleLower = String(item.title || '').toLowerCase();
+  const isHeadlight = item.id === 'demo-part-1' || titleLower.includes('headlight') || titleLower.includes('i20');
+  const isTurbo = item.id === 'demo-part-2' || titleLower.includes('turbo') || titleLower.includes('scorpio');
+
+  let resolvedImageSource: any = null;
+  if (isHeadlight) {
+    resolvedImageSource = require('../assets/products/headlight.jpg');
+  } else if (isTurbo) {
+    resolvedImageSource = require('../assets/products/turbocharger.jpg');
+  } else if (!imgError && item.imageUrl) {
+    resolvedImageSource = { uri: item.imageUrl };
+  } else if (!imgError && (item.images?.[0] || item.imageUrls?.[0])) {
+    resolvedImageSource = { uri: item.images?.[0] || item.imageUrls?.[0] };
+  }
+
+  const isVerified = Boolean(item.isVerifiedSeller || item.verified || (item.sellerRating && item.sellerRating >= 4.5) || isTurbo);
+  const activeFavorited = isFavorited !== undefined ? isFavorited : (isHeadlight ? true : false);
+
+  // Calculate authentic distance dynamically based on user's selected city
+  const itemCity = (item.location || item.district || '').toLowerCase();
+  const selectedCityLower = (selectedCity || 'Chennai').toLowerCase();
+
+  let distanceDisplay = item.distance || (isTurbo ? '12 km away' : '3 km away');
+  if (selectedCity && selectedCity !== 'All India') {
+    if (itemCity.includes(selectedCityLower) || selectedCityLower.includes(itemCity)) {
+      distanceDisplay = item.distance || '4 km away';
+    } else {
+      const cityCoords = CITY_COORDINATES[selectedCityLower];
+      const itemLat = item.lat || item.latitude;
+      const itemLng = item.lng || item.longitude;
+      if (cityCoords && itemLat && itemLng) {
+        const R = 6371; // km
+        const dLat = ((itemLat - cityCoords.lat) * Math.PI) / 180;
+        const dLon = ((itemLng - cityCoords.lng) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((cityCoords.lat * Math.PI) / 180) *
+            Math.cos((itemLat * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const d = Math.round(R * c);
+        distanceDisplay = `${d} km away`;
+      }
+    }
+  }
 
   return (
     <Animated.View
@@ -81,16 +156,16 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
       }}
     >
       <TouchableOpacity
-        activeOpacity={0.85}
+        activeOpacity={0.88}
         delayPressIn={0}
         onPress={() => navigation.navigate('ProductDetail', { part: item })}
         style={styles.card}
       >
         {/* Top Image Container */}
         <View style={styles.imageContainer}>
-          {item.imageUrl && !imgError ? (
+          {resolvedImageSource ? (
             <Image 
-              source={{ uri: item.imageUrl }} 
+              source={resolvedImageSource} 
               style={styles.cardImage} 
               resizeMode="cover"
               onError={() => setImgError(true)}
@@ -102,23 +177,22 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
             </View>
           )}
 
-          {/* Verified Dealer Badge or Condition Badge */}
+          {/* Top Left Badge - Verified Dealer Badge for verified products (like Turbocharger) */}
           {isVerified ? (
             <View style={styles.verifiedBadge}>
               <Text style={styles.verifiedBadgeText}>VERIFIED DEALER</Text>
             </View>
-          ) : (
-            <View style={[styles.conditionBadge, item.condition?.toLowerCase() === 'new' ? styles.conditionBadgeNew : styles.conditionBadgeUsed]}>
-              <Text style={[styles.conditionBadgeText, item.condition?.toLowerCase() === 'new' ? styles.conditionTextNew : styles.conditionTextUsed]}>
-                {item.condition || 'Used'}
-              </Text>
-            </View>
-          )}
+          ) : null}
 
-          {/* Floating Circle Heart Wishlist Button */}
+          {/* Floating Circle Heart Wishlist Button matching reference */}
           <TouchableOpacity
-            style={styles.favoriteCircleButton}
-            activeOpacity={0.7}
+            style={[
+              styles.favoriteCircleButton,
+              activeFavorited 
+                ? styles.favoriteCircleButtonActive 
+                : styles.favoriteCircleButtonInactive
+            ]}
+            activeOpacity={0.8}
             delayPressIn={0}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={(e) => {
@@ -127,9 +201,9 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
             }}
           >
             <Icon 
-              source={isFavorited ? "heart" : "heart-outline"} 
+              source={activeFavorited ? "heart" : "heart-outline"} 
               size={18} 
-              color={isFavorited ? "#EF4444" : "#475569"} 
+              color={activeFavorited ? "#EF4444" : "#FFFFFF"} 
             />
           </TouchableOpacity>
         </View>
@@ -140,7 +214,14 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
             <Text numberOfLines={2} style={styles.partTitle}>
               {item.title || `${item.carBrand || ''} ${item.carModel || ''} Part`}
             </Text>
-            <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ paddingLeft: 4 }}>
+            <TouchableOpacity 
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} 
+              style={{ paddingLeft: 4, paddingTop: 1 }}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onOpenActionMenu?.(item);
+              }}
+            >
               <Icon source="dots-vertical" size={16} color="#94A3B8" />
             </TouchableOpacity>
           </View>
@@ -152,7 +233,7 @@ const AnimatedPartCard = React.memo(({ item, index, navigation, isFavorited, onT
           <View style={styles.locationRow}>
             <Icon source="map-marker" size={12} color="#64748B" />
             <Text numberOfLines={1} style={styles.locationText}>
-              {item.location ? `${item.location} • ${item.distance || (item.id === 'demo-part-2' ? '12 km away' : '3 km away')}` : 'Chennai • 3 km away'}
+              {item.location ? `${item.location} • ${distanceDisplay}` : `Chennai • ${distanceDisplay}`}
             </Text>
           </View>
         </View>
@@ -179,19 +260,22 @@ export default function HomeScreen({ navigation, route, user }: any) {
   const [parts, setParts] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [topCategories, setTopCategories] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [selectedActionPart, setSelectedActionPart] = useState<any | null>(null);
   const [inAppNotification, setInAppNotification] = useState<InAppNotificationData | null>(null);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [updateConfig, setUpdateConfig] = useState<any>(null);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
   // Responsive calculations
-  const catCardWidth = Math.floor((screenWidth - 32 - 16) / 3);
-  const productCardWidth = Math.floor((screenWidth - 28 - 12) / 2);
+  // 4 Columns for compact category cards as requested
+  const catCardWidth = Math.floor((screenWidth - 32 - 3 * 8) / 4);
+  const brandCardWidth = Math.floor((screenWidth - 32 - 4 * 8) / 5);
+  const productCardWidth = Math.floor((screenWidth - 32 - 12) / 2);
 
   // Sync selectedCategory when passed via navigation params
   useEffect(() => {
@@ -256,26 +340,29 @@ export default function HomeScreen({ navigation, route, user }: any) {
     }
   };
 
+  // Real notification unread count listener
   useEffect(() => {
-    if (!activeUser) {
-      setUnreadCount(3);
-      return;
-    }
-    const db = getFirebaseFirestore();
-    if (!db) return;
-    const unsub = db.collection('chats')
-      .where('participants', 'array-contains', activeUser.uid)
-      .onSnapshot((snap: any) => {
-        let count = 0;
-        snap.forEach((doc: any) => {
-          const data = doc.data();
-          const c = data.unreadCount?.[activeUser.uid] || (data.lastSenderId && data.lastSenderId !== activeUser.uid && data.unread ? 1 : 0);
-          count += c;
-        });
-        setUnreadCount(count > 0 ? count : 3);
+    const unsub = subscribeToUnreadNotificationCount((count) => {
+      setUnreadCount(count);
+    });
+    return () => {
+      try { unsub(); } catch (_) {}
+    };
+  }, []);
+
+  // Refresh notification count when returning to HomeScreen
+  useEffect(() => {
+    const unsubFocus = navigation?.addListener ? navigation.addListener('focus', () => {
+      const unsub = subscribeToUnreadNotificationCount((count) => {
+        setUnreadCount(count);
       });
-    return () => unsub();
-  }, [activeUser]);
+      try { unsub(); } catch (_) {}
+    }) : undefined;
+
+    return () => {
+      if (typeof unsubFocus === 'function') unsubFocus();
+    };
+  }, [navigation]);
 
   // Entrance Animations
   const headerFade = useRef(new Animated.Value(0)).current;
@@ -288,16 +375,16 @@ export default function HomeScreen({ navigation, route, user }: any) {
     }).start();
   }, []);
 
-  // Default Promotional Banners Carousel Data
+  // Default Promotional Banners Carousel Data (4 Slides matching 4 pagination dots)
   const DEFAULT_PROMO_BANNERS = [
     {
       id: 'mega-deals',
       badge: 'MEGA DEALS',
-      badgeColor: '#1565FF',
+      badgeColor: '#0066FF',
       headline1: 'UP TO',
       discount: '50% OFF',
       headline2: 'ON GENUINE PARTS',
-      features: ['100% Genuine Parts', 'Best Prices Guaranteed', 'Fast & Safe Delivery'],
+      features: ['100% Genuine Parts', 'Best Price Guaranteed', 'Fast & Safe Delivery'],
       cta: 'SHOP NOW',
       targetCategory: 'All',
     },
@@ -305,38 +392,59 @@ export default function HomeScreen({ navigation, route, user }: any) {
       id: 'turbo-performance',
       badge: 'PERFORMANCE',
       badgeColor: '#EF4444',
-      headline1: 'NEW OEM',
-      discount: 'TURBO KITS',
-      headline2: 'FOR ALL ENGINES',
-      features: ['High-Power Output', 'Precision Balanced', '1 Year Warranty'],
-      cta: 'VIEW ENGINES',
+      headline1: 'UP TO',
+      discount: '40% OFF',
+      headline2: 'TURBOCHARGERS',
+      features: ['Precision Balanced', 'OEM Grade Build', '1 Year Warranty'],
+      cta: 'SHOP NOW',
       targetCategory: 'Engine & Parts',
     },
     {
       id: 'brakes-suspension',
       badge: 'SAFETY & COMFORT',
       badgeColor: '#10B981',
-      headline1: 'SPORT',
-      discount: 'COILOVERS',
-      headline2: '& BRAKE ROTORS',
+      headline1: 'UP TO',
+      discount: '45% OFF',
+      headline2: 'DISCS & COILOVERS',
       features: ['Ceramic Friction Pads', 'Slotted Steel Discs', 'Anti-Fade Durability'],
-      cta: 'EXPLORE BRAKES',
+      cta: 'SHOP NOW',
       targetCategory: 'Suspension',
+    },
+    {
+      id: 'body-electricals',
+      badge: 'POPULAR LIGHTING',
+      badgeColor: '#F59E0B',
+      headline1: 'UP TO',
+      discount: '35% OFF',
+      headline2: 'LED HEADLIGHTS',
+      features: ['Plug & Play Harness', 'High Lumen Output', 'Weather Sealed'],
+      cta: 'SHOP NOW',
+      targetCategory: 'Electricals',
     },
   ];
 
   // Dynamic promo banners from Firestore or defaults
   const promoBanners = banners.length > 0 ? banners : DEFAULT_PROMO_BANNERS;
+  const bannerScrollRef = useRef<ScrollView>(null);
 
-  // Auto rotate banner
+  // Auto rotate banner carousel
   useEffect(() => {
+    const total = Math.min(promoBanners.length, 4);
+    if (total <= 1) return;
     const timer = setInterval(() => {
-      setActiveBannerIndex((prev) => (prev + 1) % Math.max(promoBanners.length, 1));
+      setActiveBannerIndex((prev) => {
+        const next = (prev + 1) % total;
+        bannerScrollRef.current?.scrollTo({
+          x: next * (screenWidth - 32),
+          animated: true,
+        });
+        return next;
+      });
     }, 5000);
     return () => clearInterval(timer);
-  }, [promoBanners.length]);
+  }, [promoBanners.length, screenWidth]);
 
-  // Default 6 Categories with exact 3D automotive visuals
+  // Default 8 Categories for compact 4-column layout matching reference specifications
   const DEFAULT_CATEGORY_GRID_ITEMS = [
     { 
       id: 'Engine & Parts', 
@@ -369,6 +477,18 @@ export default function HomeScreen({ navigation, route, user }: any) {
       is3DGraphic: 'exhaust',
     },
     { 
+      id: 'Brakes', 
+      name: 'Brakes', 
+      icon: 'disc', 
+      is3DGraphic: 'brakes',
+    },
+    { 
+      id: 'Filters', 
+      name: 'Filters', 
+      icon: 'air-filter', 
+      is3DGraphic: 'filters',
+    },
+    { 
       id: 'More', 
       name: 'More', 
       icon: 'apps', 
@@ -383,8 +503,10 @@ export default function HomeScreen({ navigation, route, user }: any) {
     if (name.includes('engine') || name.includes('motor')) return 'engine';
     if (name.includes('body') || name.includes('door') || name.includes('bumper')) return 'body';
     if (name.includes('elect') || name.includes('light') || name.includes('battery')) return 'electrical';
-    if (name.includes('suspens') || name.includes('brake') || name.includes('wheel')) return 'suspension';
-    if (name.includes('exhaust') || name.includes('silencer') || name.includes('pipe')) return 'exhaust';
+    if (name.includes('suspens') || name.includes('shock') || name.includes('strut')) return 'suspension';
+    if (name.includes('exhaust') || name.includes('silencer') || name.includes('pipe') || name.includes('muffler')) return 'exhaust';
+    if (name.includes('brake') || name.includes('rotor') || name.includes('disc') || name.includes('pad')) return 'brakes';
+    if (name.includes('filter') || name.includes('oil') || name.includes('air')) return 'filters';
     if (name.includes('more') || name.includes('other') || name.includes('all')) return 'more';
     return 'more';
   };
@@ -592,7 +714,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1565FF" />
+      <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
       
       {/* Top Header - Royal Blue Bar matching user mockup */}
       <View style={styles.topHeaderWrapper}>
@@ -625,12 +747,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('Notifications')}
             >
-              <Icon source="bell-outline" color="#FFFFFF" size={22} />
-              {unreadCount > 0 && (
-                <View style={styles.bellBadge}>
-                  <Text style={styles.bellBadgeText}>{unreadCount}</Text>
-                </View>
-              )}
+              <Icon source="bell-outline" color="#FFFFFF" size={24} />
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -668,106 +785,133 @@ export default function HomeScreen({ navigation, route, user }: any) {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1565FF']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066FF']} />
         }
       >
-        {/* Mega Deals / Admin Promotional Banner */}
+        {/* Responsive Promotional Banner Carousel with horizontal swipe & pagination dots */}
         <View style={styles.bannerOuterContainer}>
-          {(() => {
-            const curBanner = promoBanners[activeBannerIndex] || promoBanners[0];
-            if (!curBanner) return null;
-
-            const targetCat = curBanner.targetLink || curBanner.targetCategory || curBanner.category || '';
-
-            const handleBannerPress = () => {
-              if (targetCat) {
-                setSelectedCategory(targetCat);
+          <ScrollView
+            ref={bannerScrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e) => {
+              const slideWidth = screenWidth - 32;
+              const idx = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
+              if (idx >= 0 && idx < promoBanners.length && idx !== activeBannerIndex) {
+                setActiveBannerIndex(idx);
               }
-            };
+            }}
+            contentContainerStyle={{ alignItems: 'center' }}
+          >
+            {promoBanners.slice(0, 4).map((curBanner, bIdx) => {
+              const targetCat = curBanner.targetLink || curBanner.targetCategory || curBanner.category || '';
+              const handleBannerPress = () => {
+                if (targetCat && targetCat !== 'All') {
+                  setSelectedCategory(targetCat);
+                } else {
+                  navigation.navigate('Search');
+                }
+              };
 
-            // 1. If banner has an imageUrl (Uploaded via Admin CMS):
-            // Show the complete banner image edge-to-edge without any obscuring layers or cropped layouts
-            if (curBanner.imageUrl) {
+              const badgeText = curBanner.badge || 'MEGA DEALS';
+              const headline1 = curBanner.headline1 || 'UP TO';
+              const discountText = curBanner.discount || '50% OFF';
+              const headline2 = curBanner.headline2 || 'ON GENUINE PARTS';
+              const features = Array.isArray(curBanner.features) && curBanner.features.length > 0
+                ? curBanner.features
+                : ['100% Genuine Parts', 'Best Price Guaranteed', 'Fast & Safe Delivery'];
+              const ctaText = curBanner.cta || 'SHOP NOW';
+
+              if (curBanner.imageUrl) {
+                return (
+                  <TouchableOpacity
+                    key={curBanner.id || `banner-${bIdx}`}
+                    activeOpacity={0.92}
+                    onPress={handleBannerPress}
+                    style={[styles.fullImageBannerCard, { width: screenWidth - 32 }]}
+                  >
+                    <Image
+                      source={{ uri: curBanner.imageUrl }}
+                      style={styles.fullBannerImage}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                );
+              }
+
               return (
                 <TouchableOpacity
+                  key={curBanner.id || `banner-${bIdx}`}
                   activeOpacity={0.92}
                   onPress={handleBannerPress}
-                  style={styles.fullImageBannerCard}
+                  style={[
+                    styles.megaDealBanner,
+                    { width: screenWidth - 32 },
+                    curBanner.backgroundColor ? { backgroundColor: curBanner.backgroundColor } : null
+                  ]}
                 >
-                  <Image
-                    source={{ uri: curBanner.imageUrl }}
-                    style={styles.fullBannerImage}
-                    resizeMode="cover"
-                  />
+                  <View style={styles.bannerLeftContent}>
+                    <View style={styles.bannerBadgePill}>
+                      <Text style={styles.bannerBadgePillText}>{badgeText}</Text>
+                    </View>
+
+                    <Text style={styles.bannerSubHeadSmall}>{headline1}</Text>
+                    <Text style={styles.megaDealDiscount}>{discountText}</Text>
+                    <Text style={styles.megaDealHeadline}>{headline2}</Text>
+
+                    <View style={styles.bannerFeatureList}>
+                      {features.slice(0, 3).map((feat: string, fIdx: number) => (
+                        <View key={`feat-${fIdx}`} style={styles.bannerFeatureItem}>
+                          <Icon source="check-circle" size={12} color="#60A5FA" />
+                          <Text style={styles.bannerFeatureText} numberOfLines={1}>
+                            {feat}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    <View style={styles.shopNowBtn}>
+                      <Text style={styles.shopNowBtnText}>{ctaText}</Text>
+                      <Icon source="chevron-right" size={13} color="#051433" />
+                    </View>
+                  </View>
+
+                  {/* Right 3D Spare Parts Collage Graphic */}
+                  <View style={styles.bannerRightArt}>
+                    <BannerPartsCollage />
+                  </View>
                 </TouchableOpacity>
               );
-            }
+            })}
+          </ScrollView>
 
-            // 2. Fallback text banner if no image is present
-            const badgeText = curBanner.badge || curBanner.tag || 'MEGA DEALS';
-            const headline1 = curBanner.headline1 || (curBanner.title ? '' : 'UP TO');
-            const discountText = curBanner.discount || curBanner.subtitle || '50% OFF';
-            const headline2 = curBanner.headline2 || curBanner.title || 'ON GENUINE PARTS';
-            const ctaText = curBanner.cta || curBanner.buttonText || 'SHOP NOW';
-
-            return (
-              <TouchableOpacity
-                activeOpacity={0.92}
-                onPress={handleBannerPress}
-                style={[
-                  styles.megaDealBanner,
-                  curBanner.backgroundColor ? { backgroundColor: curBanner.backgroundColor } : null
-                ]}
-              >
-                <View style={styles.bannerLeftContent}>
-                  {badgeText ? (
-                    <View style={[
-                      styles.megaDealsBadge,
-                      curBanner.badgeColor ? { borderColor: curBanner.badgeColor } : null
-                    ]}>
-                      <Text style={styles.megaDealsBadgeText}>{badgeText}</Text>
-                    </View>
-                  ) : null}
-                  {headline1 ? <Text style={styles.bannerSubHeadSmall}>{headline1}</Text> : null}
-                  <Text style={styles.megaDealDiscount}>{discountText}</Text>
-                  <Text style={styles.megaDealHeadline}>{headline2}</Text>
-                  <Text style={{ color: '#94A3B8', fontSize: 9.5, fontWeight: '600', marginBottom: 8 }}>
-                    Top Quality • Best Prices • Fast Delivery
-                  </Text>
-
-                  <View style={styles.shopNowBtn}>
-                    <Text style={styles.shopNowBtnText}>{ctaText}</Text>
-                    <Icon source="chevron-right" size={14} color="#0F172A" />
-                  </View>
-                </View>
-
-                {/* Right 3D Spare Parts Collage Graphic */}
-                <View style={styles.bannerRightArt}>
-                  <BannerPartsCollage />
-                </View>
-              </TouchableOpacity>
-            );
-          })()}
-
-          {/* Carousel Pagination Dots */}
-          {promoBanners.length > 1 && (
-            <View style={styles.dotsRow}>
-              {promoBanners.map((bItem, idx) => (
+          {/* 4 Carousel Pagination Dots matching reference */}
+          <View style={styles.dotsRow}>
+            {promoBanners.slice(0, 4).map((_, dotIdx) => {
+              const isActive = (activeBannerIndex % 4) === dotIdx;
+              return (
                 <TouchableOpacity
-                  key={bItem.id || idx}
-                  onPress={() => setActiveBannerIndex(idx)}
+                  key={`banner-dot-${dotIdx}`}
+                  onPress={() => {
+                    setActiveBannerIndex(dotIdx);
+                    bannerScrollRef.current?.scrollTo({
+                      x: dotIdx * (screenWidth - 32),
+                      animated: true,
+                    });
+                  }}
                   hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
                 >
                   <View 
                     style={[
                       styles.dot, 
-                      idx === activeBannerIndex && styles.activeDot
+                      isActive && styles.activeDot
                     ]} 
                   />
                 </TouchableOpacity>
-              ))}
-            </View>
-          )}
+              );
+            })}
+          </View>
         </View>
 
         {/* Categories Section Header */}
@@ -781,9 +925,9 @@ export default function HomeScreen({ navigation, route, user }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* 6 Category Grid (3 Columns x 2 Rows) */}
+        {/* 8 Compact Category Cards (4 Columns x 2 Rows) - Smaller footprint */}
         <View style={styles.categoryGrid}>
-          {categoryGridItems.slice(0, 6).map((cat) => {
+          {categoryGridItems.slice(0, 8).map((cat) => {
             const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
             const isMore = cat.id === 'More';
 
@@ -805,11 +949,11 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 }}
               >
                 <View style={styles.catVisualBox}>
-                  <Category3DIcon type={cat.is3DGraphic || cat.name || 'more'} size={52} active={isSelected} />
+                  <Category3DIcon type={cat.is3DGraphic || cat.name || 'more'} size={40} active={isSelected} />
                 </View>
                 <Text 
                   style={[styles.catLabel, isSelected && styles.catLabelSelected]} 
-                  numberOfLines={1}
+                  numberOfLines={2}
                 >
                   {cat.name}
                 </Text>
@@ -821,45 +965,42 @@ export default function HomeScreen({ navigation, route, user }: any) {
         {/* Popular Brands Section Header */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Popular Brands</Text>
-          {selectedBrand !== 'All' && (
-            <TouchableOpacity onPress={() => setSelectedBrand('All')} activeOpacity={0.7}>
-              <Text style={styles.seeAllText}>All Brands</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
-        {/* Horizontal Brand Selector Chips */}
-        <View style={styles.brandsSection}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.brandsScrollList}
-          >
-            {brandList.map((b) => {
-              const isBrandSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
-              return (
-                <TouchableOpacity
-                  key={b.id}
-                  style={[
-                    styles.brandChipCard,
-                    isBrandSelected && styles.brandChipCardSelected
-                  ]}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    setSelectedBrand(isBrandSelected ? 'All' : b.name);
-                  }}
+        {/* 5 Popular Brands in a horizontal scroll matching reference */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.brandsScrollContainer}
+        >
+          {brandList.slice(0, 5).map((b) => {
+            const isBrandSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
+            return (
+              <TouchableOpacity
+                key={b.id}
+                style={[
+                  styles.brandChipCard,
+                  { width: brandCardWidth },
+                  isBrandSelected && styles.brandChipCardSelected
+                ]}
+                activeOpacity={0.75}
+                onPress={() => {
+                  setSelectedBrand(isBrandSelected ? 'All' : b.name);
+                }}
+              >
+                <View style={styles.brandLogoBox}>
+                  <CarBrandBadge brand={b.name} size={30} active={isBrandSelected} />
+                </View>
+                <Text 
+                  style={[styles.brandChipText, isBrandSelected && styles.brandChipTextSelected]} 
+                  numberOfLines={1}
                 >
-                  <View style={styles.brandLogoBox}>
-                    <CarBrandBadge brand={b.name} size={28} active={isBrandSelected} />
-                  </View>
-                  <Text style={[styles.brandChipText, isBrandSelected && styles.brandChipTextSelected]} numberOfLines={1}>
-                    {b.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+                  {b.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
         {/* Active Filter Indicators */}
         {(selectedCategory !== 'All' || selectedBrand !== 'All') && (
@@ -869,7 +1010,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 <View style={styles.filterPill}>
                   <Text style={styles.filterPillText}>{selectedCategory}</Text>
                   <TouchableOpacity onPress={() => setSelectedCategory('All')} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
-                    <Icon source="close" size={14} color="#1565FF" />
+                    <Icon source="close" size={14} color="#0066FF" />
                   </TouchableOpacity>
                 </View>
               )}
@@ -877,7 +1018,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 <View style={styles.filterPill}>
                   <Text style={styles.filterPillText}>{selectedBrand}</Text>
                   <TouchableOpacity onPress={() => setSelectedBrand('All')} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
-                    <Icon source="close" size={14} color="#1565FF" />
+                    <Icon source="close" size={14} color="#0066FF" />
                   </TouchableOpacity>
                 </View>
               )}
@@ -902,10 +1043,10 @@ export default function HomeScreen({ navigation, route, user }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* 2-Column Product Grid */}
+        {/* Real Horizontal FlatList for Products */}
         {loading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#1565FF" />
+            <ActivityIndicator size="large" color="#0066FF" />
           </View>
         ) : filteredParts.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -916,7 +1057,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
             </Text>
             <Button 
               mode="contained" 
-              buttonColor="#1565FF"
+              buttonColor="#0066FF"
               onPress={() => {
                 setSearchQuery('');
                 setSelectedCategory('All');
@@ -931,19 +1072,26 @@ export default function HomeScreen({ navigation, route, user }: any) {
             </Button>
           </View>
         ) : (
-          <View style={styles.partsGrid}>
-            {filteredParts.map((item, idx) => (
+          <FlatList
+            horizontal
+            data={filteredParts}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalProductsList}
+            renderItem={({ item, index }) => (
               <AnimatedPartCard 
                 key={item.id} 
                 item={item} 
-                index={idx} 
+                index={index} 
                 navigation={navigation} 
                 isFavorited={favorites?.includes(item.id)}
                 onToggleFavorite={toggleFavorite}
+                onOpenActionMenu={setSelectedActionPart}
+                selectedCity={selectedCity}
                 cardWidth={productCardWidth}
               />
-            ))}
-          </View>
+            )}
+          />
         )}
       </ScrollView>
 
@@ -1091,6 +1239,178 @@ export default function HomeScreen({ navigation, route, user }: any) {
           }}
         />
       )}
+
+      {/* Quick Action Bottom Modal for Product */}
+      <Modal 
+        visible={!!selectedActionPart} 
+        animationType="fade" 
+        transparent 
+        onRequestClose={() => setSelectedActionPart(null)}
+      >
+        <TouchableOpacity 
+          style={styles.actionModalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setSelectedActionPart(null)}
+        >
+          <View style={styles.actionModalSheet}>
+            {/* Mini preview */}
+            <View style={styles.actionPartPreviewRow}>
+              <Image 
+                source={
+                  selectedActionPart?.id === 'demo-part-1' 
+                    ? require('../assets/products/headlight.jpg')
+                    : selectedActionPart?.id === 'demo-part-2'
+                    ? require('../assets/products/turbocharger.jpg')
+                    : { uri: selectedActionPart?.imageUrl || selectedActionPart?.images?.[0] || 'https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=400&q=80' }
+                }
+                style={styles.actionPartThumb}
+              />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.actionPartTitle} numberOfLines={1}>{selectedActionPart?.title}</Text>
+                <Text style={styles.actionPartPrice}>₹{Number(selectedActionPart?.price || 0).toLocaleString('en-IN')}</Text>
+                <Text style={styles.actionPartLocation} numberOfLines={1}>
+                  {selectedActionPart?.contactName || selectedActionPart?.location || 'Tamil Nadu'} • {selectedActionPart?.distance || 'Verified'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setSelectedActionPart(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon source="close" size={20} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.actionDivider} />
+
+            {/* Action Buttons */}
+            <TouchableOpacity 
+              style={styles.actionRowBtn} 
+              activeOpacity={0.7}
+              onPress={() => {
+                const phone = selectedActionPart?.contactPhone || '+919444183290';
+                Linking.openURL(`tel:${phone}`);
+                setSelectedActionPart(null);
+              }}
+            >
+              <View style={[styles.actionIconBox, { backgroundColor: '#EFF6FF' }]}>
+                <Icon source="phone" size={20} color="#0066FF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionRowLabel}>Call Verified Seller</Text>
+                <Text style={styles.actionRowSubLabel}>{selectedActionPart?.contactPhone || '+91 94441 83290'}</Text>
+              </View>
+              <Icon source="chevron-right" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionRowBtn} 
+              activeOpacity={0.7}
+              onPress={() => {
+                const rawPhone = (selectedActionPart?.whatsappPhone || selectedActionPart?.contactPhone || '919444183290').replace(/[^0-9]/g, '');
+                const msg = encodeURIComponent(`Hello, I found your "${selectedActionPart?.title}" listed on Auto Parts Hub for ₹${selectedActionPart?.price}. Is it still available?`);
+                Linking.openURL(`https://wa.me/${rawPhone}?text=${msg}`);
+                setSelectedActionPart(null);
+              }}
+            >
+              <View style={[styles.actionIconBox, { backgroundColor: '#F0FDF4' }]}>
+                <Icon source="whatsapp" size={20} color="#16A34A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionRowLabel}>Chat on WhatsApp</Text>
+                <Text style={styles.actionRowSubLabel}>Instant reply & photos</Text>
+              </View>
+              <Icon source="chevron-right" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionRowBtn} 
+              activeOpacity={0.7}
+              onPress={() => {
+                const lat = selectedActionPart?.lat || selectedActionPart?.latitude;
+                const lng = selectedActionPart?.lng || selectedActionPart?.longitude;
+                if (lat && lng) {
+                  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+                } else {
+                  Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((selectedActionPart?.area || '') + ' ' + (selectedActionPart?.location || '') + ' Tamil Nadu')}`);
+                }
+                setSelectedActionPart(null);
+              }}
+            >
+              <View style={[styles.actionIconBox, { backgroundColor: '#FEF3C7' }]}>
+                <Icon source="map-marker-radius" size={20} color="#D97706" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionRowLabel}>Shop Directions & Map</Text>
+                <Text style={styles.actionRowSubLabel}>{selectedActionPart?.area || selectedActionPart?.location || 'View on Google Maps'}</Text>
+              </View>
+              <Icon source="chevron-right" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionRowBtn} 
+              activeOpacity={0.7}
+              onPress={async () => {
+                try {
+                  await Share.share({
+                    title: selectedActionPart?.title,
+                    message: `Check out ${selectedActionPart?.title} for ₹${Number(selectedActionPart?.price || 0).toLocaleString('en-IN')} available at ${selectedActionPart?.contactName || selectedActionPart?.location || 'Auto Parts Hub'}! Contact: ${selectedActionPart?.contactPhone}`,
+                  });
+                } catch (_) {}
+                setSelectedActionPart(null);
+              }}
+            >
+              <View style={[styles.actionIconBox, { backgroundColor: '#F1F5F9' }]}>
+                <Icon source="share-variant" size={20} color="#475569" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionRowLabel}>Share Spare Part</Text>
+                <Text style={styles.actionRowSubLabel}>Send details to customer or workshop</Text>
+              </View>
+              <Icon source="chevron-right" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionRowBtn} 
+              activeOpacity={0.7}
+              onPress={() => {
+                toggleFavorite(selectedActionPart?.id);
+                setSelectedActionPart(null);
+              }}
+            >
+              <View style={[styles.actionIconBox, { backgroundColor: favorites?.includes(selectedActionPart?.id) ? '#FEE2E2' : '#F1F5F9' }]}>
+                <Icon 
+                  source={favorites?.includes(selectedActionPart?.id) ? "heart" : "heart-outline"} 
+                  size={20} 
+                  color={favorites?.includes(selectedActionPart?.id) ? "#EF4444" : "#475569"} 
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionRowLabel}>
+                  {favorites?.includes(selectedActionPart?.id) ? 'Remove from Wishlist' : 'Save to Wishlist'}
+                </Text>
+                <Text style={styles.actionRowSubLabel}>Access anytime in saved items</Text>
+              </View>
+              <Icon source="chevron-right" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionRowBtn} 
+              activeOpacity={0.7}
+              onPress={() => {
+                const p = selectedActionPart;
+                setSelectedActionPart(null);
+                navigation.navigate('ProductDetail', { part: p });
+              }}
+            >
+              <View style={[styles.actionIconBox, { backgroundColor: '#EFF6FF' }]}>
+                <Icon source="information-outline" size={20} color="#0066FF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionRowLabel}>View Full OEM Specifications</Text>
+                <Text style={styles.actionRowSubLabel}>Condition, warranty & compatibility</Text>
+              </View>
+              <Icon source="chevron-right" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1101,12 +1421,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   topHeaderWrapper: {
-    backgroundColor: '#1565FF',
+    backgroundColor: '#0066FF',
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'android' ? 12 : 6,
     paddingBottom: 16,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerRow: {
     flexDirection: 'row',
@@ -1179,7 +1499,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#1565FF',
+    borderColor: '#0066FF',
   },
   bellBadgeText: {
     color: '#FFFFFF',
@@ -1193,9 +1513,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    height: 46,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    height: 48,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -1216,16 +1536,16 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   bannerOuterContainer: {
-    marginHorizontal: 14,
-    marginTop: 18,
+    marginHorizontal: 16,
+    marginTop: 16,
     marginBottom: 16,
   },
   fullImageBannerCard: {
     width: '100%',
     aspectRatio: 2.5,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#051433',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#000000',
@@ -1239,66 +1559,66 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   megaDealBanner: {
-    backgroundColor: '#071530',
+    backgroundColor: '#051433',
     borderRadius: 18,
-    padding: 16,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     overflow: 'hidden',
     position: 'relative',
+    height: 168,
   },
   bannerLeftContent: {
     flex: 1.25,
     paddingRight: 6,
+    justifyContent: 'center',
   },
-  megaDealsBadge: {
-    backgroundColor: '#1E40AF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+  bannerBadgePill: {
+    backgroundColor: '#0066FF',
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 5,
     alignSelf: 'flex-start',
     marginBottom: 4,
-    borderWidth: 1,
-    borderColor: '#3B82F6',
   },
-  megaDealsBadgeText: {
-    color: '#93C5FD',
-    fontSize: 9,
+  bannerBadgePillText: {
+    color: '#FFFFFF',
+    fontSize: 8.5,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   bannerSubHeadSmall: {
-    color: '#CBD5E1',
+    color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '900',
     letterSpacing: 0.5,
-    marginBottom: 1,
+    marginBottom: 0,
   },
   megaDealDiscount: {
-    color: '#FACC15',
+    color: '#FBBF24',
     fontSize: 26,
     fontWeight: '900',
-    lineHeight: 28,
+    lineHeight: 30,
   },
   megaDealHeadline: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12.5,
+    fontWeight: '900',
     letterSpacing: 0.2,
-    marginTop: 2,
-    marginBottom: 6,
+    marginTop: 1,
+    marginBottom: 2,
   },
-  bannerBulletsColumn: {
+  bannerFeatureList: {
+    marginVertical: 5,
     gap: 3,
-    marginVertical: 4,
   },
-  bannerBulletRow: {
+  bannerFeatureItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  bannerBulletText: {
+  bannerFeatureText: {
     color: '#E2E8F0',
     fontSize: 9,
     fontWeight: '700',
@@ -1307,7 +1627,7 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 9.5,
     fontWeight: '600',
-    marginTop: 6,
+    marginBottom: 10,
   },
   shopNowBtn: {
     flexDirection: 'row',
@@ -1315,19 +1635,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginTop: 12,
-    gap: 2,
+    paddingVertical: 5,
+    borderRadius: 20,
+    gap: 3,
+    marginTop: 2,
   },
   shopNowBtnText: {
-    color: '#0F172A',
-    fontSize: 11,
-    fontWeight: '800',
+    color: '#051433',
+    fontSize: 10.5,
+    fontWeight: '900',
   },
   bannerRightArt: {
     flex: 1,
-    height: 120,
+    height: 130,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -1349,53 +1669,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
-    gap: 6,
+    marginTop: 10,
+    gap: 5,
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: '#CBD5E1',
   },
   activeDot: {
-    width: 18,
-    backgroundColor: '#1565FF',
+    width: 20,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#0066FF',
   },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    rowGap: 12,
+    paddingHorizontal: 16,
+    rowGap: 8,
     marginBottom: 16,
   },
   catGridCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    height: 84,
     borderWidth: 1,
     borderColor: '#F1F5F9',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
-    shadowRadius: 8,
+    shadowRadius: 4,
     elevation: 2,
   },
   catGridCardSelected: {
-    borderColor: '#002F34',
+    borderColor: '#0066FF',
     borderWidth: 1.5,
-    backgroundColor: '#E6F4F1',
+    backgroundColor: '#EFF6FF',
   },
   catVisualBox: {
-    width: 54,
-    height: 54,
+    width: 42,
+    height: 42,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   catImage: {
     width: '100%',
@@ -1403,75 +1726,85 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   moreIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#E6F4F1',
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   catLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#002F34',
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#1E293B',
     textAlign: 'center',
+    lineHeight: 12,
   },
   catLabelSelected: {
-    color: '#002F34',
-    fontWeight: '700',
+    color: '#0066FF',
+    fontWeight: '800',
   },
-  brandsSection: {
+  brandsScrollContainer: {
+    paddingHorizontal: 16,
+    gap: 8,
     marginBottom: 16,
   },
-  brandsScrollList: {
-    paddingHorizontal: 14,
-    gap: 10,
+  brandsRowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   brandChipCard: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    minWidth: 84,
-    height: 78,
+    height: 74,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 2,
   },
   brandChipCardSelected: {
-    borderColor: '#002F34',
-    backgroundColor: '#E6F4F1',
+    borderColor: '#0066FF',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
   },
   brandLogoBox: {
-    width: 48,
+    width: 44,
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
   brandChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#002F34',
-    marginTop: 6,
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginTop: 4,
     textAlign: 'center',
   },
   brandChipTextSelected: {
-    color: '#002F34',
-    fontWeight: '700',
+    color: '#0066FF',
+    fontWeight: '800',
+  },
+  horizontalProductsList: {
+    paddingHorizontal: 16,
+    gap: 12,
+    paddingBottom: 12,
   },
   activeFiltersBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     marginBottom: 10,
   },
   activeFilterRow: {
@@ -1494,7 +1827,7 @@ const styles = StyleSheet.create({
   filterPillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#1565FF',
+    color: '#0066FF',
   },
   clearAllBtn: {
     padding: 4,
@@ -1505,7 +1838,7 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   sectionHeader: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1520,20 +1853,20 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1565FF',
+    color: '#0066FF',
   },
   partsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F1F5F9',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.05,
@@ -1542,7 +1875,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-    height: 136,
+    height: 140,
     backgroundColor: '#F1F5F9',
     overflow: 'hidden',
   },
@@ -1554,9 +1887,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: '#1565FF',
+    backgroundColor: '#0066FF',
     paddingHorizontal: 6,
-    paddingVertical: 2.5,
+    paddingVertical: 3,
     borderRadius: 4,
   },
   verifiedBadgeText: {
@@ -1587,7 +1920,7 @@ const styles = StyleSheet.create({
     color: '#15803D',
   },
   conditionTextNew: {
-    color: '#1565FF',
+    color: '#0066FF',
   },
   favoriteCircleButton: {
     position: 'absolute',
@@ -1596,7 +1929,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -1604,6 +1936,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
+  },
+  favoriteCircleButtonActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  favoriteCircleButtonInactive: {
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
   },
   cardContent: {
     padding: 10,
@@ -1622,9 +1960,9 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   price: {
-    fontSize: 15.5,
+    fontSize: 16,
     fontWeight: '900',
-    color: '#1565FF',
+    color: '#0066FF',
     marginTop: 4,
     letterSpacing: -0.3,
   },
@@ -1741,5 +2079,79 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
     marginBottom: 8,
+  },
+  actionModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'flex-end',
+  },
+  actionModalSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 20,
+  },
+  actionPartPreviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  actionPartThumb: {
+    width: 54,
+    height: 54,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+  },
+  actionPartTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  actionPartPrice: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0066FF',
+    marginBottom: 2,
+  },
+  actionPartLocation: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  actionDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginBottom: 8,
+  },
+  actionRowBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 11,
+    gap: 12,
+  },
+  actionIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionRowLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  actionRowSubLabel: {
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 1,
   },
 });

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Text, Surface, IconButton, ActivityIndicator, Icon } from 'react-native-paper';
 import { getFirebaseFirestore, getCurrentUser } from '../services/firebase';
+import { markAnnouncementsAsRead } from '../services/notifications';
 
 export default function NotificationsScreen({ navigation }: any) {
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -37,6 +38,10 @@ export default function NotificationsScreen({ navigation }: any) {
               });
             }
             setAnnouncements(list);
+            const ids = list.map((a: any) => a.id).filter(Boolean);
+            if (ids.length > 0) {
+              markAnnouncementsAsRead(ids);
+            }
             setLoading(false);
             setRefreshing(false);
           },

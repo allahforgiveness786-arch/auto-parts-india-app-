@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Platform, StatusBar, TouchableOpacity } from 'react-native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getFirebaseFirestore, getFirebaseAuth } from '../services/firebase';
 
 import HomeScreen from '../screens/HomeScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
@@ -31,15 +32,15 @@ function CustomSellTabBarButton({ onPress, accessibilityState }: any) {
   const focused = accessibilityState?.selected;
   return (
     <TouchableOpacity
-      activeOpacity={0.82}
+      activeOpacity={0.85}
       onPress={onPress}
       style={tabStyles.customSellButtonTouch}
     >
       <View style={[tabStyles.sellButtonCircle, focused && tabStyles.sellButtonCircleFocused]}>
-        <Icon source="plus" color="#FFFFFF" size={28} />
+        <Icon source="plus" color="#FFFFFF" size={30} />
       </View>
-      <Text style={[tabStyles.sellButtonLabel, { color: focused ? '#1565FF' : '#64748B' }]}>
-        Sell Part
+      <Text style={tabStyles.sellButtonLabel}>
+        SELL
       </Text>
     </TouchableOpacity>
   );
@@ -48,13 +49,13 @@ function CustomSellTabBarButton({ onPress, accessibilityState }: any) {
 function TabNavigator() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 6) : insets.bottom;
-  const tabHeight = 60 + bottomPadding;
+  const tabHeight = 62 + bottomPadding;
 
   return (
     <Tab.Navigator id="MainTab"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1565FF',
+        tabBarActiveTintColor: '#0066FF',
         tabBarInactiveTintColor: '#64748B',
         tabBarLabelStyle: {
           fontSize: 11,
@@ -76,6 +77,7 @@ function TabNavigator() {
         },
       }}
     >
+      {/* 1. HOME TAB */}
       <Tab.Screen 
         name="HomeTab" 
         component={HomeScreen}
@@ -87,48 +89,41 @@ function TabNavigator() {
         }}
       />
 
-      <Tab.Screen 
-        name="SearchTab" 
-        component={SearchScreen}
-        options={{ 
-          title: 'Search',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Icon source="magnify" color={color} size={24} />
-          )
-        }}
-      />
-
-      <Tab.Screen 
-        name="SellTab" 
-        component={SellPartScreen}
-        options={{ 
-          title: 'Sell Part',
-          tabBarButton: (props) => <CustomSellTabBarButton {...props} />,
-        }}
-      />
-
+      {/* 2. CHATS TAB - No badge, clean icon matching reference */}
       <Tab.Screen 
         name="ChatsTab" 
         component={ChatsScreen}
         options={{ 
           title: 'Chats',
-          tabBarBadge: 2,
-          tabBarBadgeStyle: {
-            backgroundColor: '#EF4444',
-            color: '#FFFFFF',
-            fontSize: 10,
-            fontWeight: '800',
-            lineHeight: 14,
-            minWidth: 16,
-            height: 16,
-            borderRadius: 8,
-          },
           tabBarIcon: ({ color, size, focused }) => (
-            <Icon source={focused ? "message-text" : "message-text-outline"} color={color} size={23} />
+            <Icon source={focused ? "comment-processing" : "comment-processing-outline"} color={color} size={23} />
           )
         }}
       />
 
+      {/* 3. SELL ACTION TAB (Center elevated blue circle button) */}
+      <Tab.Screen 
+        name="SellTab" 
+        component={SellPartScreen}
+        options={{ 
+          title: 'SELL',
+          tabBarButton: (props) => <CustomSellTabBarButton {...props} />,
+        }}
+      />
+
+      {/* 4. MY ADS TAB (Clipboard icon matching reference) */}
+      <Tab.Screen 
+        name="MyAdsTab" 
+        component={MyAdsScreen}
+        options={{ 
+          title: 'My Ads',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Icon source={focused ? "clipboard-text" : "clipboard-text-outline"} color={color} size={23} />
+          )
+        }}
+      />
+
+      {/* 5. PROFILE TAB */}
       <Tab.Screen 
         name="ProfileTab" 
         component={ProfileScreen}
@@ -145,34 +140,36 @@ function TabNavigator() {
 
 const tabStyles = StyleSheet.create({
   customSellButtonTouch: {
-    top: -16,
+    top: -18,
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
   },
   sellButtonCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#1565FF',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#0066FF',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#1565FF',
+    shadowColor: '#0066FF',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
     elevation: 8,
     borderWidth: 3,
     borderColor: '#FFFFFF',
   },
   sellButtonCircleFocused: {
-    backgroundColor: '#0D47A1',
+    backgroundColor: '#0052CC',
     transform: [{ scale: 1.05 }],
   },
   sellButtonLabel: {
     fontSize: 11,
     fontWeight: '800',
+    color: '#0066FF',
     marginTop: 2,
+    letterSpacing: 0.5,
   },
 });
 

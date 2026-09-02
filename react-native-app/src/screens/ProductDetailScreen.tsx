@@ -18,8 +18,9 @@ import {
 } from '../services/location';
 
 export default function ProductDetailScreen({ route, navigation, user: initialUser }: any) {
-  const { part: initialPart } = route.params || {};
-  const [part, setPart] = useState<any>(initialPart);
+  const { part: initialPart, partId: routePartId } = route.params || {};
+  const [part, setPart] = useState<any>(initialPart || null);
+  const [loadingDoc, setLoadingDoc] = useState<boolean>(!initialPart && Boolean(routePartId));
   const [userCoords, setUserCoords] = useState<LocationCoords | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
@@ -40,31 +41,55 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
   }, []);
 
   useEffect(() => {
-    if (initialPart?.id) {
+    const targetId = initialPart?.id || routePartId;
+    if (!targetId) {
+      setLoadingDoc(false);
+      return;
+    }
+
+    if (initialPart) {
       setPart(initialPart);
       addRecentlyViewedPart(initialPart);
-      
-      let unsub = () => {};
-      try {
-        const db = getFirebaseFirestore();
-        if (db && typeof db.collection === 'function') {
-          unsub = db.collection('spareParts').doc(initialPart.id).onSnapshot((docSnap: any) => {
-            const isExisting = typeof docSnap?.exists === 'function' ? docSnap.exists() : Boolean(docSnap?.exists);
-            if (isExisting) {
-              setPart({ id: docSnap.id, ...docSnap.data() });
-            }
-          }, (err: any) => {
-            console.warn('[ProductDetailScreen] Realtime sync error:', err);
-          });
-        }
-      } catch (e) {
-        console.warn('[ProductDetailScreen] Realtime sync setup error:', e);
-      }
-      return () => {
-        try { unsub(); } catch (_) {}
-      };
     }
-  }, [initialPart?.id]);
+
+    let unsub = () => {};
+    try {
+      const db = getFirebaseFirestore();
+      if (db && typeof db.collection === 'function') {
+        unsub = db.collection('spareParts').doc(targetId).onSnapshot((docSnap: any) => {
+          const isExisting = typeof docSnap?.exists === 'function' ? docSnap.exists() : Boolean(docSnap?.exists);
+          if (isExisting) {
+            const data = { id: docSnap.id, ...docSnap.data() };
+            setPart(data);
+            addRecentlyViewedPart(data);
+          }
+          setLoadingDoc(false);
+        }, (err: any) => {
+          console.warn('[ProductDetailScreen] Realtime sync error:', err);
+          setLoadingDoc(false);
+        });
+      } else {
+        setLoadingDoc(false);
+      }
+    } catch (e) {
+      console.warn('[ProductDetailScreen] Realtime sync setup error:', e);
+      setLoadingDoc(false);
+    }
+    return () => {
+      try { unsub(); } catch (_) {}
+    };
+  }, [initialPart?.id, routePartId]);
+
+  if (loadingDoc) {
+    return (
+      <View style={[styles.errorContainer, { backgroundColor: '#FFFFFF' }]}>
+        <ActivityIndicator size="large" color="#1565FF" />
+        <Text variant="bodyMedium" style={{ marginTop: 12, color: '#64748B' }}>
+          Loading part details...
+        </Text>
+      </View>
+    );
+  }
 
   if (!part) {
     return (

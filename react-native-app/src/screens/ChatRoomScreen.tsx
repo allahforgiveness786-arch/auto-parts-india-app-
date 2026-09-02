@@ -135,6 +135,14 @@ export default function ChatRoomScreen({ route, navigation, user: initialUser }:
               } catch (_) {}
             }
           });
+
+          // Reset unread count on the chat document for current user
+          try {
+            db.collection('chats').doc(chatId).set({
+              unreadCount: { [currentUid]: 0 },
+              unread: false,
+            }, { merge: true });
+          } catch (_) {}
         },
         (err: any) => {
           console.warn('[ChatRoomScreen] Messages snapshot error:', err);

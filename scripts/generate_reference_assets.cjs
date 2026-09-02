@@ -43,35 +43,28 @@ async function saveSvgToPng(svgString, baseName, width, height, androidDrawableN
 // 1. BRAND LOGOS (Transparent, Pristine)
 // ==========================================
 
-// Maruti Suzuki: The iconic bold sharp 'S'
+// Maruti Suzuki: The iconic OEM sharp 'S' emblem
 const svgMarutiSuzuki = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
-    <linearGradient id="suzukiGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1E293B"/>
-      <stop offset="50%" stop-color="#334155"/>
-      <stop offset="100%" stop-color="#0F172A"/>
+    <linearGradient id="suzukiRedGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EF4444"/>
+      <stop offset="50%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#991B1B"/>
     </linearGradient>
-    <linearGradient id="redAccent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#E11D48"/>
-      <stop offset="100%" stop-color="#BE123C"/>
-    </linearGradient>
+    <filter id="suzukiShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
   </defs>
-  <!-- Authentic Suzuki S symbol -->
-  <g transform="translate(15, 10)">
-    <!-- Top arm -->
-    <path d="M 125 15 L 60 85 L 85 85 L 145 25 Z" fill="#DC2626"/>
-    <!-- Center diagonal -->
-    <path d="M 45 35 L 140 35 L 120 55 L 65 55 Z" fill="url(#suzukiGrad)"/>
-    <path d="M 30 85 L 140 85 L 125 100 L 45 100 Z" fill="url(#suzukiGrad)"/>
-    <!-- Bottom arm -->
-    <path d="M 25 155 L 90 85 L 65 85 L 5 145 Z" fill="#DC2626"/>
-    <path d="M 10 125 L 120 125 L 105 145 L 25 145 Z" fill="url(#suzukiGrad)"/>
-    
-    <!-- Clean geometric S shape matching OEM emblem -->
-    <path d="M 40 40 L 135 40 L 95 80 L 135 80 L 110 140 L 35 140 L 75 100 L 35 100 Z" fill="url(#suzukiGrad)" opacity="0.95"/>
-    <path d="M 45 42 L 130 42 L 95 78 L 130 78 L 108 138 L 40 138 L 75 102 L 40 102 Z" fill="#1E293B"/>
-    <path d="M 115 48 L 128 48 L 98 78 L 85 78 Z" fill="#E2E8F0"/>
+  <g filter="url(#suzukiShadow)">
+    <!-- Exact mathematical OEM Suzuki Red S -->
+    <path d="M 98 36 L 154 36 L 106 84 L 148 84 L 102 164 L 46 164 L 94 116 L 52 116 Z" fill="url(#suzukiRedGrad)"/>
+    <!-- Top Chrome highlight edge -->
+    <path d="M 98 36 L 154 36 L 146 44 L 102 44 Z" fill="#FFFFFF" opacity="0.6"/>
+    <!-- Central bevel reflection -->
+    <path d="M 106 84 L 148 84 L 140 92 L 98 92 Z" fill="#FCA5A5" opacity="0.7"/>
+    <!-- Bottom base shadow -->
+    <path d="M 46 164 L 102 164 L 96 156 L 54 156 Z" fill="#7F1D1D" opacity="0.8"/>
   </g>
 </svg>
 `;
@@ -308,10 +301,19 @@ const svgCatBody = `
 </svg>
 `;
 
-// Category 3: Electricals (3D Gold Faceted Lightning Bolt)
+// Category 3: Electricals (3D Automotive Battery + Golden Electric Spark)
 const svgCatElectricals = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
+    <linearGradient id="batteryBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="60%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="batteryTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
     <linearGradient id="goldFront" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#FEF08A"/>
       <stop offset="40%" stop-color="#FACC15"/>
@@ -322,31 +324,49 @@ const svgCatElectricals = `
       <stop offset="50%" stop-color="#A16207"/>
       <stop offset="100%" stop-color="#713F12"/>
     </linearGradient>
-    <linearGradient id="goldHighlight" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#FEF08A"/>
-    </linearGradient>
     <filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#EAB308" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#EAB308" flood-opacity="0.6"/>
+    </filter>
+    <filter id="batteryShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="12" stdDeviation="10" flood-color="#000000" flood-opacity="0.3"/>
     </filter>
   </defs>
 
-  <g filter="url(#goldGlow)" transform="translate(32, 16)">
-    <!-- 3D Extrusion Side Wall (Depth) -->
-    <polygon points="120,15 138,28 88,118 70,105" fill="url(#goldSide)"/>
-    <polygon points="88,118 70,105 110,105 128,118" fill="#713F12"/>
-    <polygon points="128,118 110,105 50,215 68,228" fill="url(#goldSide)"/>
+  <g filter="url(#batteryShadow)" transform="translate(18, 14)">
+    <!-- 3D Heavy Duty Automotive 12V Battery -->
+    <!-- Battery Top Cover -->
+    <polygon points="35,110 115,70 195,105 115,145" fill="url(#batteryTop)"/>
+    <!-- Battery Front Face -->
+    <polygon points="35,110 115,145 115,215 35,180" fill="url(#batteryBody)"/>
+    <!-- Battery Side Face -->
+    <polygon points="115,145 195,105 195,175 115,215" fill="#0F172A"/>
+    
+    <!-- Red Positive (+) Terminal Post -->
+    <ellipse cx="65" cy="100" rx="10" ry="5" fill="#DC2626"/>
+    <rect x="57" y="90" width="16" height="10" rx="2" fill="#EF4444"/>
+    <ellipse cx="65" cy="90" rx="8" ry="4" fill="#FCA5A5"/>
+    <!-- Red Terminal Lead Wire -->
+    <path d="M 65 90 C 65 72, 42 72, 38 85" stroke="#EF4444" stroke-width="4" fill="none" stroke-linecap="round"/>
 
-    <!-- Main Front Lightning Facet -->
-    <polygon points="120,15 50,115 105,115 45,225 155,95 95,95" fill="url(#goldFront)"/>
+    <!-- Black/Blue Negative (-) Terminal Post -->
+    <ellipse cx="165" cy="95" rx="10" ry="5" fill="#1D4ED8"/>
+    <rect x="157" y="85" width="16" height="10" rx="2" fill="#2563EB"/>
+    <ellipse cx="165" cy="85" rx="8" ry="4" fill="#93C5FD"/>
+    <!-- Blue Terminal Lead Wire -->
+    <path d="M 165 85 C 165 68, 188 68, 192 80" stroke="#3B82F6" stroke-width="4" fill="none" stroke-linecap="round"/>
 
-    <!-- Inner Specular Crest (Beveled light reflection) -->
-    <polygon points="115,25 60,110 100,110 55,215 75,175 100,120 75,120 135,100" fill="url(#goldHighlight)" opacity="0.6"/>
+    <!-- Battery Top Cell Caps -->
+    <ellipse cx="90" cy="112" rx="7" ry="3.5" fill="#334155"/>
+    <ellipse cx="115" cy="122" rx="7" ry="3.5" fill="#334155"/>
+    <ellipse cx="140" cy="112" rx="7" ry="3.5" fill="#334155"/>
 
-    <!-- Energy Sparkle Star at Top Tip -->
-    <circle cx="120" cy="18" r="4" fill="#FFFFFF"/>
-    <line x1="120" y1="8" x2="120" y2="28" stroke="#FFFFFF" stroke-width="2"/>
-    <line x1="110" y1="18" x2="130" y2="18" stroke="#FFFFFF" stroke-width="2"/>
+    <!-- 3D Energetic Electric Spark / Lightning in Front -->
+    <g filter="url(#goldGlow)" transform="translate(60, 15) scale(0.8)">
+      <polygon points="85,5 20,95 65,95 10,185 105,75 55,75" fill="url(#goldFront)"/>
+      <circle cx="85" cy="8" r="4" fill="#FFFFFF"/>
+      <line x1="85" y1="0" x2="85" y2="16" stroke="#FFFFFF" stroke-width="2"/>
+      <line x1="77" y1="8" x2="93" y2="8" stroke="#FFFFFF" stroke-width="2"/>
+    </g>
   </g>
 </svg>
 `;
@@ -481,7 +501,168 @@ const svgCatExhaust = `
 </svg>
 `;
 
-// Category 6: More (3D Royal Blue 4-Square Apps Grid with depth)
+// Category 6: Brakes (3D Ventilated Disc Brake Rotor with High-Gloss Racing Red Brembo Caliper)
+const svgCatBrakes = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="brakeRotorFace" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="35%" stop-color="#E2E8F0"/>
+      <stop offset="70%" stop-color="#94A3B8"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+    <linearGradient id="brakeRotorEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="caliperRed" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF3838"/>
+      <stop offset="40%" stop-color="#E11D48"/>
+      <stop offset="80%" stop-color="#BE123C"/>
+      <stop offset="100%" stop-color="#881337"/>
+    </linearGradient>
+    <filter id="brakeShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="12" stdDeviation="10" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <g filter="url(#brakeShadow)" transform="translate(18, 16)">
+    <!-- 3D Disc Rotor -->
+    <ellipse cx="110" cy="116" rx="90" ry="90" fill="url(#brakeRotorEdge)"/>
+    <circle cx="110" cy="110" r="88" fill="url(#brakeRotorFace)"/>
+    <circle cx="110" cy="110" r="82" fill="none" stroke="#CBD5E1" stroke-width="1.5"/>
+    <circle cx="110" cy="110" r="54" fill="none" stroke="#64748B" stroke-width="1"/>
+    
+    <!-- Cross-drilled cooling holes -->
+    <circle cx="90" cy="45" r="2.5" fill="#1E293B"/>
+    <circle cx="95" cy="50" r="2.5" fill="#1E293B"/>
+    <circle cx="100" cy="55" r="2.5" fill="#1E293B"/>
+    <circle cx="65" cy="75" r="2.5" fill="#1E293B"/>
+    <circle cx="72" cy="82" r="2.5" fill="#1E293B"/>
+    <circle cx="80" cy="88" r="2.5" fill="#1E293B"/>
+    <circle cx="45" cy="120" r="2.5" fill="#1E293B"/>
+    <circle cx="53" cy="125" r="2.5" fill="#1E293B"/>
+    <circle cx="62" cy="130" r="2.5" fill="#1E293B"/>
+    <circle cx="65" cy="160" r="2.5" fill="#1E293B"/>
+    <circle cx="75" cy="165" r="2.5" fill="#1E293B"/>
+    <circle cx="85" cy="168" r="2.5" fill="#1E293B"/>
+    <circle cx="110" cy="180" r="2.5" fill="#1E293B"/>
+    <circle cx="120" cy="180" r="2.5" fill="#1E293B"/>
+    <circle cx="130" cy="178" r="2.5" fill="#1E293B"/>
+    <circle cx="155" cy="165" r="2.5" fill="#1E293B"/>
+    <circle cx="163" cy="158" r="2.5" fill="#1E293B"/>
+    <circle cx="170" cy="150" r="2.5" fill="#1E293B"/>
+
+    <!-- Slotted curved grooves on friction band -->
+    <path d="M 125 35 Q 115 50 120 62" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M 52 95 Q 68 98 75 110" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M 75 170 Q 90 160 100 165" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M 165 130 Q 155 142 145 140" stroke="#475569" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <!-- Center Aluminum Hat / Hub -->
+    <circle cx="110" cy="110" r="42" fill="#1E293B"/>
+    <circle cx="110" cy="110" r="38" fill="#334155"/>
+    <circle cx="110" cy="110" r="18" fill="#0F172A"/>
+    <!-- 5 Chrome Wheel Stud Lug Holes -->
+    <circle cx="110" cy="86" r="4.5" fill="#E2E8F0"/>
+    <circle cx="110" cy="86" r="2.5" fill="#0F172A"/>
+    <circle cx="131" cy="100" r="4.5" fill="#E2E8F0"/>
+    <circle cx="131" cy="100" r="2.5" fill="#0F172A"/>
+    <circle cx="123" cy="126" r="4.5" fill="#E2E8F0"/>
+    <circle cx="123" cy="126" r="2.5" fill="#0F172A"/>
+    <circle cx="97" cy="126" r="4.5" fill="#E2E8F0"/>
+    <circle cx="97" cy="126" r="2.5" fill="#0F172A"/>
+    <circle cx="89" cy="100" r="4.5" fill="#E2E8F0"/>
+    <circle cx="89" cy="100" r="2.5" fill="#0F172A"/>
+
+    <!-- High-Performance Racing Red Caliper (Top-Right mount) -->
+    <g transform="translate(130, 20)">
+      <path d="M 5 20 C 15 5, 55 15, 75 45 C 85 60, 75 95, 60 105 C 45 95, 30 70, 25 50 Z" fill="#4C0519"/>
+      <path d="M 8 18 C 18 3, 58 12, 78 42 C 86 58, 76 92, 62 102 C 48 92, 33 68, 28 48 Z" fill="url(#caliperRed)"/>
+      <path d="M 16 18 C 30 12, 60 22, 72 45" stroke="#FFA4B4" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <rect x="22" y="5" width="6" height="10" rx="2" fill="#CBD5E1"/>
+      <circle cx="25" cy="5" r="2.5" fill="#94A3B8"/>
+      <circle cx="50" cy="45" r="10" fill="#BE123C" opacity="0.6"/>
+      <circle cx="58" cy="72" r="10" fill="#BE123C" opacity="0.6"/>
+      <rect x="36" y="54" width="22" height="4" rx="2" fill="#FFFFFF" transform="rotate(35, 47, 56)"/>
+    </g>
+  </g>
+</svg>
+`;
+
+// Category 7: Filters (3D Automotive Pleated Air/Oil Filter with rubber flanges)
+const svgCatFilters = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="filterOrange" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#EA580C"/>
+      <stop offset="35%" stop-color="#F97316"/>
+      <stop offset="70%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+    <linearGradient id="rubberEndCap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="40%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="chromeClamp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#94A3B8"/>
+      <stop offset="50%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+    <filter id="filterDrop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="12" stdDeviation="10" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#filterDrop)" transform="translate(42, 22) rotate(15, 85, 105)">
+    <!-- Top Rubber Flange & Neck Collar -->
+    <ellipse cx="85" cy="22" rx="38" ry="14" fill="#0F172A"/>
+    <ellipse cx="85" cy="20" rx="36" ry="12" fill="#1E293B"/>
+    <ellipse cx="85" cy="20" rx="26" ry="9" fill="#020617"/>
+    
+    <!-- Chrome Hose Clamp Band -->
+    <ellipse cx="85" cy="30" rx="40" ry="13" fill="none" stroke="url(#chromeClamp)" stroke-width="6"/>
+    <rect x="115" y="24" width="10" height="7" rx="2" fill="#E2E8F0"/>
+    
+    <!-- Top Rubber Molded Flange Base -->
+    <path d="M 35 38 C 35 38, 85 52, 135 38 L 138 48 C 138 48, 85 62, 32 48 Z" fill="url(#rubberEndCap)"/>
+
+    <!-- Pleated Filter Paper Body -->
+    <path d="M 35 44 L 20 160 C 20 176, 150 176, 150 160 L 135 44 Z" fill="url(#filterOrange)"/>
+
+    <!-- Accordion Pleat Ridges -->
+    <line x1="42" y1="46" x2="30" y2="162" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="44" y1="46" x2="32" y2="162" stroke="#FDBA74" stroke-width="1.5"/>
+    <line x1="53" y1="48" x2="44" y2="165" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="55" y1="48" x2="46" y2="165" stroke="#FDBA74" stroke-width="1.5"/>
+    <line x1="65" y1="49" x2="58" y2="168" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="67" y1="49" x2="60" y2="168" stroke="#FED7AA" stroke-width="1.5"/>
+    <line x1="77" y1="50" x2="73" y2="170" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="79" y1="50" x2="75" y2="170" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8"/>
+    <line x1="89" y1="50" x2="88" y2="170" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="91" y1="50" x2="90" y2="170" stroke="#FED7AA" stroke-width="1.5"/>
+    <line x1="101" y1="49" x2="103" y2="168" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="103" y1="49" x2="105" y2="168" stroke="#FDBA74" stroke-width="1.5"/>
+    <line x1="113" y1="48" x2="118" y2="165" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="115" y1="48" x2="120" y2="165" stroke="#FDBA74" stroke-width="1.5"/>
+    <line x1="124" y1="46" x2="132" y2="162" stroke="#9A3412" stroke-width="2.5"/>
+    <line x1="126" y1="46" x2="134" y2="162" stroke="#FDBA74" stroke-width="1.5"/>
+
+    <!-- Stainless Mesh Grid overlay -->
+    <path d="M 28 75 Q 85 92 142 75" stroke="#FFFFFF" stroke-width="1" fill="none" opacity="0.4" stroke-dasharray="3,3"/>
+    <path d="M 24 115 Q 85 132 146 115" stroke="#FFFFFF" stroke-width="1" fill="none" opacity="0.4" stroke-dasharray="3,3"/>
+    <path d="M 21 145 Q 85 162 149 145" stroke="#FFFFFF" stroke-width="1" fill="none" opacity="0.4" stroke-dasharray="3,3"/>
+
+    <!-- Bottom Molded Rubber End Cap -->
+    <ellipse cx="85" cy="162" rx="66" ry="18" fill="#0F172A"/>
+    <ellipse cx="85" cy="159" rx="64" ry="16" fill="url(#rubberEndCap)"/>
+    <ellipse cx="85" cy="157" rx="56" ry="13" fill="#1E293B"/>
+    <circle cx="85" cy="157" r="4" fill="#334155"/>
+  </g>
+</svg>
+`;
+
+// Category 8: More (3D Royal Blue 4-Square Apps Grid with depth)
 const svgCatMore = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
@@ -672,6 +853,8 @@ async function run() {
   await saveSvgToPng(svgCatElectricals, 'categories/electricals', 256, 256, 'cat_electricals');
   await saveSvgToPng(svgCatSuspension, 'categories/suspension', 256, 256, 'cat_suspension');
   await saveSvgToPng(svgCatExhaust, 'categories/exhaust', 256, 256, 'cat_exhaust');
+  await saveSvgToPng(svgCatBrakes, 'categories/brakes', 256, 256, 'cat_brakes');
+  await saveSvgToPng(svgCatFilters, 'categories/filters', 256, 256, 'cat_filters');
   await saveSvgToPng(svgCatMore, 'categories/more', 256, 256, 'cat_more');
 
   // 3. Hero Banner Right Art (500x380)
