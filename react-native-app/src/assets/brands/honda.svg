@@ -1,15 +1,13 @@
-
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="hondaGrad" x1="0" y1="0" x2="256" y2="256">
-      <stop offset="0%" stop-color="#DC2626"/>
-      <stop offset="100%" stop-color="#991B1B"/>
+    <linearGradient id="hondaRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EF4444" />
+      <stop offset="50%" stop-color="#E40521" />
+      <stop offset="100%" stop-color="#991B1B" />
     </linearGradient>
   </defs>
-  <g>
-    <!-- Outer Rounded Trapezoid -->
-    <path d="M 40,56 L 216,56 C 224,56 230,62 228,70 L 206,196 C 204,204 198,208 190,208 L 66,208 C 58,208 52,204 50,196 L 28,70 C 26,62 32,56 40,56 Z M 52,72 L 68,192 L 188,192 L 204,72 Z" fill="#DC2626"/>
-    <!-- Bold 'H' with curved flares -->
-    <path d="M 76,82 L 96,82 L 98,122 L 158,122 L 160,82 L 180,82 L 168,182 L 148,182 L 150,138 L 106,138 L 108,182 L 88,182 Z" fill="#DC2626"/>
+  <g transform="translate(10, 10) scale(0.9)">
+    <path d="M 34 26 L 166 26 C 178 26 186 36 182 50 L 162 166 C 158 178 148 184 138 184 L 62 184 C 52 184 42 178 38 166 L 18 50 C 14 36 22 26 34 26 Z" fill="none" stroke="url(#hondaRedGrad)" stroke-width="9" />
+    <path d="M 48 40 L 66 40 L 76 104 L 124 104 L 134 40 L 152 40 L 140 168 L 122 168 L 126 122 L 74 122 L 78 168 L 60 168 Z" fill="url(#hondaRedGrad)" />
   </g>
 </svg>

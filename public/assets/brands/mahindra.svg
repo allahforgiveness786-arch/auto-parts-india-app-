@@ -1,25 +1,21 @@
 <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="mahindraChrome" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E2E8F0" />
-      <stop offset="30%" stop-color="#94A3B8" />
-      <stop offset="70%" stop-color="#475569" />
-      <stop offset="100%" stop-color="#1E293B" />
-    </linearGradient>
-    <linearGradient id="mahindraRed" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="mahLGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#DC2626" />
-      <stop offset="100%" stop-color="#991B1B" />
+      <stop offset="40%" stop-color="#991B1B" />
+      <stop offset="100%" stop-color="#450A0A" />
+    </linearGradient>
+    <linearGradient id="mahChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E2E8F0" />
+      <stop offset="50%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#475569" />
     </linearGradient>
   </defs>
-  <!-- Official Mahindra Twin Peaks Chrome Badge -->
-  <g transform="translate(15, 20) scale(0.85)">
-    <!-- Left Wing Peak -->
-    <path d="M 28 140 L 76 36 C 80 28 90 28 94 36 L 108 72 L 84 124 C 80 134 68 144 56 144 Z" fill="url(#mahindraRed)"/>
-    <!-- Right Wing Peak -->
-    <path d="M 172 140 L 124 36 C 120 28 110 28 106 36 L 92 72 L 116 124 C 120 134 132 144 144 144 Z" fill="url(#mahindraRed)"/>
-    <!-- Center Fold -->
-    <path d="M 94 48 L 100 36 L 106 48 L 100 84 Z" fill="#7F1D1D"/>
-    <!-- Base Bottom Connecting Arc -->
-    <path d="M 46 156 C 80 172 120 172 154 156 C 136 164 64 164 46 156 Z" fill="url(#mahindraRed)"/>
+  <g transform="translate(10, 15) scale(0.9)">
+    <path d="M 96 118 L 34 150 C 32 140, 38 100, 60 46 C 64 36, 72 36, 76 46 L 96 102 Z" fill="url(#mahLGrad)" />
+    <path d="M 76 46 L 96 102 L 96 68 L 76 46 Z" fill="url(#mahChrome)" />
+    <path d="M 104 118 L 166 150 C 168 140, 162 100, 140 46 C 136 36, 128 36, 124 46 L 104 102 Z" fill="url(#mahLGrad)" />
+    <path d="M 124 46 L 104 102 L 104 68 L 124 46 Z" fill="url(#mahChrome)" />
+    <path d="M 96 122 L 100 136 L 104 122 L 100 106 Z" fill="#EF4444" />
   </g>
 </svg>

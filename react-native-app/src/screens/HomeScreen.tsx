@@ -661,11 +661,25 @@ export default function HomeScreen({ navigation, route, user }: any) {
     };
   }, []);
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      const db = getFirebaseFirestore();
+      if (db && typeof db.collection === 'function') {
+        const snap = await db.collection('spareParts').orderBy('createdAt', 'desc').get();
+        const list: any[] = [];
+        snap.forEach((doc: any) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        if (list.length > 0) {
+          setParts(list);
+        }
+      }
+    } catch (refreshErr) {
+      console.warn('Refresh error:', refreshErr);
+    } finally {
       setRefreshing(false);
-    }, 1000);
+    }
   };
 
   const strictFilteredParts = parts.filter((part) => {

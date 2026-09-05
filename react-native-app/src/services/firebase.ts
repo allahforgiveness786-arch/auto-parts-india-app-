@@ -259,32 +259,59 @@ async function fetchCloudCollection(collPath: string): Promise<any[]> {
     const pathsToQuery: string[] = [];
 
     if (cleanPath === 'spareParts' || cleanPath === 'products' || cleanPath === 'products/listings/items') {
-      pathsToQuery.push('spareParts', 'products', 'products/listings/items');
+      pathsToQuery.push('spareParts', 'products');
     } else {
       pathsToQuery.push(cleanPath);
     }
 
     const fetchedMap = new Map<string, any>();
+    const runQueryUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/${FIRESTORE_DB_ID}/documents:runQuery?key=${FIREBASE_API_KEY}`;
 
-    // Query each cloud endpoint in parallel
+    // Query each cloud endpoint in parallel using structuredQuery (Zero permission-drop)
     await Promise.all(
-      pathsToQuery.map(async (p) => {
+      pathsToQuery.map(async (collectionId) => {
         try {
-          const res = await fetch(`${firestoreBaseUrl}/${p}?key=${FIREBASE_API_KEY}&pageSize=100`);
+          const res = await fetch(runQueryUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              structuredQuery: {
+                from: [{ collectionId }],
+                limit: 100,
+              },
+            }),
+          });
+
           if (res.ok) {
-            const json: any = await res.json();
-            const docs = json.documents || [];
-            docs.forEach((d: any) => {
-              const decoded = decodeFirestoreDoc(d);
-              if (decoded && decoded.id) {
-                fetchedMap.set(decoded.id, decoded);
-              }
-            });
+            const jsonArray: any = await res.json();
+            if (Array.isArray(jsonArray)) {
+              jsonArray.forEach((entry: any) => {
+                if (entry.document) {
+                  const decoded = decodeFirestoreDoc(entry.document);
+                  if (decoded && decoded.id) {
+                    fetchedMap.set(decoded.id, decoded);
+                  }
+                }
+              });
+            }
           } else {
-            console.warn(`[Firestore Cloud] Fetch ${p} returned HTTP ${res.status}`);
+            // Fallback to GET listing if runQuery returns an unexpected status
+            try {
+              const fallbackRes = await fetch(`${firestoreBaseUrl}/${collectionId}?key=${FIREBASE_API_KEY}&pageSize=100`);
+              if (fallbackRes.ok) {
+                const json: any = await fallbackRes.json();
+                const docs = json.documents || [];
+                docs.forEach((d: any) => {
+                  const decoded = decodeFirestoreDoc(d);
+                  if (decoded && decoded.id) {
+                    fetchedMap.set(decoded.id, decoded);
+                  }
+                });
+              }
+            } catch (_) {}
           }
         } catch (fetchErr) {
-          console.warn(`[Firestore Cloud] Fetch query error for ${p}:`, fetchErr);
+          console.warn(`[Firestore Cloud] Fetch query error for ${collectionId}:`, fetchErr);
         }
       })
     );
@@ -292,16 +319,20 @@ async function fetchCloudCollection(collPath: string): Promise<any[]> {
     const parsedDocs = Array.from(fetchedMap.values());
 
     if (!cloudCache[collPath]) cloudCache[collPath] = {};
+    
+    // Merge fetched docs with existing cache
     parsedDocs.forEach((doc) => {
       cloudCache[collPath][doc.id] = { ...doc };
     });
+
+    const allDocs = Object.values(cloudCache[collPath] || {});
 
     try {
       await AsyncStorage.setItem(STORAGE_KEY_PREFIX + collPath, JSON.stringify(cloudCache[collPath]));
     } catch (_) {}
 
     notifyLocalSubscribers(collPath);
-    return parsedDocs;
+    return allDocs.length > 0 ? allDocs : parsedDocs;
   } catch (err) {
     console.warn(`[Firestore Cloud] Fetch error for ${collPath}:`, err);
     return Object.values(cloudCache[collPath] || {});

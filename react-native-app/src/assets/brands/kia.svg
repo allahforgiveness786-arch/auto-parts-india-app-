@@ -1,12 +1,13 @@
-
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <!-- Continuous KIA ribbon logo -->
-    <path d="
-      M 32,168 L 56,88 L 76,88 L 60,140 L 98,88 L 120,88 L 94,122 L 126,168 L 102,168 L 78,132 L 68,146 L 62,168 Z
-      M 130,88 L 150,88 L 150,168 L 130,168 Z
-      M 160,168 L 184,88 L 204,88 L 228,168 L 206,168 L 200,146 L 182,146 L 176,168 Z
-      M 186,130 L 196,130 L 191,108 Z
-    " fill="#0F172A"/>
+<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="kiaDarkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(10, 30) scale(0.9)">
+    <path d="M 18 136 L 18 64 L 40 64 L 72 112 L 72 64 L 92 64 L 92 136 L 72 136 L 40 88 L 40 136 Z" fill="url(#kiaDarkGrad)" />
+    <path d="M 92 64 L 114 64 L 136 136 L 116 136 L 110 116 L 92 116 Z" fill="url(#kiaDarkGrad)" />
+    <path d="M 114 64 L 138 64 L 182 136 L 160 136 L 150 114 L 128 114 Z" fill="url(#kiaDarkGrad)" />
   </g>
 </svg>

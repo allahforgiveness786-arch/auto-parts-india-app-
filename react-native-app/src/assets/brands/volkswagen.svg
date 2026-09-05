@@ -1,11 +1,14 @@
-
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="128" cy="128" r="100" fill="#001E50"/>
-  <circle cx="128" cy="128" r="92" stroke="#FFFFFF" stroke-width="8" fill="none"/>
-  <!-- V -->
-  <path d="M 72,74 L 108,138 L 124,138 L 90,74 Z M 184,74 L 148,138 L 132,138 L 166,74 Z" fill="#FFFFFF"/>
-  <path d="M 112,74 L 128,102 L 144,74 Z" fill="#FFFFFF"/>
-  <!-- W -->
-  <path d="M 80,122 L 108,182 L 122,182 L 94,122 Z M 176,122 L 148,182 L 134,182 L 162,122 Z" fill="#FFFFFF"/>
-  <path d="M 120,132 L 128,150 L 136,132 Z" fill="#FFFFFF"/>
+<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vwBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#002D72" />
+      <stop offset="50%" stop-color="#001E50" />
+      <stop offset="100%" stop-color="#000E26" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(10, 10) scale(0.9)">
+    <circle cx="100" cy="100" r="88" fill="none" stroke="url(#vwBlueGrad)" stroke-width="10" />
+    <path d="M 52 46 L 94 124 L 106 124 L 148 46 L 134 46 L 100 110 L 66 46 Z" fill="url(#vwBlueGrad)" />
+    <path d="M 38 84 L 72 154 L 84 154 L 100 122 L 116 154 L 128 154 L 162 84 L 148 84 L 122 138 L 106 106 L 94 106 L 78 138 L 52 84 Z" fill="url(#vwBlueGrad)" />
+  </g>
 </svg>

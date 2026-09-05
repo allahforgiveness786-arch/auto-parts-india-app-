@@ -1,17 +1,14 @@
 <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="vwBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#001E50" />
-      <stop offset="100%" stop-color="#000F29" />
+    <linearGradient id="vwBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#002D72" />
+      <stop offset="50%" stop-color="#001E50" />
+      <stop offset="100%" stop-color="#000E26" />
     </linearGradient>
   </defs>
-  <!-- Official Modern Volkswagen Roundel Emblem -->
-  <g transform="translate(20, 20) scale(0.8)">
-    <!-- Outer Ring -->
-    <circle cx="100" cy="100" r="92" fill="none" stroke="url(#vwBlue)" stroke-width="12"/>
-    <!-- V Geometry -->
-    <path d="M 46 44 L 92 126 L 108 126 L 154 44 L 140 44 L 100 114 L 60 44 Z" fill="url(#vwBlue)"/>
-    <!-- W Geometry -->
-    <path d="M 28 88 L 68 156 L 82 156 L 100 120 L 118 156 L 132 156 L 172 88 L 158 88 L 126 144 L 108 108 L 92 108 L 74 144 L 42 88 Z" fill="url(#vwBlue)"/>
+  <g transform="translate(10, 10) scale(0.9)">
+    <circle cx="100" cy="100" r="88" fill="none" stroke="url(#vwBlueGrad)" stroke-width="10" />
+    <path d="M 52 46 L 94 124 L 106 124 L 148 46 L 134 46 L 100 110 L 66 46 Z" fill="url(#vwBlueGrad)" />
+    <path d="M 38 84 L 72 154 L 84 154 L 100 122 L 116 154 L 128 154 L 162 84 L 148 84 L 122 138 L 106 106 L 94 106 L 78 138 L 52 84 Z" fill="url(#vwBlueGrad)" />
   </g>
 </svg>

@@ -1,93 +1,68 @@
 <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Deep Professional Navy Gradient Background -->
-    <linearGradient id="shieldBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F1F38" />
-      <stop offset="50%" stop-color="#0A1526" />
-      <stop offset="100%" stop-color="#050B14" />
+    <linearGradient id="blueLogoBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0080FF" />
+      <stop offset="100%" stop-color="#0066E0" />
     </linearGradient>
-
-    <!-- Professional Royal Blue to Speed Cyan Border Rim -->
-    <linearGradient id="shieldRim" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="40%" stop-color="#0066FF" />
-      <stop offset="80%" stop-color="#003B95" />
-      <stop offset="100%" stop-color="#0284C7" />
-    </linearGradient>
-
-    <!-- Car Aerodynamic Stream Gradient -->
-    <linearGradient id="carStream" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="50%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#60A5FA" />
-    </linearGradient>
-
-    <!-- Gear & Wrench Steel Blue Gradient -->
-    <linearGradient id="gearGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="50%" stop-color="#0066FF" />
-      <stop offset="100%" stop-color="#003B95" />
-    </linearGradient>
-
-    <!-- Cyan Glow -->
-    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
 
-  <!-- 1. Hexagonal Rounded Outer Shield Container -->
-  <rect x="8" y="8" width="184" height="184" rx="42" fill="url(#shieldBg)" stroke="url(#shieldRim)" stroke-width="3.5" />
+  <!-- Rounded App Icon Background -->
+  <rect x="0" y="0" width="200" height="200" rx="44" fill="url(#blueLogoBg)" />
 
-  <!-- 2. Technical Precision Concentric Grid (Subtle) -->
-  <g opacity="0.25">
-    <circle cx="100" cy="100" r="76" fill="none" stroke="#38BDF8" stroke-width="1.2" stroke-dasharray="4 6" />
-    <circle cx="100" cy="100" r="58" fill="none" stroke="#1E293B" stroke-width="1" />
-    <line x1="100" y1="14" x2="100" y2="24" stroke="#38BDF8" stroke-width="2" />
-    <line x1="100" y1="176" x2="100" y2="186" stroke="#0066FF" stroke-width="2" />
-    <line x1="14" y1="100" x2="24" y2="100" stroke="#38BDF8" stroke-width="2" />
-    <line x1="176" y1="100" x2="186" y2="100" stroke="#0066FF" stroke-width="2" />
-  </g>
-
-  <!-- 3. The Core Automotive Symbol: Modern Car Silhouette + Minimal Gear & Wrench -->
-  <g transform="translate(10, 8)">
-    
-    <!-- (A) PRECISION GEAR & WRENCH (Spare Parts Element) -->
-    <!-- Central Mechanical Spur Gear in Rear/Drive Position -->
-    <g transform="translate(68, 108)" fill="url(#gearGrad)">
-      <!-- 8-Tooth Clean Spur Gear Outline -->
-      <path d="M -6,-28 L 6,-28 L 5,-22 C 8,-21 11,-19 14,-17 L 19,-20 L 27,-12 L 24,-7 C 26,-4 28,-1 29,2 L 35,3 L 35,15 L 29,16 C 28,19 26,22 24,25 L 27,30 L 19,38 L 14,35 C 11,37 8,39 5,40 L 6,46 L -6,46 L -5,40 C -8,39 -11,37 -14,35 L -19,38 L -27,30 L -24,25 C -26,22 -28,19 -29,16 L -35,15 L -35,3 L -29,2 C -28,-1 -26,-4 -24,-7 L -27,-12 L -19,-20 L -14,-17 C -11,-19 -8,-21 -5,-22 Z" opacity="0.95" />
-      
-      <!-- Center Gear Axle / Bearing -->
-      <circle cx="0" cy="9" r="14" fill="#0A1526" stroke="#38BDF8" stroke-width="2.5" />
-      <circle cx="0" cy="9" r="6" fill="#38BDF8" />
+  <g transform="translate(0, 16) scale(0.95)">
+    <!-- Gear in upper-right behind car -->
+    <g transform="translate(136, 68)">
+      <!-- Outer 8 Teeth -->
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" />
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" transform="rotate(45)" />
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" transform="rotate(90)" />
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" transform="rotate(135)" />
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" transform="rotate(180)" />
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" transform="rotate(225)" />
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" transform="rotate(270)" />
+      <rect x="-7" y="-46" width="14" height="12" rx="3" fill="#FFFFFF" transform="rotate(315)" />
+      <!-- Gear Ring -->
+      <circle cx="0" cy="0" r="38" fill="#FFFFFF" />
+      <!-- Gear Center Cutout Hole -->
+      <circle cx="0" cy="0" r="23" fill="#0077F6" />
     </g>
 
-    <!-- (B) PRECISION MINIMAL WRENCH HEAD (Integrated with Lower Ground-Effect Stream) -->
-    <g transform="translate(132, 117) rotate(35)">
-      <!-- Wrench Jaw & Shaft -->
-      <path d="M -16,-6 L -42,-6 C -44,-6 -46,-4 -46,-2 L -46,2 C -46,4 -44,6 -42,6 L -16,6 C -14,12 -8,16 0,16 C 9,16 16,9 16,0 C 16,-9 9,-16 0,-16 C -8,-16 -14,-12 -16,-6 Z M 0,-8 C 4.4,-8 8,-4.4 8,0 C 8,4.4 4.4,8 0,8 C -3,8 -5.6,6.3 -6.9,3.8 L 3,3.8 L 3,-3.8 L -6.9,-3.8 C -5.6,-6.3 -3,-8 0,-8 Z" fill="#60A5FA" opacity="0.9" />
-    </g>
+    <!-- Side Mirrors -->
+    <rect x="36" y="78" width="15" height="7" rx="3.5" fill="#FFFFFF" />
+    <rect x="159" y="78" width="15" height="7" rx="3.5" fill="#FFFFFF" />
 
-    <!-- (C) DYNAMIC MODERN CAR SILHOUETTE (Automobile Element) -->
-    <!-- Sweeping aerodynamic roofline & coupe silhouette -->
-    <!-- Fastback roof curve with windshield and hood line -->
-    <path d="M 22 104 C 32 94, 46 64, 76 52 C 102 42, 130 46, 154 78 C 160 86, 168 96, 172 104 C 174 108, 166 110, 158 108 C 138 104, 114 96, 86 96 C 58 96, 38 102, 22 104 Z" fill="url(#carStream)" filter="url(#cyanGlow)" />
-    
-    <!-- Top Speed Line / Windshield Pillar Arc -->
-    <path d="M 48 88 C 70 62, 106 56, 142 80" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" />
+    <!-- Car Outer Body Shell -->
+    <path
+      d="M 105 50 C 122 50, 138 56, 148 68 C 152 73, 156 78, 160 82 C 162 83, 166 88, 166 98 C 166 106, 162 112, 156 114 L 150 114 C 150 118, 148 121, 144 121 L 134 121 C 130 121, 128 118, 128 114 L 82 114 C 82 118, 80 121, 76 121 L 66 121 C 62 121, 60 118, 60 114 L 54 114 C 48 112, 44 106, 44 98 C 44 88, 48 83, 50 82 C 54 78, 58 73, 62 68 C 72 56, 88 50, 105 50 Z"
+      fill="#FFFFFF"
+    />
 
-    <!-- Side Windows Glass Inset -->
-    <!-- Front Quarter Window -->
-    <path d="M 80 78 L 94 62 C 108 60, 120 62, 128 76 Z" fill="#0A1526" stroke="#38BDF8" stroke-width="1.2" />
-    <!-- Rear Quarter Window -->
-    <path d="M 132 76 C 138 72, 144 74, 148 78 L 136 80 Z" fill="#0A1526" stroke="#38BDF8" stroke-width="1.2" />
+    <!-- Windshield Cutout -->
+    <path
+      d="M 105 56 C 120 56, 132 60, 138 67 C 141 71, 142 75, 144 79 C 144 81, 142 82, 139 82 L 71 82 C 68 82, 66 81, 66 79 C 68 75, 69 71, 72 67 C 78 60, 90 56, 105 56 Z"
+      fill="#0077F6"
+    />
 
-    <!-- Aerodynamic Headlight Beam -->
-    <path d="M 158 98 L 174 102 L 160 106 Z" fill="#38BDF8" opacity="0.95" />
+    <!-- Left Headlight Cutout -->
+    <path
+      d="M 53 90 C 57 87, 67 87, 72 90 C 73 92, 70 96, 66 97 C 59 98, 53 96, 53 90 Z"
+      fill="#0077F6"
+    />
 
-    <!-- Dynamic Ground Flow Base Lines -->
-    <path d="M 18 116 L 38 116" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" opacity="0.8" />
-    <path d="M 102 126 L 166 126" stroke="#0066FF" stroke-width="2.5" stroke-linecap="round" opacity="0.9" />
+    <!-- Right Headlight Cutout -->
+    <path
+      d="M 157 90 C 153 87, 143 87, 138 90 C 137 92, 140 96, 144 97 C 151 98, 157 96, 157 90 Z"
+      fill="#0077F6"
+    />
+
+    <!-- Center Lower Bumper Grille Cutout -->
+    <rect
+      x="83"
+      y="93"
+      width="44"
+      height="8"
+      rx="4"
+      fill="#0077F6"
+    />
   </g>
 </svg>

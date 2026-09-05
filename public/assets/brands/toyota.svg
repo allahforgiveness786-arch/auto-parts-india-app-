@@ -1,17 +1,14 @@
 <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="toyotaRed" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#EB0A1E" />
-      <stop offset="100%" stop-color="#D0081A" />
+    <linearGradient id="toyotaRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EF4444" />
+      <stop offset="50%" stop-color="#EB0A1E" />
+      <stop offset="100%" stop-color="#B91C1C" />
     </linearGradient>
   </defs>
-  <!-- Official Toyota Triple-Oval Geometric Logo -->
-  <g transform="translate(10, 30) scale(0.9)">
-    <!-- Outer Horizontal Oval -->
-    <path d="M 100 10 C 44 10 0 38 0 74 C 0 110 44 138 100 138 C 156 138 200 110 200 74 C 200 38 156 10 100 10 Z M 100 24 C 148 24 186 46 186 74 C 186 102 148 124 100 124 C 52 124 14 102 14 74 C 14 46 52 24 100 24 Z" fill="url(#toyotaRed)"/>
-    <!-- Inner Vertical Center Oval -->
-    <path d="M 100 32 C 84 32 72 50 72 74 C 72 98 84 116 100 116 C 116 116 128 98 128 74 C 128 50 116 32 100 32 Z M 100 44 C 108 44 114 58 114 74 C 114 90 108 104 100 104 C 92 104 86 90 86 74 C 86 58 92 44 100 44 Z" fill="url(#toyotaRed)"/>
-    <!-- Inner Top Horizontal Cross Oval -->
-    <path d="M 100 30 C 65 30 40 44 40 58 C 40 72 65 82 100 82 C 135 82 160 72 160 58 C 160 44 135 30 100 30 Z M 100 42 C 124 42 146 50 146 58 C 146 66 124 70 100 70 C 76 70 54 66 54 58 C 54 50 76 42 100 42 Z" fill="url(#toyotaRed)"/>
+  <g transform="translate(10, 15) scale(0.9)">
+    <ellipse cx="100" cy="95" rx="88" ry="60" fill="none" stroke="url(#toyotaRedGrad)" stroke-width="10" />
+    <ellipse cx="100" cy="95" rx="26" ry="46" fill="none" stroke="url(#toyotaRedGrad)" stroke-width="8" />
+    <ellipse cx="100" cy="74" rx="58" ry="22" fill="none" stroke="url(#toyotaRedGrad)" stroke-width="8" />
   </g>
 </svg>

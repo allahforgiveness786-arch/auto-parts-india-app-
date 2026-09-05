@@ -1,15 +1,13 @@
 <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="hondaRed" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E40521" />
-      <stop offset="100%" stop-color="#C00319" />
+    <linearGradient id="hondaRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EF4444" />
+      <stop offset="50%" stop-color="#E40521" />
+      <stop offset="100%" stop-color="#991B1B" />
     </linearGradient>
   </defs>
-  <!-- Official Honda Motor Emblem: Trapezoid Frame with 'H' Wings -->
-  <g transform="translate(20, 20) scale(0.8)">
-    <!-- Outer Trapezoidal Border -->
-    <path d="M 24 16 L 176 16 C 188 16 196 26 192 38 L 168 168 C 166 178 158 184 148 184 L 52 184 C 42 184 34 178 32 168 L 8 38 C 4 26 12 16 24 16 Z M 38 32 L 22 162 C 21 166 24 168 28 168 L 132 168 C 136 168 139 166 138 162 L 122 32 C 121 28 118 26 114 26 L 46 26 C 42 26 39 28 38 32 Z" fill="url(#hondaRed)" fill-rule="evenodd"/>
-    <!-- The Official Honda 'H' Inside -->
-    <path d="M 38 38 L 56 38 L 68 110 L 92 110 L 104 38 L 122 38 L 110 162 L 92 162 L 88 124 L 72 124 L 68 162 L 50 162 Z" fill="url(#hondaRed)"/>
+  <g transform="translate(10, 10) scale(0.9)">
+    <path d="M 34 26 L 166 26 C 178 26 186 36 182 50 L 162 166 C 158 178 148 184 138 184 L 62 184 C 52 184 42 178 38 166 L 18 50 C 14 36 22 26 34 26 Z" fill="none" stroke="url(#hondaRedGrad)" stroke-width="9" />
+    <path d="M 48 40 L 66 40 L 76 104 L 124 104 L 134 40 L 152 40 L 140 168 L 122 168 L 126 122 L 74 122 L 78 168 L 60 168 Z" fill="url(#hondaRedGrad)" />
   </g>
 </svg>
