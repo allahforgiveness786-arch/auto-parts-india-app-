@@ -19,6 +19,10 @@ const BRAND_IMAGES: Record<string, any> = {
   tata: require('../assets/brands/tata.png'),
   mahindra: require('../assets/brands/mahindra.png'),
   toyota: require('../assets/brands/toyota.png'),
+  honda: require('../assets/brands/honda.png'),
+  kia: require('../assets/brands/kia.png'),
+  volkswagen: require('../assets/brands/volkswagen.png'),
+  vw: require('../assets/brands/volkswagen.png'),
 };
 
 const APP_LOGO = require('../assets/logo.png');

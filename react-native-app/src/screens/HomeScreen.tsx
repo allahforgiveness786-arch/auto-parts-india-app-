@@ -66,7 +66,7 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   'hyderabad': { lat: 17.3850, lng: 78.4867 },
 };
 
-// Animated Product Card matching user reference layout
+// High-performance Product Card matching user reference layout
 const AnimatedPartCard = React.memo(({ 
   item, 
   index, 
@@ -77,27 +77,6 @@ const AnimatedPartCard = React.memo(({
   cardWidth,
   selectedCity 
 }: any) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 350,
-        delay: Math.min(index * 35, 280),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 380,
-        delay: Math.min(index * 35, 280),
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
   const [imgError, setImgError] = useState(false);
 
   const titleLower = String(item.title || '').toLowerCase();
@@ -148,11 +127,9 @@ const AnimatedPartCard = React.memo(({
   }
 
   return (
-    <Animated.View
+    <View
       style={{
         width: cardWidth,
-        opacity: fadeAnim,
-        transform: [{ translateY: slideAnim }],
         marginBottom: 14,
       }}
     >
@@ -178,10 +155,10 @@ const AnimatedPartCard = React.memo(({
             </View>
           )}
 
-          {/* Floating Transparent Heart Wishlist Button matching reference */}
+          {/* Floating High-Contrast Wishlist Button */}
           <TouchableOpacity
             style={styles.favoriteCircleButton}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
             delayPressIn={0}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={(e) => {
@@ -191,8 +168,8 @@ const AnimatedPartCard = React.memo(({
           >
             <Icon 
               source={activeFavorited ? "heart" : "heart-outline"} 
-              size={22} 
-              color={activeFavorited ? "#EF4444" : "#FFFFFF"} 
+              size={18} 
+              color={activeFavorited ? "#EF4444" : "#475569"} 
             />
           </TouchableOpacity>
         </View>
@@ -227,7 +204,7 @@ const AnimatedPartCard = React.memo(({
           </View>
         </View>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 });
 
@@ -241,7 +218,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(route?.params?.selectedCategory || 'All');
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
-  const [selectedCity, setSelectedCity] = useState('Chennai');
+  const [selectedCity, setSelectedCity] = useState('All India');
   const [isDetectingGPS, setIsDetectingGPS] = useState(false);
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -433,91 +410,118 @@ export default function HomeScreen({ navigation, route, user }: any) {
     return () => clearInterval(timer);
   }, [promoBanners.length, screenWidth]);
 
-  // Default 8 Categories for compact 4-column layout matching reference specifications
+  // Modern curated automotive categories
   const DEFAULT_CATEGORY_GRID_ITEMS = [
     { 
+      id: 'All', 
+      name: 'All Parts', 
+      icon: 'car-multiple', 
+      bg: '#EFF6FF', 
+      color: '#0066FF',
+    },
+    { 
       id: 'Engine & Parts', 
-      name: 'Engine & Parts', 
+      name: 'Engine', 
       icon: 'engine', 
-      is3DGraphic: 'engine',
+      bg: '#FEF2F2', 
+      color: '#DC2626',
     },
     { 
       id: 'Body Parts', 
-      name: 'Body Parts', 
+      name: 'Body & Frame', 
       icon: 'car-door', 
-      is3DGraphic: 'body',
+      bg: '#F0F9FF', 
+      color: '#0284C7',
     },
     { 
       id: 'Electricals', 
       name: 'Electricals', 
-      icon: 'lightning-bolt', 
-      is3DGraphic: 'electrical',
+      icon: 'flash', 
+      bg: '#FEFCE8', 
+      color: '#D97706',
+    },
+    { 
+      id: 'Brakes', 
+      name: 'Brakes & Discs', 
+      icon: 'car-brake-alert', 
+      bg: '#FFF1F2', 
+      color: '#E11D48',
     },
     { 
       id: 'Suspension', 
       name: 'Suspension', 
-      icon: 'car-brake-alert', 
-      is3DGraphic: 'suspension',
+      icon: 'tune-vertical', 
+      bg: '#FAF5FF', 
+      color: '#9333EA',
     },
     { 
       id: 'Exhaust', 
       name: 'Exhaust', 
-      icon: 'pipe', 
-      is3DGraphic: 'exhaust',
-    },
-    { 
-      id: 'Brakes', 
-      name: 'Brakes', 
-      icon: 'disc', 
-      is3DGraphic: 'brakes',
+      icon: 'weather-windy', 
+      bg: '#ECFDF5', 
+      color: '#059669',
     },
     { 
       id: 'Filters', 
-      name: 'Filters', 
+      name: 'Filters & Fluids', 
       icon: 'air-filter', 
-      is3DGraphic: 'filters',
+      bg: '#FFF7ED', 
+      color: '#EA580C',
+    },
+    { 
+      id: 'AC & Cooling', 
+      name: 'AC & Cooling', 
+      icon: 'fan', 
+      bg: '#F0FDFA', 
+      color: '#0D9488',
     },
     { 
       id: 'More', 
-      name: 'More', 
+      name: 'All Categories', 
       icon: 'apps', 
-      is3DGraphic: 'more',
+      bg: '#F1F5F9', 
+      color: '#475569',
     },
   ];
 
-  // Helper to map category names or custom icons to 3D graphic types
-  const get3DGraphicForCategory = (cat: any) => {
-    if (cat.is3DGraphic) return cat.is3DGraphic;
-    const name = (cat.name || cat.title || '').toLowerCase();
-    if (name.includes('engine') || name.includes('motor')) return 'engine';
-    if (name.includes('body') || name.includes('door') || name.includes('bumper')) return 'body';
-    if (name.includes('elect') || name.includes('light') || name.includes('battery')) return 'electrical';
-    if (name.includes('suspens') || name.includes('shock') || name.includes('strut')) return 'suspension';
-    if (name.includes('exhaust') || name.includes('silencer') || name.includes('pipe') || name.includes('muffler')) return 'exhaust';
-    if (name.includes('brake') || name.includes('rotor') || name.includes('disc') || name.includes('pad')) return 'brakes';
-    if (name.includes('filter') || name.includes('oil') || name.includes('air')) return 'filters';
-    if (name.includes('more') || name.includes('other') || name.includes('all')) return 'more';
-    return 'more';
+  // Helper to map category names or custom icons to icon & colors
+  const getCategoryMeta = (cat: any) => {
+    const name = (cat.name || cat.title || cat.id || '').toLowerCase();
+    if (name.includes('engine') || name.includes('motor')) return { icon: 'engine', bg: '#FEF2F2', color: '#DC2626' };
+    if (name.includes('body') || name.includes('door') || name.includes('bumper')) return { icon: 'car-door', bg: '#F0F9FF', color: '#0284C7' };
+    if (name.includes('elect') || name.includes('light') || name.includes('battery')) return { icon: 'flash', bg: '#FEFCE8', color: '#D97706' };
+    if (name.includes('suspens') || name.includes('shock') || name.includes('strut')) return { icon: 'tune-vertical', bg: '#FAF5FF', color: '#9333EA' };
+    if (name.includes('exhaust') || name.includes('silencer') || name.includes('pipe') || name.includes('muffler')) return { icon: 'weather-windy', bg: '#ECFDF5', color: '#059669' };
+    if (name.includes('brake') || name.includes('rotor') || name.includes('disc') || name.includes('pad')) return { icon: 'car-brake-alert', bg: '#FFF1F2', color: '#E11D48' };
+    if (name.includes('filter') || name.includes('oil') || name.includes('air')) return { icon: 'air-filter', bg: '#FFF7ED', color: '#EA580C' };
+    if (name.includes('ac') || name.includes('cool') || name.includes('radiator')) return { icon: 'fan', bg: '#F0FDFA', color: '#0D9488' };
+    if (name.includes('all')) return { icon: 'car-multiple', bg: '#EFF6FF', color: '#0066FF' };
+    return { icon: 'apps', bg: '#F1F5F9', color: '#475569' };
   };
 
   // Dynamic category grid items from Firestore or defaults
   const categoryGridItems = React.useMemo(() => {
     if (topCategories && topCategories.length > 0) {
-      const formatted = topCategories.map((c) => ({
-        id: c.id || c.name || c.title,
-        name: c.name || c.title,
-        icon: c.icon || 'car-cog',
-        imageUrl: c.imageUrl,
-        is3DGraphic: get3DGraphicForCategory(c),
-      }));
+      const formatted = topCategories.map((c) => {
+        const meta = getCategoryMeta(c);
+        return {
+          id: c.id || c.name || c.title,
+          name: c.name || c.title,
+          icon: c.icon || meta.icon,
+          bg: meta.bg,
+          color: meta.color,
+          imageUrl: c.imageUrl,
+        };
+      });
       // Ensure 'More' is always present at the end for easy catalog browsing
-      if (!formatted.some(c => c.name?.toLowerCase() === 'more')) {
+      if (!formatted.some(c => c.name?.toLowerCase() === 'more' || c.id === 'More')) {
         formatted.push({
           id: 'More',
-          name: 'More',
+          name: 'All Categories',
           icon: 'apps',
+          bg: '#F1F5F9',
+          color: '#475569',
           imageUrl: undefined,
-          is3DGraphic: 'more',
         });
       }
       return formatted;
@@ -539,9 +543,9 @@ export default function HomeScreen({ navigation, route, user }: any) {
   ];
 
   const popularCities = [
-    'Chennai', 'Coimbatore', 'Karur', 'Pallapatti', 
+    'All India', 'Chennai', 'Coimbatore', 'Karur', 'Pallapatti', 
     'Madurai', 'Trichy', 'Salem', 'Tiruppur', 'Erode',
-    'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'All India'
+    'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad'
   ];
 
   const allIndianDistricts = React.useMemo(() => {
@@ -672,9 +676,13 @@ export default function HomeScreen({ navigation, route, user }: any) {
     const matchesBrand = selectedBrand === 'All' || 
       (part.carBrand && part.carBrand.toLowerCase().includes(selectedBrand.toLowerCase()));
 
-    const matchesCity = selectedCity === 'All India' || !part.location || 
-      part.location.toLowerCase().includes(selectedCity.toLowerCase()) ||
-      (part.state && part.state.toLowerCase().includes(selectedCity.toLowerCase()));
+    const isAllIndia = !selectedCity || selectedCity.toLowerCase() === 'all india' || selectedCity.toLowerCase() === 'all';
+    const matchesCity = isAllIndia || 
+      (part.location && part.location.toLowerCase().includes(selectedCity.toLowerCase())) ||
+      (part.city && part.city.toLowerCase().includes(selectedCity.toLowerCase())) ||
+      (part.district && part.district.toLowerCase().includes(selectedCity.toLowerCase())) ||
+      (part.state && part.state.toLowerCase().includes(selectedCity.toLowerCase())) ||
+      (part.area && part.area.toLowerCase().includes(selectedCity.toLowerCase()));
 
     const partPrice = Number(part.price || part.partPrice) || 0;
     const isAboveMin = minPrice ? partPrice >= Number(minPrice) : true;
@@ -683,23 +691,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
     return matchesSearch && matchesCategory && matchesBrand && matchesCity && isAboveMin && isBelowMax;
   });
 
-  const filteredParts = strictFilteredParts.length > 0 ? strictFilteredParts : parts.filter((part) => {
-    const queryLower = searchQuery.toLowerCase().trim();
-    const matchesSearch = !queryLower || 
-      part.title?.toLowerCase().includes(queryLower) ||
-      part.carBrand?.toLowerCase().includes(queryLower) ||
-      part.carModel?.toLowerCase().includes(queryLower);
-
-    const matchesCategory = matchesCategoryFilter(part, selectedCategory);
-    const matchesBrand = selectedBrand === 'All' || 
-      (part.carBrand && part.carBrand.toLowerCase().includes(selectedBrand.toLowerCase()));
-
-    const partPrice = Number(part.price || part.partPrice) || 0;
-    const isAboveMin = minPrice ? partPrice >= Number(minPrice) : true;
-    const isBelowMax = maxPrice ? partPrice <= Number(maxPrice) : true;
-
-    return matchesSearch && matchesCategory && matchesBrand && isAboveMin && isBelowMax;
-  });
+  const filteredParts = strictFilteredParts;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -716,7 +708,7 @@ export default function HomeScreen({ navigation, route, user }: any) {
           >
             <Icon source="map-marker" size={15} color="#FFFFFF" />
             <Text style={styles.locationPillText} numberOfLines={1}>
-              {selectedCity === 'All India' ? 'All India' : `${selectedCity}, Tamil Nadu`}
+              {selectedCity || 'All India'}
             </Text>
             <Icon source="chevron-down" size={15} color="#FFFFFF" />
           </TouchableOpacity>
@@ -903,77 +895,111 @@ export default function HomeScreen({ navigation, route, user }: any) {
           </View>
         </View>
 
-        {/* 8 Compact Category Cards (4 Columns x 2 Rows) matching reference layout */}
-        <View style={styles.categoryGrid}>
-          {categoryGridItems.slice(0, 8).map((cat) => {
-            const isSelected = selectedCategory.toLowerCase() === cat.name.toLowerCase();
-            const isMore = cat.id === 'More';
+        {/* Modern Categories Explorer */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Shop by Category</Text>
+              <Text style={styles.sectionSubtitle}>Find verified OEM & aftermarket spare parts</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.viewAllRow}
+              onPress={() => navigation.navigate('AllCategories', { categories: categoryGridItems.filter(c => c.id !== 'More') })}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.seeAllText}>See All</Text>
+              <Icon source="chevron-right" size={18} color="#0066FF" />
+            </TouchableOpacity>
+          </View>
 
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[
-                  styles.catGridCard, 
-                  { width: catCardWidth },
-                  isSelected && styles.catGridCardSelected
-                ]}
-                activeOpacity={0.75}
-                onPress={() => {
-                  if (isMore) {
-                    navigation.navigate('AllCategories', { categories: categoryGridItems.filter(c => c.id !== 'More') });
-                  } else {
-                    setSelectedCategory(isSelected ? 'All' : cat.name);
-                  }
-                }}
-              >
-                <View style={styles.catVisualBox}>
-                  <Category3DIcon type={cat.is3DGraphic || cat.name || 'more'} size={40} active={isSelected} />
-                </View>
-                <Text 
-                  style={[styles.catLabel, isSelected && styles.catLabelSelected]} 
-                  numberOfLines={2}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.modernCategoriesScroll}
+          >
+            {categoryGridItems.map((cat) => {
+              const isSelected = selectedCategory.toLowerCase() === cat.id.toLowerCase() || (cat.id === 'All' && selectedCategory === 'All');
+              const isMore = cat.id === 'More';
+
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.modernCatCard,
+                    isSelected && styles.modernCatCardSelected
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (isMore) {
+                      navigation.navigate('AllCategories', { categories: categoryGridItems.filter(c => c.id !== 'More') });
+                    } else {
+                      setSelectedCategory(isSelected && cat.id !== 'All' ? 'All' : cat.id);
+                    }
+                  }}
                 >
-                  {cat.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <View style={[styles.modernCatIconBox, { backgroundColor: cat.bg || '#EFF6FF' }, isSelected && styles.modernCatIconBoxSelected]}>
+                    <Icon source={cat.icon || 'car-cog'} size={24} color={isSelected ? '#FFFFFF' : (cat.color || '#0066FF')} />
+                  </View>
+                  <Text style={[styles.modernCatName, isSelected && styles.modernCatNameSelected]} numberOfLines={1}>
+                    {cat.name}
+                  </Text>
+                  {isSelected && <View style={styles.modernCatActiveDot} />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
-        {/* 5 Popular Brands in a horizontal scroll matching reference */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.brandsScrollContainer}
-        >
-          {brandList.slice(0, 5).map((b) => {
-            const isBrandSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
-            return (
-              <TouchableOpacity
-                key={b.id}
-                style={[
-                  styles.brandChipCard,
-                  { width: brandCardWidth },
-                  isBrandSelected && styles.brandChipCardSelected
-                ]}
-                activeOpacity={0.75}
-                onPress={() => {
-                  setSelectedBrand(isBrandSelected ? 'All' : b.name);
-                }}
+        {/* Official Car Brands OEM Hub */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Top Vehicle Brands</Text>
+              <Text style={styles.sectionSubtitle}>Genuine OEM spare parts tailored for your make</Text>
+            </View>
+            {selectedBrand !== 'All' && (
+              <TouchableOpacity 
+                onPress={() => setSelectedBrand('All')}
+                style={styles.clearBrandBtn}
               >
-                <View style={styles.brandLogoBox}>
-                  <CarBrandBadge brand={b.name} size={36} active={isBrandSelected} />
-                </View>
-                <Text 
-                  style={[styles.brandChipText, isBrandSelected && styles.brandChipTextSelected]} 
-                  numberOfLines={1}
-                >
-                  {b.name}
-                </Text>
+                <Text style={styles.clearBrandText}>Show All Makes</Text>
               </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+            )}
+          </View>
+
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.modernBrandsScroll}
+          >
+            {brandList.map((b) => {
+              const isBrandSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
+              return (
+                <TouchableOpacity
+                  key={b.id}
+                  style={[
+                    styles.modernBrandCard,
+                    isBrandSelected && styles.modernBrandCardSelected
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setSelectedBrand(isBrandSelected ? 'All' : b.name);
+                  }}
+                >
+                  <View style={styles.modernBrandLogoWrapper}>
+                    <CarBrandBadge brand={b.name} size={38} />
+                  </View>
+                  <Text 
+                    style={[styles.modernBrandLabel, isBrandSelected && styles.modernBrandLabelSelected]} 
+                    numberOfLines={1}
+                  >
+                    {b.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         {/* Active Filter Indicators */}
         {(selectedCategory !== 'All' || selectedBrand !== 'All') && (
@@ -1037,9 +1063,10 @@ export default function HomeScreen({ navigation, route, user }: any) {
                 setSearchQuery('');
                 setSelectedCategory('All');
                 setSelectedBrand('All');
-                setSelectedCity('Chennai');
+                setSelectedCity('All India');
                 setMinPrice('');
                 setMaxPrice('');
+                saveUserLocation({ city: 'All India' });
               }}
               style={{ marginTop: 14 }}
             >
@@ -1654,121 +1681,131 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
     backgroundColor: '#0066FF',
   },
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    rowGap: 8,
+  sectionContainer: {
     marginBottom: 16,
   },
-  catGridCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+  sectionSubtitle: {
+    fontSize: 11.5,
+    fontWeight: '500',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  modernCategoriesScroll: {
+    paddingHorizontal: 16,
+    gap: 10,
+    paddingVertical: 4,
+  },
+  modernCatCard: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    minWidth: 84,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modernCatCardSelected: {
+    borderColor: '#0066FF',
+    borderWidth: 1.5,
+    backgroundColor: '#EFF6FF',
+    shadowColor: '#0066FF',
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  modernCatIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  modernCatIconBoxSelected: {
+    backgroundColor: '#0066FF',
+  },
+  modernCatName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1E293B',
+    textAlign: 'center',
+  },
+  modernCatNameSelected: {
+    color: '#0066FF',
+    fontWeight: '800',
+  },
+  modernCatActiveDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#0066FF',
+    marginTop: 4,
+  },
+  modernBrandsScroll: {
+    paddingHorizontal: 16,
+    gap: 10,
+    paddingVertical: 4,
+  },
+  modernBrandCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    width: 86,
     height: 84,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
   },
-  catGridCardSelected: {
+  modernBrandCardSelected: {
     borderColor: '#0066FF',
     borderWidth: 1.5,
     backgroundColor: '#EFF6FF',
+    shadowColor: '#0066FF',
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  catVisualBox: {
-    width: 42,
-    height: 42,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  catImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
-  },
-  moreIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: '#EFF6FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  catLabel: {
-    fontSize: 9.5,
-    fontWeight: '700',
-    color: '#1E293B',
-    textAlign: 'center',
-    lineHeight: 12,
-  },
-  catLabelSelected: {
-    color: '#0066FF',
-    fontWeight: '800',
-  },
-  brandsScrollContainer: {
-    paddingHorizontal: 16,
-    gap: 8,
-    marginBottom: 16,
-  },
-  brandsRowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  brandChipCard: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    height: 80,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  brandChipCardSelected: {
-    borderColor: '#0066FF',
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1.5,
-  },
-  brandLogoBox: {
-    width: 48,
+  modernBrandLogoWrapper: {
+    width: 44,
     height: 38,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  brandChipText: {
-    fontSize: 9.5,
+  modernBrandLabel: {
+    fontSize: 10.5,
     fontWeight: '700',
-    color: '#1E293B',
-    marginTop: 4,
+    color: '#334155',
     textAlign: 'center',
+    marginTop: 4,
   },
-  brandChipTextSelected: {
+  modernBrandLabelSelected: {
     color: '#0066FF',
     fontWeight: '800',
   },
-  horizontalProductsList: {
-    paddingHorizontal: 16,
-    gap: 12,
-    paddingBottom: 12,
+  clearBrandBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 8,
+  },
+  clearBrandText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#0066FF',
   },
   activeFiltersBar: {
     flexDirection: 'row',
@@ -1809,7 +1846,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1904,13 +1941,17 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    zIndex: 10,
   },
   cardContent: {
     padding: 10,

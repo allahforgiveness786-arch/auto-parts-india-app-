@@ -739,6 +739,16 @@ export async function createSparePartListing(part: Omit<SparePart, "id" | "creat
       const exactPath = `products/listings/items/${docRef.id}`;
       console.log(`[Firestore Write] Listing created successfully in Firestore. Document ID: ${docRef.id}, exact Firestore path: ${exactPath}`);
 
+      // Sync across secondary collections for cross-platform compatibility
+      try {
+        await Promise.all([
+          setDoc(doc(db, "spareParts", docRef.id), payload, { merge: true }),
+          setDoc(doc(db, "products", docRef.id), payload, { merge: true }),
+        ]);
+      } catch (syncErr) {
+        console.warn("[Firestore Write] Secondary collections sync:", syncErr);
+      }
+
       // Immediately fetch and verify the document exists in Firestore
       const savedDoc = await withTimeout(
         getDoc(docRef),

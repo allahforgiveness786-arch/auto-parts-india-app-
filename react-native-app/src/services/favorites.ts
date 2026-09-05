@@ -1,11 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirebaseFirestore, getCurrentUser } from './firebase';
+
+const STORAGE_KEY = 'autoparts_user_favorites';
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const user = getCurrentUser();
   const userId = user?.uid || user?.id;
 
+  // 1. Load initial cached favorites from local AsyncStorage
+  useEffect(() => {
+    let isMounted = true;
+    const loadCachedFavorites = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored && isMounted) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setFavorites(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load local favorites:', e);
+      }
+    };
+    loadCachedFavorites();
+    return () => { isMounted = false; };
+  }, []);
+
+  // 2. Sync with Firestore if logged in
   useEffect(() => {
     let unsub = () => {};
     if (userId) {
@@ -14,44 +38,65 @@ export function useFavorites() {
         if (db && typeof db.collection === 'function') {
           unsub = db.collection('favorites').where('userId', '==', userId).onSnapshot((snap: any) => {
             const favIds: string[] = [];
-            snap.forEach((doc: any) => favIds.push(doc.data().partId));
+            snap.forEach((doc: any) => {
+              const data = doc.data();
+              if (data && data.partId) {
+                favIds.push(data.partId);
+              }
+            });
             setFavorites(favIds);
+            AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(favIds)).catch(() => {});
+          }, (err: any) => {
+            console.warn('Firestore favorites sync notice:', err);
           });
         }
       } catch (err) {
-        console.warn('Error syncing favs', err);
+        console.warn('Error syncing favorites with Firestore:', err);
       }
     }
     return () => unsub();
   }, [userId]);
 
-  const toggleFavorite = async (partId: string) => {
-    if (!userId) return;
-    try {
-      const db = getFirebaseFirestore();
-      if (db && typeof db.collection === 'function') {
-        const favId = `${userId}_${partId}`;
-        const ref = db.collection('favorites').doc(favId);
-        
-        if (favorites.includes(partId)) {
-          // Remove
-          await ref.delete();
-          setFavorites(prev => prev.filter(id => id !== partId));
-        } else {
-          // Add
-          await ref.set({
-            id: favId,
-            userId,
-            partId,
-            createdAt: Date.now()
-          });
-          setFavorites(prev => [...prev, partId]);
+  const toggleFavorite = useCallback(async (partId: string) => {
+    if (!partId) return;
+
+    setFavorites(prev => {
+      const exists = prev.includes(partId);
+      const next = exists ? prev.filter(id => id !== partId) : [...prev, partId];
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch(() => {});
+
+      // If logged in, sync with Firestore in background
+      if (userId) {
+        try {
+          const db = getFirebaseFirestore();
+          if (db && typeof db.collection === 'function') {
+            const favId = `${userId}_${partId}`;
+            const ref = db.collection('favorites').doc(favId);
+            if (exists) {
+              ref.delete().catch((e: any) => console.warn('Failed to delete favorite doc:', e));
+            } else {
+              ref.set({
+                id: favId,
+                userId,
+                partId,
+                createdAt: Date.now()
+              }).catch((e: any) => console.warn('Failed to save favorite doc:', e));
+            }
+          }
+        } catch (err) {
+          console.warn('Firestore favorite toggle error:', err);
         }
       }
-    } catch (err) {
-      console.warn('Toggle fav error', err);
-    }
-  };
 
-  return { favorites, toggleFavorite };
+      return next;
+    });
+  }, [userId]);
+
+  const isFavorited = useCallback((partId: string) => {
+    return favorites.includes(partId);
+  }, [favorites]);
+
+  return { favorites, toggleFavorite, isFavorited };
 }
+
+export default useFavorites;

@@ -8,15 +8,20 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  SafeAreaView,
+  useWindowDimensions,
+  Platform
 } from 'react-native';
 import { Text, Icon } from 'react-native-paper';
-import BrandLogo from '../components/BrandLogo';
+import { AuthCarLogo, AuthPartsShowcase } from '../components/AuthPartsIllustration';
 import { signInWithGoogleNative } from '../services/googleAuth';
+import Svg, { Path, Circle, G } from 'react-native-svg';
 
 export default function AuthScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | null>(null);
+  const { height: screenHeight } = useWindowDimensions();
 
   // Google Sign-In Native (Pure Real Firebase Auth)
   const handleGoogleSignIn = async () => {
@@ -45,107 +50,154 @@ export default function AuthScreen({ navigation }: any) {
     }
   };
 
+  const handleGuestContinue = () => {
+    if (navigation?.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0B192C" />
-      
+      <StatusBar barStyle="light-content" backgroundColor="#0047BA" translucent={false} />
+
+      {/* Subtle Background Watermark Gears */}
+      <View style={styles.bgGearsLayer} pointerEvents="none">
+        {/* Top-Right Ambient Gear */}
+        <View style={styles.gearTopRight}>
+          <Svg width="160" height="160" viewBox="0 0 100 100" fill="none">
+            <Path
+              d="M 50 15 L 54 15 L 56 22 L 63 25 L 68 20 L 73 24 L 70 31 L 76 37 L 83 35 L 85 41 L 79 46 L 80 54 L 86 58 L 84 65 L 77 64 L 72 70 L 74 77 L 69 81 L 63 76 L 56 79 L 54 86 L 47 86 L 45 79 L 38 76 L 33 81 L 28 77 L 30 70 L 25 64 L 18 65 L 16 58 L 22 54 L 21 46 L 15 41 L 17 35 L 24 37 L 30 31 L 27 24 L 32 20 L 37 25 L 44 22 Z"
+              fill="#005EE6"
+              opacity="0.3"
+            />
+            <Circle cx="50" cy="50" r="18" fill="#0047BA" />
+            <Circle cx="50" cy="50" r="10" fill="#003899" />
+          </Svg>
+        </View>
+
+        {/* Lower-Left Ambient Gear */}
+        <View style={styles.gearBottomLeft}>
+          <Svg width="140" height="140" viewBox="0 0 100 100" fill="none">
+            <Path
+              d="M 50 15 L 54 15 L 56 22 L 63 25 L 68 20 L 73 24 L 70 31 L 76 37 L 83 35 L 85 41 L 79 46 L 80 54 L 86 58 L 84 65 L 77 64 L 72 70 L 74 77 L 69 81 L 63 76 L 56 79 L 54 86 L 47 86 L 45 79 L 38 76 L 33 81 L 28 77 L 30 70 L 25 64 L 18 65 L 16 58 L 22 54 L 21 46 L 15 41 L 17 35 L 24 37 L 30 31 L 27 24 L 32 20 L 37 25 L 44 22 Z"
+              fill="#005EE6"
+              opacity="0.25"
+            />
+            <Circle cx="50" cy="50" r="16" fill="#0047BA" />
+          </Svg>
+        </View>
+      </View>
+
+      {/* Top Left Close/Back Button */}
       {navigation?.canGoBack && navigation.canGoBack() && (
         <TouchableOpacity 
-          style={{ position: 'absolute', top: 50, left: 20, zIndex: 10, padding: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20 }}
+          style={styles.backBtn}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Icon source="close" size={24} color="#FFFFFF" />
+          <Icon source="close" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       )}
 
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { minHeight: screenHeight - (Platform.OS === 'android' ? 24 : 44) }
+        ]}
         showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        {/* Header Branding */}
-        <View style={styles.headerBox}>
-          <BrandLogo size={80} variant="icon" style={styles.logo} />
-          <Text variant="headlineSmall" style={styles.brandTitle}>
-            AUTO PARTS <Text style={styles.accentText}>INDIA</Text>
-          </Text>
-          <Text variant="labelLarge" style={styles.brandSub}>
-            Automotive Spare Parts Marketplace
-          </Text>
-          <Text style={styles.tagline}>
-            India's premier automotive marketplace.{"\n"}Buy and sell genuine spare parts across India.
-          </Text>
-        </View>
+        <SafeAreaView style={styles.safeArea}>
+          {/* TOP SECTION: BRAND EMBLEM & TYPOGRAPHY */}
+          <View style={styles.brandingWrapper}>
+            {/* Aerodynamic Sportscar Silhouette + Cyan Gear Emblem */}
+            <AuthCarLogo size={95} />
 
-        {/* Main Card */}
-        <View style={styles.card}>
-          <Text variant="titleLarge" style={styles.cardTitle}>
-            Sign in with Google
-          </Text>
-          <Text variant="bodyMedium" style={styles.cardSubtitle}>
-            Connect directly with verified mechanics, dealers, and sellers across India.
-          </Text>
+            {/* Title: Auto (White) + Parts (Sky Blue) */}
+            <View style={styles.titleRow}>
+              <Text style={styles.titleAuto}>Auto</Text>
+              <Text style={styles.titleParts}> Parts</Text>
+            </View>
 
-          {/* Error Banner */}
-          {errorMessage ? (
+            {/* — INDIA — with sleek lines */}
+            <View style={styles.indiaRow}>
+              <View style={styles.lineDivider} />
+              <Text style={styles.indiaText}>I N D I A</Text>
+              <View style={styles.lineDivider} />
+            </View>
+
+            {/* Subtitle / Tagline */}
+            <Text style={styles.taglineText}>
+              Buy. Sell. Find. Auto Parts Across India
+            </Text>
+          </View>
+
+          {/* Error Banner if any */}
+          {errorMessage && (
             <View style={styles.errorBox}>
-              <Icon source="alert-circle-outline" size={20} color="#F87171" />
+              <Icon source="alert-circle-outline" size={18} color="#FCA5A5" />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
-          ) : null}
+          )}
 
-          {/* Google Sign-In Button */}
-          <TouchableOpacity
-            style={[styles.googleButton, loading && styles.googleButtonDisabled]}
-            onPress={handleGoogleSignIn}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <View style={styles.btnRow}>
-                <ActivityIndicator color="#0F172A" size="small" />
-                <Text style={styles.googleBtnText}>Signing in...</Text>
-              </View>
-            ) : (
-              <View style={styles.btnRow}>
-                <Icon source="google" size={22} color="#EA4335" />
-                <Text style={styles.googleBtnText}>Sign in with Google</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Trust Badges */}
-          <View style={styles.trustBadgesBox}>
-            <View style={styles.badgeRow}>
-              <Icon source="shield-check" size={16} color="#38BDF8" />
-              <Text style={styles.badgeText}>Verified Sellers & Buyers</Text>
-            </View>
-            <View style={styles.badgeRow}>
-              <Icon source="message-text-outline" size={16} color="#38BDF8" />
-              <Text style={styles.badgeText}>Direct In-App Chat</Text>
-            </View>
-            <View style={styles.badgeRow}>
-              <Icon source="lock-check-outline" size={16} color="#38BDF8" />
-              <Text style={styles.badgeText}>Fast & Secure Sign-In</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Footer Legal Terms */}
-        <View style={styles.footerLegal}>
-          <Text style={styles.legalNotice}>
-            By signing in, you agree to Auto Parts India's
-          </Text>
-          <View style={styles.legalLinksRow}>
-            <TouchableOpacity onPress={() => setLegalModal('terms')}>
-              <Text style={styles.legalLink}>Terms of Service</Text>
+          {/* CENTER SECTION: HIGH-CONTRAST "SIGN IN →" PILL BUTTON */}
+          <View style={styles.actionWrapper}>
+            <TouchableOpacity
+              style={[styles.signInPillBtn, loading && styles.btnDisabled]}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+              activeOpacity={0.88}
+            >
+              {loading ? (
+                <View style={styles.pillContent}>
+                  <ActivityIndicator color="#0047BA" size="small" />
+                  <Text style={styles.signInBtnText}>Connecting securely...</Text>
+                </View>
+              ) : (
+                <View style={styles.pillContent}>
+                  <Text style={styles.signInBtnText}>Sign In</Text>
+                  <Icon source="arrow-right" size={20} color="#0047BA" />
+                </View>
+              )}
             </TouchableOpacity>
-            <Text style={styles.legalDot}>•</Text>
-            <TouchableOpacity onPress={() => setLegalModal('privacy')}>
-              <Text style={styles.legalLink}>Privacy Policy</Text>
+
+            {/* Secondary Guest Option */}
+            <TouchableOpacity
+              style={styles.guestBtn}
+              onPress={handleGuestContinue}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.guestBtnText}>Explore as Guest</Text>
             </TouchableOpacity>
           </View>
-        </View>
+
+          {/* BOTTOM SECTION: 3D AUTO SPARE PARTS CLUSTER */}
+          <View style={styles.showcaseWrapper}>
+            <AuthPartsShowcase />
+
+            {/* Bottom Footer Accent: KEEP INDIA MOVING — */}
+            <View style={styles.footerMovingRow}>
+              <Text style={styles.keepMovingText}>KEEP INDIA MOVING</Text>
+              <View style={styles.keepMovingLine} />
+            </View>
+
+            {/* Discreet Legal Links */}
+            <View style={styles.legalRow}>
+              <TouchableOpacity onPress={() => setLegalModal('terms')}>
+                <Text style={styles.legalLink}>Terms</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalDot}>•</Text>
+              <TouchableOpacity onPress={() => setLegalModal('privacy')}>
+                <Text style={styles.legalLink}>Privacy</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
       </ScrollView>
 
       {/* Terms / Privacy Modal */}
@@ -162,15 +214,15 @@ export default function AuthScreen({ navigation }: any) {
                 {legalModal === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
               </Text>
               <TouchableOpacity onPress={() => setLegalModal(null)} style={styles.closeBtn}>
-                <Icon source="close" size={24} color="#94A3B8" />
+                <Icon source="close" size={24} color="#64748B" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
               <Text style={styles.modalText}>
                 {legalModal === 'terms' ? (
-                  `Welcome to Auto Parts India.\n\n1. Acceptance of Terms: By accessing or using this app, you agree to be bound by these terms.\n\n2. Marketplace Platform: Auto Parts India connects buyers and sellers of automotive components. We do not manufacture or inspect the parts listed by third-party sellers.\n\n3. User Conduct: Users must list only genuine parts with accurate descriptions and pricing. Fraudulent listings or harassment will result in account termination.\n\n4. Transactions: All financial deals and shipping arrangements are between buyer and seller directly.`
+                  `Welcome to Auto Parts India.\n\n1. Acceptance of Terms: By accessing or using this app, you agree to be bound by these terms.\n\n2. Marketplace Platform: Auto Parts India connects buyers and sellers of automotive components across India.\n\n3. Verified Listings: Sellers must ensure accurate descriptions, genuine condition ratings, and fair pricing for all automobile components.`
                 ) : (
-                  `Auto Parts India Privacy Policy\n\n1. Information We Collect: We collect your name, email address, and profile details provided via Google Sign-In.\n\n2. How We Use Information: To facilitate communication between buyers and sellers, provide notifications, and maintain account security.\n\n3. Data Security: Your information is stored securely with industry-standard encryption. We do not sell your personal data to any third parties.`
+                  `Auto Parts India Privacy Policy\n\n1. Information We Collect: Basic account information provided during Sign-In to connect buyers and sellers.\n\n2. Data Security: Your profile and transactions are secured with industry-standard encryption protocols.`
                 )}
               </Text>
             </ScrollView>
@@ -184,169 +236,208 @@ export default function AuthScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B192C',
+    backgroundColor: '#0047BA', // Vibrant Royal Blue matching reference image
+  },
+  safeArea: {
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   scrollContent: {
     flexGrow: 1,
+    justifyContent: 'space-between',
+  },
+  bgGearsLayer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  gearTopRight: {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+  },
+  gearBottomLeft: {
+    position: 'absolute',
+    bottom: 120,
+    left: -30,
+  },
+  backBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 16 : 50,
+    left: 16,
+    zIndex: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-  headerBox: {
     alignItems: 'center',
-    marginBottom: 24,
   },
-  logo: {
-    marginBottom: 10,
+  brandingWrapper: {
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'android' ? 24 : 16,
+    paddingHorizontal: 20,
   },
-  brandTitle: {
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  titleAuto: {
+    fontSize: 38,
     fontWeight: '900',
     color: '#FFFFFF',
-    letterSpacing: 1,
+    letterSpacing: -0.5,
   },
-  accentText: {
-    color: '#38BDF8',
+  titleParts: {
+    fontSize: 38,
+    fontWeight: '900',
+    color: '#38BDF8', // Cyan / Sky Blue accent
+    letterSpacing: -0.5,
   },
-  brandSub: {
-    color: '#94A3B8',
-    marginTop: 2,
-    fontWeight: '600',
-    fontSize: 13,
+  indiaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 12,
   },
-  tagline: {
-    color: '#CBD5E1',
-    fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: 8,
-    maxWidth: 280,
+  lineDivider: {
+    width: 48,
+    height: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
-  card: {
-    backgroundColor: '#0F223D',
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#1E3A5F',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-  },
-  cardTitle: {
-    fontWeight: 'bold',
+  indiaText: {
+    fontSize: 18,
+    fontWeight: '800',
     color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: 6,
+    letterSpacing: 4,
   },
-  cardSubtitle: {
-    color: '#94A3B8',
+  taglineText: {
     fontSize: 13,
+    fontWeight: '600',
+    color: '#E0F2FE',
+    marginTop: 10,
     textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 22,
+    letterSpacing: 0.2,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: '#EF4444',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
+    marginHorizontal: 24,
+    marginTop: 12,
     gap: 8,
   },
   errorText: {
-    color: '#FCA5A5',
+    color: '#FEE2E2',
     fontSize: 12,
+    fontWeight: '600',
     flex: 1,
-    lineHeight: 18,
   },
-  googleButton: {
-    backgroundColor: '#FFFFFF',
+  actionWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    marginTop: 24,
+    marginBottom: 8,
+    zIndex: 10,
+  },
+  signInPillBtn: {
+    width: '100%',
+    maxWidth: 320,
     height: 52,
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    marginBottom: 18,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  googleButtonDisabled: {
-    opacity: 0.7,
+  btnDisabled: {
+    opacity: 0.75,
   },
-  btnRow: {
+  pillContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
   },
-  googleBtnText: {
-    color: '#0F172A',
-    fontSize: 15,
-    fontWeight: '700',
+  signInBtnText: {
+    color: '#0047BA',
+    fontSize: 17,
+    fontWeight: '800',
     letterSpacing: 0.2,
   },
-  trustBadgesBox: {
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.15)',
+  guestBtn: {
+    marginTop: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
   },
-  badgeRow: {
+  guestBtnText: {
+    color: '#BFDBFE',
+    fontSize: 13,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+  showcaseWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 'auto',
+  },
+  footerMovingRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    marginTop: -8,
+    marginBottom: 6,
   },
-  badgeText: {
-    color: '#94A3B8',
-    fontSize: 12,
-    fontWeight: '500',
+  keepMovingText: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 2,
   },
-  footerLegal: {
-    alignItems: 'center',
-    marginTop: 24,
+  keepMovingLine: {
+    width: 36,
+    height: 1.2,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
   },
-  legalNotice: {
-    color: '#64748B',
-    fontSize: 11,
-    textAlign: 'center',
-  },
-  legalLinksRow: {
+  legalRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    justifyContent: 'center',
     gap: 6,
+    marginBottom: 10,
   },
   legalLink: {
-    color: '#38BDF8',
+    color: '#93C5FD',
     fontSize: 11,
     fontWeight: '600',
   },
   legalDot: {
-    color: '#475569',
-    fontSize: 11,
+    color: '#93C5FD',
+    fontSize: 10,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#0F223D',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    padding: 20,
     maxHeight: '75%',
-    borderWidth: 1,
-    borderColor: '#1E3A5F',
+    padding: 20,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -355,20 +446,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#0F172A',
   },
   closeBtn: {
     padding: 4,
   },
   modalBody: {
-    marginBottom: 16,
+    paddingBottom: 20,
   },
   modalText: {
-    color: '#CBD5E1',
-    fontSize: 13,
-    lineHeight: 20,
+    color: '#334155',
+    lineHeight: 22,
+    fontSize: 14,
   },
 });
-

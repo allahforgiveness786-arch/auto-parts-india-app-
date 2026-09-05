@@ -19,6 +19,10 @@ const BRAND_IMAGE_PATHS: Record<string, string> = {
   tata: '/assets/brands/tata.png',
   mahindra: '/assets/brands/mahindra.png',
   toyota: '/assets/brands/toyota.png',
+  honda: '/assets/brands/honda.png',
+  kia: '/assets/brands/kia.png',
+  volkswagen: '/assets/brands/volkswagen.png',
+  vw: '/assets/brands/volkswagen.png',
 };
 
 const SIZE_MAP: Record<string, number> = {

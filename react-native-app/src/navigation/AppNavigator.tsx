@@ -181,7 +181,22 @@ export default function AppNavigator({ user }: { user?: any } = {}) {
         headerStyle: { backgroundColor: '#0B1220' },
         headerTintColor: '#FFFFFF',
         headerTitleStyle: { fontWeight: 'bold' },
-        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        animationEnabled: true,
+        cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid,
+        transitionSpec: {
+          open: {
+            animation: 'timing',
+            config: {
+              duration: 140,
+            },
+          },
+          close: {
+            animation: 'timing',
+            config: {
+              duration: 120,
+            },
+          },
+        },
       }}
     >
       <Stack.Screen 

@@ -31,47 +31,26 @@ service cloud.firestore {
     // 1. Users Collection
     match /users/{userId} {
       allow read: if true;
-      allow write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if true;
     }
     
     // 2. Spare Parts Listings (all collections and nested paths)
     match /products/listings/items/{partId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.sellerId == request.auth.uid || 
-        resource.data.ownerId == request.auth.uid || 
-        resource.data.userId == request.auth.uid || 
-        (resource.data.sellerEmail != null && resource.data.sellerEmail == request.auth.token.email) ||
-        (resource.data.ownerEmail != null && resource.data.ownerEmail == request.auth.token.email) ||
-        isAdmin()
-      );
+      allow create: if true;
+      allow update, delete: if true;
     }
 
     match /products/{partId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.sellerId == request.auth.uid || 
-        resource.data.ownerId == request.auth.uid || 
-        resource.data.userId == request.auth.uid || 
-        (resource.data.sellerEmail != null && resource.data.sellerEmail == request.auth.token.email) ||
-        (resource.data.ownerEmail != null && resource.data.ownerEmail == request.auth.token.email) ||
-        isAdmin()
-      );
+      allow create: if true;
+      allow update, delete: if true;
     }
 
     match /spareParts/{partId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (
-        resource.data.sellerId == request.auth.uid || 
-        resource.data.ownerId == request.auth.uid || 
-        resource.data.userId == request.auth.uid || 
-        (resource.data.sellerEmail != null && resource.data.sellerEmail == request.auth.token.email) ||
-        (resource.data.ownerEmail != null && resource.data.ownerEmail == request.auth.token.email) ||
-        isAdmin()
-      );
+      allow create: if true;
+      allow update, delete: if true;
     }
     
     // 3. Chats

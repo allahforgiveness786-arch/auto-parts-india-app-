@@ -249,11 +249,20 @@ export default function ProductDetailScreen({ route, navigation, user: initialUs
             style={styles.image} 
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.favFab} onPress={() => toggleFavorite(part.id)}>
-          <IconButton icon={isFav ? "heart" : "heart-outline"} iconColor={isFav ? "#EF4444" : "#0B1220"} size={20} />
+        <TouchableOpacity 
+          style={[styles.favFab, isFav && styles.favFabActive]} 
+          onPress={() => toggleFavorite(part.id)}
+          activeOpacity={0.8}
+        >
+          <IconButton 
+            icon={isFav ? "heart" : "heart-outline"} 
+            iconColor={isFav ? "#EF4444" : "#475569"} 
+            size={20} 
+            style={{ margin: 0 }}
+          />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shareFab} onPress={handleShare}>
-          <IconButton icon="share-variant" iconColor="#0B1220" size={20} />
+        <TouchableOpacity style={styles.shareFab} onPress={handleShare} activeOpacity={0.8}>
+          <IconButton icon="share-variant" iconColor="#0B1220" size={20} style={{ margin: 0 }} />
         </TouchableOpacity>
       </View>
 
@@ -557,25 +566,43 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     right: 16,
+    width: 38,
+    height: 38,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
+    zIndex: 10,
+  },
+  favFabActive: {
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FFF5F5',
   },
   shareFab: {
     position: 'absolute',
     top: 16,
-    right: 68,
+    right: 62,
+    width: 38,
+    height: 38,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
+    zIndex: 10,
   },
   content: {
     padding: 16,

@@ -21,10 +21,14 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
   const [editLocation, setEditLocation] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const SUPER_ADMIN_EMAILS = [
+    'wwwautoparts2@gmail.com',
+    'www.allahforgiveness877@gmail.com'
+  ];
+
   const isAdmin = 
     dbUserDoc?.role === 'admin' || 
-    userEmail?.toLowerCase() === 'www.allahforgiveness877@gmail.com' ||
-    userEmail?.toLowerCase().includes('admin');
+    SUPER_ADMIN_EMAILS.includes(userEmail?.toLowerCase().trim());
 
   useEffect(() => {
     let unsubscribeAuth = () => {};
@@ -158,27 +162,30 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
 
         {/* Menu Options List */}
         <View style={styles.menuContainer}>
-          {/* Admin Panel & Version Management Entry */}
-          <TouchableOpacity 
-            style={[styles.menuItem, styles.adminMenuItem]} 
-            onPress={() => navigation.navigate('Admin')}
-          >
-            <View style={[styles.menuIconBox, { backgroundColor: '#FEF3C7' }]}>
-              <Icon source="shield-crown" size={22} color="#D97706" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.menuItemText, { fontWeight: '700', color: '#B45309' }]}>Admin Panel</Text>
-                <View style={styles.adminBadge}>
-                  <Text style={styles.adminBadgeText}>CONTROL</Text>
+          {/* Admin Panel & Version Management Entry (STRICTLY HIDDEN for regular users) */}
+          {isAdmin && (
+            <>
+              <TouchableOpacity 
+                style={[styles.menuItem, styles.adminMenuItem]} 
+                onPress={() => navigation.navigate('Admin')}
+              >
+                <View style={[styles.menuIconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <Icon source="shield-crown" size={22} color="#D97706" />
                 </View>
-              </View>
-              <Text style={styles.adminSubText}>Version Management, CMS, Users & Ads</Text>
-            </View>
-            <Icon source="chevron-right" size={20} color="#D97706" />
-          </TouchableOpacity>
-
-          <Divider style={styles.divider} />
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.menuItemText, { fontWeight: '700', color: '#B45309' }]}>Admin Panel</Text>
+                    <View style={styles.adminBadge}>
+                      <Text style={styles.adminBadgeText}>CONTROL</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.adminSubText}>Version Management, CMS, Users & Ads</Text>
+                </View>
+                <Icon source="chevron-right" size={20} color="#D97706" />
+              </TouchableOpacity>
+              <Divider style={styles.divider} />
+            </>
+          )}
 
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyAdsTab')}>
             <View style={[styles.menuIconBox, { backgroundColor: '#EFF6FF' }]}>

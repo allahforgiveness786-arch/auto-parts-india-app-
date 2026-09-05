@@ -219,7 +219,7 @@ export default function SearchScreen({ navigation, route, user }: any) {
           >
             <Icon
               source={isFav ? 'heart' : 'heart-outline'}
-              color={isFav ? '#EF4444' : '#FFFFFF'}
+              color={isFav ? '#EF4444' : '#475569'}
               size={18}
             />
           </TouchableOpacity>
@@ -624,12 +624,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     right: 6,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    width: 28,
-    height: 28,
+    width: 30,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 3,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   cardContent: {
     padding: 10,

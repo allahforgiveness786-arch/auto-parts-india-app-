@@ -72,11 +72,12 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
             const userListings = list.filter((part: any) => {
               if (part.isDeleted) return false;
               const sellerId = part.sellerId || part.userId || part.ownerId;
-              const sellerEmail = (part.sellerEmail || '').toLowerCase();
+              const sellerEmail = (part.sellerEmail || part.ownerEmail || '').toLowerCase();
 
               const matchesId = currentUid && sellerId && (sellerId === currentUid || String(sellerId) === String(currentUid));
+              const matchesEmail = currentEmail && sellerEmail && (sellerEmail === currentEmail);
 
-              return Boolean(matchesId);
+              return Boolean(matchesId || matchesEmail);
             });
 
             // Sort by most recently updated/created first
@@ -121,9 +122,10 @@ export default function MyAdsScreen({ navigation, user: initialUser }: any) {
           const data = doc.data();
           if (!data.isDeleted) {
             const sellerId = data.sellerId || data.userId || data.ownerId;
-            const sellerEmail = (data.sellerEmail || '').toLowerCase();
+            const sellerEmail = (data.sellerEmail || data.ownerEmail || '').toLowerCase();
             const matchesId = currentUid && sellerId && (sellerId === currentUid || String(sellerId) === String(currentUid));
-            if (matchesId) {
+            const matchesEmail = currentEmail && sellerEmail && (sellerEmail === currentEmail);
+            if (matchesId || matchesEmail) {
               list.push({ id: doc.id, ...data });
             }
           }

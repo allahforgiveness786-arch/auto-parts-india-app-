@@ -591,11 +591,15 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         description: resolvedDesc,
         price: priceNum,
         brand: resolvedBrand,
+        carBrand: resolvedBrand,
         finalBrand: resolvedBrand,
         model: resolvedModel,
+        carModel: resolvedModel,
         finalModel: resolvedModel,
         carVariant: carVariant.trim() || null,
+        category: resolvedCategory,
         finalCategory: resolvedCategory,
+        partName: resolvedPartName,
         finalPartName: resolvedPartName,
         condition,
         location: readableLoc,
@@ -613,7 +617,9 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         images: finalImageUrls.length > 0 ? finalImageUrls : resolvedImagesToUse,
         sellerId: activeUser?.uid || 'guest-seller',
         ownerId: activeUser?.uid || 'guest-seller',
+        userId: activeUser?.uid || 'guest-seller',
         sellerEmail: activeUser?.email || '',
+        ownerEmail: activeUser?.email || '',
         sellerPhoto: activeUser?.photoURL || activeUser?.profilePhoto || '',
         sellerPhotoURL: activeUser?.photoURL || activeUser?.profilePhoto || '',
         sellerAvatar: activeUser?.photoURL || activeUser?.profilePhoto || '',
@@ -623,15 +629,14 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
         approved: true,
         verified: true,
         createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
 
       const db = getFirestoreInstance();
       if (db) {
-        // Parallel non-blocking write
-        await Promise.all([
-          db.collection('products/listings/items').add(listingData),
-          db.collection('spareParts').add(listingData),
-        ]);
+        const newDocId = 'part_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        const fullListing = { id: newDocId, ...listingData };
+        await db.collection('spareParts').doc(newDocId).set(fullListing);
       }
 
       setUploadProgress(null);

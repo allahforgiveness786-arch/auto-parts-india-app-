@@ -791,8 +791,8 @@ export default function ProfileScreen({
 
             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(11,18,32,0.04)] overflow-hidden divide-y divide-slate-100">
               
-              {/* Super Admin Control Center */}
-              {(currentUser.email === "wwwautoparts2@gmail.com" || currentUser.email === "ym1950394@gmail.com" || currentUser.isSuperAdmin || currentUser.isAdmin || currentUser.role === "admin") && onOpenAdminDashboard && (
+              {/* Super Admin Control Center - Strictly visible ONLY for verified Admin emails */}
+              {(currentUser.email?.toLowerCase().trim() === "wwwautoparts2@gmail.com" || currentUser.email?.toLowerCase().trim() === "www.allahforgiveness877@gmail.com" || currentUser.isSuperAdmin || currentUser.isAdmin || currentUser.role === "admin") && onOpenAdminDashboard && (
                 <button
                   onClick={onOpenAdminDashboard}
                   className="w-full flex items-center justify-between p-4 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-left cursor-pointer"
