@@ -260,158 +260,110 @@ export function AutoPartsLogo({
 function renderBrandVector(brandKey: string, size: number) {
   const s = size;
 
-  // 1. Maruti Suzuki (Iconic Suzuki 'S' Red/Blue Geometric Emblem)
+  // 1. Maruti Suzuki (Official Suzuki Emblem Badge)
   if (brandKey.includes('maruti') || brandKey.includes('suzuki')) {
     return (
       <Svg width={s} height={s} viewBox="0 0 200 200">
         <Defs>
           <LinearGradient id="szRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#EF4444" />
-            <Stop offset="50%" stopColor="#E2231A" />
-            <Stop offset="100%" stopColor="#B91C1C" />
+            <Stop offset="0%" stopColor="#FF3B30" />
+            <Stop offset="50%" stopColor="#D32F2F" />
+            <Stop offset="100%" stopColor="#990000" />
           </LinearGradient>
           <LinearGradient id="szBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#003580" />
-            <Stop offset="50%" stopColor="#002D62" />
-            <Stop offset="100%" stopColor="#001A38" />
+            <Stop offset="0%" stopColor="#2196F3" />
+            <Stop offset="50%" stopColor="#1565C0" />
+            <Stop offset="100%" stopColor="#0D47A1" />
+          </LinearGradient>
+          <LinearGradient id="szChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" />
+            <Stop offset="50%" stopColor="#E0E0E0" />
+            <Stop offset="100%" stopColor="#9E9E9E" />
           </LinearGradient>
         </Defs>
         <G transform="translate(10, 10) scale(0.9)">
-          {/* Top Wing (Red) */}
-          <Path 
-            d="M 82 22 L 164 22 L 118 74 L 164 74 L 114 130 L 72 130 L 116 86 L 36 86 Z" 
-            fill="url(#szRedGrad)" 
-          />
-          {/* Bottom Wing (Blue) */}
-          <Path 
-            d="M 118 178 L 36 178 L 82 126 L 36 126 L 86 70 L 128 70 L 84 114 L 164 114 Z" 
-            fill="url(#szBlueGrad)" 
-          />
+          <Circle cx="100" cy="100" r="94" fill="#0A0F1D" stroke="url(#szChrome)" strokeWidth="5" />
+          {/* Top Red Wing */}
+          <Path d="M 82 22 L 162 22 L 118 72 L 160 72 L 112 130 L 74 130 L 114 84 L 38 84 Z" fill="url(#szRedGrad)" stroke="#FFFFFF" strokeWidth="1" />
+          {/* Bottom Blue Wing */}
+          <Path d="M 118 178 L 38 178 L 82 128 L 40 128 L 88 70 L 126 70 L 86 116 L 162 116 Z" fill="url(#szBlueGrad)" stroke="#FFFFFF" strokeWidth="1" />
         </G>
       </Svg>
     );
   }
 
-  // 2. Hyundai (Official Slanted Oval & Stylized Italic 'H')
+  // 2. Hyundai (Official Slanted Oval & Italic H)
   if (brandKey.includes('hyundai')) {
     return (
       <Svg width={s} height={s} viewBox="0 0 200 200">
         <Defs>
-          <LinearGradient id="hyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#003B95" />
-            <Stop offset="50%" stopColor="#002C6C" />
-            <Stop offset="100%" stopColor="#001844" />
+          <LinearGradient id="hyBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#0052CC" />
+            <Stop offset="100%" stopColor="#002266" />
+          </LinearGradient>
+          <LinearGradient id="hyChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" />
+            <Stop offset="50%" stopColor="#CBD5E1" />
+            <Stop offset="100%" stopColor="#64748B" />
           </LinearGradient>
         </Defs>
         <G transform="translate(10, 15) scale(0.9)">
-          {/* Slanted Outer Oval Ring */}
-          <Ellipse 
-            cx="100" 
-            cy="95" 
-            rx="86" 
-            ry="54" 
-            transform="rotate(-15, 100, 95)" 
-            fill="none" 
-            stroke="url(#hyGrad)" 
-            strokeWidth="11" 
-          />
-          {/* Flowing Italic H Stems */}
-          <Path 
-            d="M 58 134 C 54 110, 60 76, 76 54 C 80 48, 86 52, 84 60 C 72 82, 68 114, 72 136 C 73 140, 59 140, 58 134 Z" 
-            fill="url(#hyGrad)" 
-          />
-          <Path 
-            d="M 124 140 C 130 116, 136 82, 122 60 C 118 54, 126 50, 130 54 C 146 78, 140 120, 134 142 C 132 146, 122 146, 124 140 Z" 
-            fill="url(#hyGrad)" 
-          />
-          <Path 
-            d="M 70 100 C 90 92, 114 90, 130 96 C 132 102, 124 106, 110 106 C 92 106, 78 108, 70 110 Z" 
-            fill="url(#hyGrad)" 
-          />
+          <Circle cx="100" cy="95" r="94" fill="#070D1A" stroke="url(#hyChrome)" strokeWidth="5" />
+          <Ellipse cx="100" cy="95" rx="82" ry="50" transform="rotate(-15, 100, 95)" fill="none" stroke="url(#hyBlue)" strokeWidth="14" />
+          <Path d="M 58 132 C 54 108, 61 76, 76 56 C 80 50, 86 54, 84 62 C 72 82, 68 110, 72 130 C 73 134, 59 134, 58 132 Z" fill="#FFFFFF" />
+          <Path d="M 124 136 C 130 112, 136 80, 122 60 C 118 54, 126 50, 130 54 C 144 76, 138 114, 132 138 C 130 142, 122 142, 124 136 Z" fill="#FFFFFF" />
+          <Path d="M 70 98 C 90 90, 112 88, 128 94 C 130 100, 122 104, 108 104 C 90 104, 78 106, 70 106 Z" fill="#FFFFFF" />
         </G>
       </Svg>
     );
   }
 
-  // 3. Tata Motors (Official Twin-Wing Crest in Oval)
+  // 3. Tata Motors (Official Twin-Wing Crest)
   if (brandKey.includes('tata')) {
     return (
       <Svg width={s} height={s} viewBox="0 0 200 200">
         <Defs>
-          <LinearGradient id="tataBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#0066B2" />
-            <Stop offset="50%" stopColor="#005A9C" />
-            <Stop offset="100%" stopColor="#003366" />
+          <LinearGradient id="tataGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#0066FF" />
+            <Stop offset="100%" stopColor="#003399" />
+          </LinearGradient>
+          <LinearGradient id="tataChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" />
+            <Stop offset="100%" stopColor="#94A3B8" />
           </LinearGradient>
         </Defs>
         <G transform="translate(10, 15) scale(0.9)">
-          {/* Outer Oval Ring */}
-          <Ellipse 
-            cx="100" 
-            cy="95" 
-            rx="86" 
-            ry="58" 
-            fill="none" 
-            stroke="url(#tataBlueGrad)" 
-            strokeWidth="10" 
-          />
-          {/* Left Ascending Wing */}
-          <Path 
-            d="M 98 140 C 96 112, 88 88, 52 70 C 46 66, 44 60, 52 58 C 66 58, 86 70, 94 92 C 96 98, 98 118, 98 140 Z" 
-            fill="url(#tataBlueGrad)" 
-          />
-          {/* Right Ascending Wing */}
-          <Path 
-            d="M 102 140 C 104 112, 112 88, 148 70 C 154 66, 156 60, 148 58 C 134 58, 114 70, 106 92 C 104 98, 102 118, 102 140 Z" 
-            fill="url(#tataBlueGrad)" 
-          />
-          {/* Center Crown Accent */}
-          <Rect x="96" y="48" width="8" height="42" rx="4" fill="url(#tataBlueGrad)" />
+          <Circle cx="100" cy="95" r="94" fill="#0A0F1D" stroke="url(#tataChrome)" strokeWidth="5" />
+          <Ellipse cx="100" cy="95" rx="84" ry="54" fill="none" stroke="url(#tataGrad)" strokeWidth="12" />
+          <Path d="M 98 138 C 96 112, 88 88, 54 70 C 48 66, 46 60, 54 58 C 68 58, 86 70, 94 90 C 96 96, 98 114, 98 138 Z" fill="#FFFFFF" />
+          <Path d="M 102 138 C 104 112, 112 88, 146 70 C 152 66, 154 60, 146 58 C 132 58, 114 70, 106 90 C 104 96, 102 114, 102 138 Z" fill="#FFFFFF" />
+          <Rect x="96" y="48" width="8" height="40" rx="4" fill="#FFFFFF" />
         </G>
       </Svg>
     );
   }
 
-  // 4. Mahindra (Official New "Twin Peaks" Modern Metallic Emblem)
+  // 4. Mahindra (Official Twin Peaks Emblem)
   if (brandKey.includes('mahindra')) {
     return (
       <Svg width={s} height={s} viewBox="0 0 200 200">
         <Defs>
-          <LinearGradient id="mahLGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#DC2626" />
-            <Stop offset="40%" stopColor="#991B1B" />
-            <Stop offset="100%" stopColor="#450A0A" />
+          <LinearGradient id="mahRed" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#EF4444" />
+            <Stop offset="100%" stopColor="#991B1B" />
           </LinearGradient>
           <LinearGradient id="mahChrome" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#E2E8F0" />
-            <Stop offset="50%" stopColor="#94A3B8" />
-            <Stop offset="100%" stopColor="#475569" />
+            <Stop offset="0%" stopColor="#FFFFFF" />
+            <Stop offset="100%" stopColor="#64748B" />
           </LinearGradient>
         </Defs>
         <G transform="translate(10, 15) scale(0.9)">
-          {/* Left Peak Wing */}
-          <Path 
-            d="M 96 118 L 34 150 C 32 140, 38 100, 60 46 C 64 36, 72 36, 76 46 L 96 102 Z" 
-            fill="url(#mahLGrad)" 
-          />
-          <Path 
-            d="M 76 46 L 96 102 L 96 68 L 76 46 Z" 
-            fill="url(#mahChrome)" 
-          />
-          {/* Right Peak Wing */}
-          <Path 
-            d="M 104 118 L 166 150 C 168 140, 162 100, 140 46 C 136 36, 128 36, 124 46 L 104 102 Z" 
-            fill="url(#mahLGrad)" 
-          />
-          <Path 
-            d="M 124 46 L 104 102 L 104 68 L 124 46 Z" 
-            fill="url(#mahChrome)" 
-          />
-          {/* Center Dynamic Apex */}
-          <Path 
-            d="M 96 122 L 100 136 L 104 122 L 100 106 Z" 
-            fill="#EF4444" 
-          />
+          <Circle cx="100" cy="95" r="94" fill="#0A0F1D" stroke="url(#mahChrome)" strokeWidth="5" />
+          <Path d="M 96 116 L 36 148 C 34 138, 40 100, 62 46 C 66 36, 74 36, 78 46 L 96 100 Z" fill="url(#mahRed)" />
+          <Path d="M 78 46 L 96 100 L 96 68 L 78 46 Z" fill="url(#mahChrome)" />
+          <Path d="M 104 116 L 164 148 C 166 138, 160 100, 138 46 C 134 36, 126 36, 122 46 L 104 100 Z" fill="url(#mahRed)" />
+          <Path d="M 122 46 L 104 100 L 104 68 L 122 46 Z" fill="url(#mahChrome)" />
+          <Path d="M 96 120 L 100 134 L 104 120 L 100 104 Z" fill="#FFFFFF" />
         </G>
       </Svg>
     );
@@ -422,48 +374,43 @@ function renderBrandVector(brandKey: string, size: number) {
     return (
       <Svg width={s} height={s} viewBox="0 0 200 200">
         <Defs>
-          <LinearGradient id="toyotaRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#EF4444" />
-            <Stop offset="50%" stopColor="#EB0A1E" />
-            <Stop offset="100%" stopColor="#B91C1C" />
+          <LinearGradient id="toyotaRed" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FF3333" />
+            <Stop offset="100%" stopColor="#CC0000" />
+          </LinearGradient>
+          <LinearGradient id="toyotaChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" />
+            <Stop offset="100%" stopColor="#94A3B8" />
           </LinearGradient>
         </Defs>
         <G transform="translate(10, 15) scale(0.9)">
-          {/* Outer Oval */}
-          <Ellipse cx="100" cy="95" rx="88" ry="60" fill="none" stroke="url(#toyotaRedGrad)" strokeWidth="10" />
-          {/* Inner Vertical Oval (T stem) */}
-          <Ellipse cx="100" cy="95" rx="26" ry="46" fill="none" stroke="url(#toyotaRedGrad)" strokeWidth="8" />
-          {/* Inner Horizontal Oval (T crossbar) */}
-          <Ellipse cx="100" cy="74" rx="58" ry="22" fill="none" stroke="url(#toyotaRedGrad)" strokeWidth="8" />
+          <Circle cx="100" cy="95" r="94" fill="#0A0F1D" stroke="url(#toyotaChrome)" strokeWidth="5" />
+          <Ellipse cx="100" cy="95" rx="84" ry="58" fill="none" stroke="url(#toyotaRed)" strokeWidth="11" />
+          <Ellipse cx="100" cy="95" rx="26" ry="44" fill="none" stroke="url(#toyotaRed)" strokeWidth="8" />
+          <Ellipse cx="100" cy="74" rx="56" ry="20" fill="none" stroke="url(#toyotaRed)" strokeWidth="8" />
         </G>
       </Svg>
     );
   }
 
-  // 6. Honda (Official Trapezoid Badge & Signature 'H')
+  // 6. Honda (Official Red Emblem)
   if (brandKey.includes('honda')) {
     return (
       <Svg width={s} height={s} viewBox="0 0 200 200">
         <Defs>
-          <LinearGradient id="hondaRedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#EF4444" />
-            <Stop offset="50%" stopColor="#E40521" />
-            <Stop offset="100%" stopColor="#991B1B" />
+          <LinearGradient id="hondaRed" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FF1111" />
+            <Stop offset="100%" stopColor="#880000" />
+          </LinearGradient>
+          <LinearGradient id="hondaChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" />
+            <Stop offset="100%" stopColor="#94A3B8" />
           </LinearGradient>
         </Defs>
         <G transform="translate(10, 10) scale(0.9)">
-          {/* Outer Trapezoidal Shield Frame */}
-          <Path 
-            d="M 34 26 L 166 26 C 178 26 186 36 182 50 L 162 166 C 158 178 148 184 138 184 L 62 184 C 52 184 42 178 38 166 L 18 50 C 14 36 22 26 34 26 Z" 
-            fill="none" 
-            stroke="url(#hondaRedGrad)" 
-            strokeWidth="9" 
-          />
-          {/* Center Iconic Honda 'H' */}
-          <Path 
-            d="M 48 40 L 66 40 L 76 104 L 124 104 L 134 40 L 152 40 L 140 168 L 122 168 L 126 122 L 74 122 L 78 168 L 60 168 Z" 
-            fill="url(#hondaRedGrad)" 
-          />
+          <Circle cx="100" cy="100" r="94" fill="#0A0F1D" stroke="url(#hondaChrome)" strokeWidth="5" />
+          <Path d="M 38 26 L 162 26 C 174 26 182 36 178 50 L 158 160 C 154 172 144 178 134 178 L 66 178 C 56 178 46 172 42 160 L 22 50 C 18 38 26 26 38 26 Z" fill="none" stroke="url(#hondaRed)" strokeWidth="10" />
+          <Path d="M 52 42 L 68 42 L 76 102 L 124 102 L 132 42 L 148 42 L 136 158 L 120 158 L 124 118 L 76 118 L 80 158 L 64 158 Z" fill="#FFFFFF" />
         </G>
       </Svg>
     );
@@ -715,6 +662,51 @@ function renderBrandVector(brandKey: string, size: number) {
   );
 }
 
+function getLocalBrandLogo(brandKey: string) {
+  let slug = brandKey;
+  if (slug.includes('maruti') || slug.includes('suzuki')) return require('../assets/brands/suzuki.png');
+  if (slug.includes('hyundai')) return require('../assets/brands/hyundai.png');
+  if (slug.includes('tata')) return require('../assets/brands/tata.png');
+  if (slug.includes('mahindra')) return require('../assets/brands/mahindra.png');
+  if (slug.includes('toyota')) return require('../assets/brands/toyota.png');
+  if (slug.includes('honda')) return require('../assets/brands/honda.png');
+  if (slug.includes('kia')) return require('../assets/brands/kia.png');
+  if (slug.includes('volkswagen') || slug.includes('vw')) return require('../assets/brands/volkswagen.png');
+  if (slug.includes('ford')) return require('../assets/brands/ford.png');
+  if (slug.includes('bmw')) return require('../assets/brands/bmw.png');
+  if (slug.includes('audi')) return require('../assets/brands/audi.png');
+  if (slug.includes('mercedes') || slug.includes('benz')) return require('../assets/brands/mercedes.png');
+  if (slug.includes('skoda')) return require('../assets/brands/skoda.png');
+  if (slug.includes('renault')) return require('../assets/brands/renault.png');
+  if (slug.includes('nissan')) return require('../assets/brands/nissan.png');
+  if (slug.includes('mg')) return require('../assets/brands/mg.png');
+  if (slug.includes('jeep')) return require('../assets/brands/jeep.png');
+  return null;
+}
+
+function OfficialBrandLogo({ brandKey, size, style }: { brandKey: string; size: number; style?: StyleProp<ViewStyle> }) {
+  const [imageError, setImageError] = React.useState(false);
+  const localAsset = getLocalBrandLogo(brandKey);
+
+  if (!imageError && localAsset) {
+    return (
+      <View style={[styles.center, { width: size, height: size }, style]}>
+        <Image 
+          source={localAsset} 
+          style={{ width: size * 0.9, height: size * 0.9, resizeMode: 'contain' }}
+          onError={() => setImageError(true)}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.center, style]}>
+      {renderBrandVector(brandKey, size)}
+    </View>
+  );
+}
+
 /**
  * Modern BrandLogo Component
  */
@@ -728,15 +720,11 @@ export function BrandLogo({
   theme = 'dark'
 }: BrandLogoProps) {
   const safeSize = Number.isFinite(size) && size > 0 ? size : 32;
-  const brandKey = String(brand || '').toLowerCase().trim();
+  const brandKey = String(brand || name || '').toLowerCase().trim();
 
-  // 1. If Car Brand is specified: render 100% genuine vector emblem
+  // 1. If Car Brand is specified: render official brand logo image with vector fallback
   if (brandKey && brandKey !== 'all' && brandKey !== 'all brands') {
-    return (
-      <View style={[styles.center, style]}>
-        {renderBrandVector(brandKey, safeSize)}
-      </View>
-    );
+    return <OfficialBrandLogo brandKey={brandKey} size={safeSize} style={style} />;
   }
 
   // 2. Square App Icon

@@ -9,7 +9,8 @@ import {
   SafeAreaView,
   useWindowDimensions,
   Platform,
-  Animated
+  Animated,
+  Image
 } from 'react-native';
 import { Text, Icon } from 'react-native-paper';
 import { signInWithGoogleNative } from '../services/googleAuth';
@@ -68,6 +69,9 @@ export default function AuthScreen({ navigation }: any) {
     }
   };
 
+  const logoWidth = Math.min(screenWidth * 0.72, 270);
+  const logoHeight = logoWidth * 0.72;
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0075FF" translucent={false} />
@@ -85,16 +89,25 @@ export default function AuthScreen({ navigation }: any) {
       )}
 
       <SafeAreaView style={styles.safeArea}>
-        {/* UPPER SPACER (Balanced to place button at ~55% height matching screenshot) */}
-        <View style={{ flex: 1.15 }} />
+        {/* UPPER SPACER */}
+        <View style={{ flex: 1 }} />
 
-        {/* CENTER ACTION: SIGN IN WITH GOOGLE PILL */}
+        {/* CENTER ACTION: COMPACT BRAND LOGO + SIGN IN WITH GOOGLE PILL */}
         <Animated.View 
           style={[
             styles.centerActionContainer,
             { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
           ]}
         >
+          {/* Brand Logo perfectly fitted and compact */}
+          <View style={styles.logoWrapper}>
+            <Image
+              source={require('../assets/logo.png')}
+              style={{ width: logoWidth, height: logoHeight }}
+              resizeMode="contain"
+            />
+          </View>
+
           {errorMessage && (
             <View style={styles.errorBanner}>
               <Icon source="alert-circle-outline" size={16} color="#FFFFFF" />
@@ -142,7 +155,7 @@ export default function AuthScreen({ navigation }: any) {
         </Animated.View>
 
         {/* LOWER SPACER */}
-        <View style={{ flex: 1.0 }} />
+        <View style={{ flex: 1.2 }} />
       </SafeAreaView>
     </View>
   );
@@ -155,9 +168,9 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
+    alignItems: 'center',
   },
   backBtn: {
     position: 'absolute',
@@ -173,6 +186,11 @@ const styles = StyleSheet.create({
   },
   centerActionContainer: {
     width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoWrapper: {
+    marginBottom: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
