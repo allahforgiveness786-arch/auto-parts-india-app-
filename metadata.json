@@ -1,6 +1,6 @@
 {
-  "name": "Auto Parts",
-  "description": "A fully functional C2C marketplace for buying and selling car parts in India with complete user authentication, listing creation, search/filtering, and Firebase integration.",
+  "name": "Auto Parts India",
+  "description": "A fully functional C2C marketplace for buying and selling genuine car spare parts in India with user authentication, listing creation, direct chat, and search/filtering.",
   "requestFramePermissions": [
     "camera",
     "geolocation"

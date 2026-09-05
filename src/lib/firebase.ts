@@ -1373,35 +1373,41 @@ export function subscribeToAuth(callback: (user: User | null) => void): () => vo
   
   let unsubscribeFirebase: (() => void) | null = null;
   
-  if (useFirebase && auth) {
-    // Only use cached user if it matches the current Firebase Auth user (prevents stale cross-account emissions)
-    const cachedUserRaw = localStorage.getItem(LOCAL_STORAGE_CURRENT_USER_KEY);
-    if (cachedUserRaw && (!auth.currentUser || auth.currentUser.uid)) {
-      try {
-        const cachedUser = JSON.parse(cachedUserRaw);
-        if (cachedUser && cachedUser.id && (!auth.currentUser || auth.currentUser.uid === cachedUser.id)) {
-          callback(cachedUser);
-        }
-      } catch (e) {}
-    }
+  // 1. Immediately emit stored local user to prevent flash of logged-out state
+  const cachedUserRaw = localStorage.getItem(LOCAL_STORAGE_CURRENT_USER_KEY);
+  if (cachedUserRaw) {
+    try {
+      const cachedUser = JSON.parse(cachedUserRaw);
+      if (cachedUser && (cachedUser.id || cachedUser.uid)) {
+        callback(cachedUser);
+      }
+    } catch (e) {}
+  } else {
+    callback(null);
+  }
 
+  if (useFirebase && auth) {
     try {
       unsubscribeFirebase = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
         if (firebaseUser) {
-          const user = await ensureFirestoreUserDoc(firebaseUser);
-          localStorage.setItem(LOCAL_STORAGE_CURRENT_USER_KEY, JSON.stringify(user));
-          callback(user);
+          try {
+            const user = await ensureFirestoreUserDoc(firebaseUser);
+            localStorage.setItem(LOCAL_STORAGE_CURRENT_USER_KEY, JSON.stringify(user));
+            callback(user);
+          } catch (e) {
+            console.warn("Failed to ensure user doc on auth state change:", e);
+          }
         } else {
-          localStorage.removeItem(LOCAL_STORAGE_CURRENT_USER_KEY);
-          callback(null);
+          // If Firebase Auth emits null, only clear if there is no valid local cached session
+          const currentLocalRaw = localStorage.getItem(LOCAL_STORAGE_CURRENT_USER_KEY);
+          if (!currentLocalRaw) {
+            callback(null);
+          }
         }
       });
     } catch (e) {
       console.warn("Firebase onAuthStateChanged failed:", e);
     }
-  } else {
-    localStorage.removeItem(LOCAL_STORAGE_CURRENT_USER_KEY);
-    callback(null);
   }
 
   // Handle storage / custom event for dynamic local auth changes

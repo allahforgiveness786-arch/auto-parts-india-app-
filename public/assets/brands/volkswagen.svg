@@ -1,11 +1,17 @@
-
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="128" cy="128" r="100" fill="#001E50"/>
-  <circle cx="128" cy="128" r="92" stroke="#FFFFFF" stroke-width="8" fill="none"/>
-  <!-- V -->
-  <path d="M 72,74 L 108,138 L 124,138 L 90,74 Z M 184,74 L 148,138 L 132,138 L 166,74 Z" fill="#FFFFFF"/>
-  <path d="M 112,74 L 128,102 L 144,74 Z" fill="#FFFFFF"/>
-  <!-- W -->
-  <path d="M 80,122 L 108,182 L 122,182 L 94,122 Z M 176,122 L 148,182 L 134,182 L 162,122 Z" fill="#FFFFFF"/>
-  <path d="M 120,132 L 128,150 L 136,132 Z" fill="#FFFFFF"/>
+<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vwBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#001E50" />
+      <stop offset="100%" stop-color="#000F29" />
+    </linearGradient>
+  </defs>
+  <!-- Official Modern Volkswagen Roundel Emblem -->
+  <g transform="translate(20, 20) scale(0.8)">
+    <!-- Outer Ring -->
+    <circle cx="100" cy="100" r="92" fill="none" stroke="url(#vwBlue)" stroke-width="12"/>
+    <!-- V Geometry -->
+    <path d="M 46 44 L 92 126 L 108 126 L 154 44 L 140 44 L 100 114 L 60 44 Z" fill="url(#vwBlue)"/>
+    <!-- W Geometry -->
+    <path d="M 28 88 L 68 156 L 82 156 L 100 120 L 118 156 L 132 156 L 172 88 L 158 88 L 126 144 L 108 108 L 92 108 L 74 144 L 42 88 Z" fill="url(#vwBlue)"/>
+  </g>
 </svg>

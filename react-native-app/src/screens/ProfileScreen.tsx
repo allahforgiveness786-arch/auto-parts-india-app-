@@ -238,10 +238,10 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
           <View style={styles.sectionGap} />
 
           <TouchableOpacity style={styles.menuItem} onPress={handleSignOut}>
-            <View style={[styles.menuIconBox, { backgroundColor: '#F8FAFC' }]}>
+            <View style={[styles.menuIconBox, { backgroundColor: '#FEF2F2' }]}>
               <Icon source="logout" size={20} color="#DC2626" />
             </View>
-            <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Log Out</Text>
+            <Text style={[styles.menuItemText, { color: '#DC2626', fontWeight: '600' }]}>Log Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -330,6 +330,34 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     gap: 16,
+  },
+  guestHeaderCard: {
+    backgroundColor: '#F0F7FF',
+    borderColor: '#BAE6FD',
+  },
+  guestAvatarWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signInPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#0066FF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  signInPrimaryBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
   },
   avatarWrap: { width: 72, height: 72, borderRadius: 36, overflow: 'hidden', borderWidth: 2, borderColor: '#F1F5F9' },
   avatarImage: { width: '100%', height: '100%' },

@@ -1,28 +1,26 @@
-
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="hyundaiSilver" x1="40" y1="40" x2="216" y2="216" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#3B82F6"/>
-      <stop offset="40%" stop-color="#1D4ED8"/>
-      <stop offset="100%" stop-color="#0F172A"/>
+    <linearGradient id="hyundaiBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#002C6C" />
+      <stop offset="50%" stop-color="#00438F" />
+      <stop offset="100%" stop-color="#001844" />
     </linearGradient>
-    <linearGradient id="chromeGrad" x1="40" y1="50" x2="216" y2="206" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#475569"/>
-      <stop offset="30%" stop-color="#0284C7"/>
-      <stop offset="70%" stop-color="#0369A1"/>
-      <stop offset="100%" stop-color="#0C4A6E"/>
+    <linearGradient id="hyundaiChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC" />
+      <stop offset="35%" stop-color="#CBD5E1" />
+      <stop offset="70%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
     </linearGradient>
   </defs>
-  <g>
-    <!-- Outer Slanted Oval Ring -->
-    <path d="M 128,52 C 60,52 20,86 20,128 C 20,170 60,204 128,204 C 196,204 236,170 236,128 C 236,86 196,52 128,52 Z M 128,70 C 182,70 216,96 216,128 C 216,160 182,186 128,186 C 74,186 40,160 40,128 C 40,96 74,70 128,70 Z" fill="url(#chromeGrad)"/>
-    
-    <!-- Stylized Slanted 'H' with connecting bridge -->
-    <!-- Left Pillar -->
-    <path d="M 72,176 C 68,154 74,106 90,80 C 94,74 102,74 102,82 C 90,108 86,146 92,176 C 94,182 86,184 72,176 Z" fill="url(#chromeGrad)"/>
-    <!-- Right Pillar -->
-    <path d="M 154,80 C 170,106 174,150 162,176 C 160,182 152,182 152,174 C 164,148 160,108 144,80 C 142,74 150,72 154,80 Z" fill="url(#chromeGrad)"/>
-    <!-- Slanted Crossbar -->
-    <path d="M 86,134 C 110,122 144,118 164,124 C 168,126 166,134 160,136 C 138,142 108,144 84,142 C 80,140 82,136 86,134 Z" fill="url(#chromeGrad)"/>
+  <!-- Official Hyundai Slanted Oval Ring with Flowing 'H' -->
+  <g transform="translate(10, 25) scale(0.9)">
+    <!-- Outer Slanted Oval -->
+    <path d="M 100 12 C 45 12 10 38 10 70 C 10 102 45 128 100 128 C 155 128 190 102 190 70 C 190 38 155 12 100 12 Z M 100 26 C 144 26 174 46 174 70 C 174 94 144 114 100 114 C 56 114 26 94 26 70 C 26 46 56 26 100 26 Z" fill="url(#hyundaiBlue)"/>
+    <!-- Left Stalk (Slanted) -->
+    <path d="M 52 104 C 48 88 54 52 68 34 C 72 29 80 30 79 38 C 68 56 64 88 68 104 C 69 108 55 110 52 104 Z" fill="url(#hyundaiBlue)"/>
+    <!-- Right Stalk (Slanted) -->
+    <path d="M 124 34 C 138 52 144 88 134 104 C 132 109 123 108 124 100 C 132 84 128 52 116 38 C 114 30 121 29 124 34 Z" fill="url(#hyundaiBlue)"/>
+    <!-- Crossbar -->
+    <path d="M 64 72 C 86 64 114 62 134 68 C 138 69 136 76 130 77 C 110 73 84 75 66 80 C 62 81 61 74 64 72 Z" fill="url(#hyundaiBlue)"/>
   </g>
 </svg>

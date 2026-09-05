@@ -939,35 +939,7 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
             })}
           </View>
 
-          <View style={styles.nativeField}>
-            <Text style={styles.fieldLabel}>PART NAME *</Text>
-            <TouchableOpacity
-              style={[
-                styles.nativePicker,
-                submittedAttempt && !finalPartName && styles.fieldError,
-              ]}
-              onPress={() => {
-                setPickerSearchQuery('');
-                setPickerModalType('finalPartName');
-              }}
-              disabled={!finalCategory}
-            >
-              <View style={styles.fieldIconCircle}>
-                <IconButton icon="cog-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
-              </View>
-              <Text
-                style={[
-                  styles.pickerValue,
-                  !finalPartName && styles.pickerPlaceholder,
-                ]}
-                numberOfLines={1}
-              >
-                {finalPartName || (finalCategory ? 'Select spare part' : 'Select finalCategory first')}
-              </Text>
-              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
-            </TouchableOpacity>
-          </View>
-
+          {/* 1. CATEGORY FIRST */}
           <View style={styles.nativeField}>
             <Text style={styles.fieldLabel}>CATEGORY *</Text>
             <TouchableOpacity
@@ -990,12 +962,44 @@ export default function SellPartScreen({ navigation, user: initialUser }: any) {
                 ]}
                 numberOfLines={1}
               >
-                {finalCategory ? translateDynamic(finalCategory) : 'Select part finalCategory'}
+                {finalCategory ? translateDynamic(finalCategory) : 'Select part category'}
               </Text>
               <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
             </TouchableOpacity>
           </View>
 
+          {/* 2. PART NAME SECOND */}
+          <View style={styles.nativeField}>
+            <Text style={styles.fieldLabel}>PART NAME *</Text>
+            <TouchableOpacity
+              style={[
+                styles.nativePicker,
+                !finalCategory && styles.nativePickerDisabled,
+                submittedAttempt && !finalPartName && styles.fieldError,
+              ]}
+              onPress={() => {
+                setPickerSearchQuery('');
+                setPickerModalType('finalPartName');
+              }}
+              disabled={!finalCategory}
+            >
+              <View style={styles.fieldIconCircle}>
+                <IconButton icon="cog-outline" size={18} iconColor="#475569" style={{ margin: 0 }} />
+              </View>
+              <Text
+                style={[
+                  styles.pickerValue,
+                  !finalPartName && styles.pickerPlaceholder,
+                ]}
+                numberOfLines={1}
+              >
+                {finalPartName || (finalCategory ? 'Select spare part' : 'Select category first')}
+              </Text>
+              <IconButton icon="chevron-right" size={20} iconColor="#94A3B8" style={{ margin: 0 }} />
+            </TouchableOpacity>
+          </View>
+
+          {/* 3. AD TITLE THIRD */}
           <View style={styles.nativeField}>
             <Text style={styles.fieldLabel}>AD TITLE *</Text>
             <RNTextInput

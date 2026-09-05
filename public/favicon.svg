@@ -1,139 +1,48 @@
-
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="iconGearGrad" x1="512" y1="40" x2="512" y2="980" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0088FF"/>
-      <stop offset="40%" stop-color="#0060E6"/>
-      <stop offset="100%" stop-color="#0035A8"/>
+    <linearGradient id="favShieldBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F1F38" />
+      <stop offset="50%" stop-color="#0A1526" />
+      <stop offset="100%" stop-color="#050B14" />
     </linearGradient>
-    <linearGradient id="iconGearBevel" x1="60" y1="40" x2="964" y2="980" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#38B6FF"/>
-      <stop offset="50%" stop-color="#0066FF"/>
-      <stop offset="100%" stop-color="#002277"/>
+
+    <linearGradient id="favShieldRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="40%" stop-color="#0066FF" />
+      <stop offset="80%" stop-color="#003B95" />
+      <stop offset="100%" stop-color="#0284C7" />
     </linearGradient>
-    <linearGradient id="iconWindshield" x1="512" y1="280" x2="512" y2="470" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#004BBB"/>
-      <stop offset="100%" stop-color="#002166"/>
+
+    <linearGradient id="favCarStream" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#60A5FA" />
     </linearGradient>
-    <linearGradient id="iconLight" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#00F0FF"/>
-      <stop offset="100%" stop-color="#0088FF"/>
+
+    <linearGradient id="favGearGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#0066FF" />
+      <stop offset="100%" stop-color="#003B95" />
     </linearGradient>
-    <linearGradient id="iconChrome" x1="160" y1="580" x2="920" y2="780" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#E2E8F0"/>
-      <stop offset="50%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#CBD5E1"/>
-    </linearGradient>
-    <linearGradient id="iconSwoosh" x1="100" y1="580" x2="800" y2="820" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#00E5FF"/>
-      <stop offset="50%" stop-color="#0080FF"/>
-      <stop offset="100%" stop-color="#0052CC"/>
-    </linearGradient>
-    <filter id="iconShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#001844" flood-opacity="0.4"/>
-    </filter>
   </defs>
 
-  <rect width="1024" height="1024" rx="224" fill="#0B1220"/>
+  <rect x="8" y="8" width="184" height="184" rx="42" fill="url(#favShieldBg)" stroke="url(#favShieldRim)" stroke-width="4" />
 
-  <g transform="translate(0, -10)" filter="url(#iconShadow)">
-    <!-- 8-Teeth Gear -->
-    <path d="
-      M 426,80 L 598,80 L 612,178 Q 674,196 730,228 L 824,170 L 924,270 L 866,364 Q 898,420 916,482 L 1014,496 L 1014,668 L 916,682 Q 898,744 866,800 L 924,894 L 824,994 L 730,936 Q 674,968 612,986 L 598,1084 L 426,1084 L 412,986 Q 350,968 294,936 L 200,994 L 100,894 L 158,800 Q 126,744 108,682 L 10,668 L 10,496 L 108,482 Q 126,420 158,364 L 100,270 L 200,170 L 294,228 Q 350,196 412,178 Z"
-      transform="matrix(0.92 0 0 0.92 41 20)"
-      fill="url(#iconGearGrad)"
-      stroke="url(#iconGearBevel)"
-      stroke-width="12"
-      stroke-linejoin="round"
-    />
+  <g transform="translate(10, 8)">
+    <g transform="translate(68, 108)" fill="url(#favGearGrad)">
+      <path d="M -6,-28 L 6,-28 L 5,-22 C 8,-21 11,-19 14,-17 L 19,-20 L 27,-12 L 24,-7 C 26,-4 28,-1 29,2 L 35,3 L 35,15 L 29,16 C 28,19 26,22 24,25 L 27,30 L 19,38 L 14,35 C 11,37 8,39 5,40 L 6,46 L -6,46 L -5,40 C -8,39 -11,37 -14,35 L -19,38 L -27,30 L -24,25 C -26,22 -28,19 -29,16 L -35,15 L -35,3 L -29,2 C -28,-1 -26,-4 -24,-7 L -27,-12 L -19,-20 L -14,-17 C -11,-19 -8,-21 -5,-22 Z" opacity="0.95" />
+      <circle cx="0" cy="9" r="14" fill="#0A1526" stroke="#38BDF8" stroke-width="2.5" />
+      <circle cx="0" cy="9" r="6" fill="#38BDF8" />
+    </g>
 
-    <!-- Inner Groove -->
-    <circle cx="512" cy="530" r="375" fill="#04122C" stroke="#0055D4" stroke-width="10"/>
-    <circle cx="512" cy="530" r="355" fill="#0A224A"/>
+    <g transform="translate(132, 117) rotate(35)">
+      <path d="M -16,-6 L -42,-6 C -44,-6 -46,-4 -46,-2 L -46,2 C -46,4 -44,6 -42,6 L -16,6 C -14,12 -8,16 0,16 C 9,16 16,9 16,0 C 16,-9 9,-16 0,-16 C -8,-16 -14,-12 -16,-6 Z M 0,-8 C 4.4,-8 8,-4.4 8,0 C 8,4.4 4.4,8 0,8 C -3,8 -5.6,6.3 -6.9,3.8 L 3,3.8 L 3,-3.8 L -6.9,-3.8 C -5.6,-6.3 -3,-8 0,-8 Z" fill="#60A5FA" opacity="0.9" />
+    </g>
 
-    <!-- Car Shield White Base -->
-    <path d="M 200,510 C 200,330 310,220 512,220 C 714,220 824,330 824,510 C 824,690 700,760 512,760 C 324,760 200,690 200,510 Z" fill="#F8FAFC"/>
-
-    <!-- Car Cabin Roof & Pillars -->
-    <path d="M 310,430 L 360,315 C 376,290 416,280 512,280 C 608,280 648,290 664,315 L 714,430 Z" fill="#0B1A30"/>
-    
-    <!-- Windshield -->
-    <path d="M 326,425 L 372,320 C 388,302 420,295 512,295 C 604,295 636,302 652,320 L 698,425 Z" fill="url(#iconWindshield)"/>
-    <path d="M 390,315 L 355,420 L 415,420 L 450,315 Z" fill="#38B6FF" opacity="0.35"/>
-
-    <!-- Mirrors -->
-    <path d="M 308,406 C 278,406 264,422 278,438 C 294,450 316,446 322,432 Z" fill="#F1F5F9" stroke="#0B1A30" stroke-width="4"/>
-    <path d="M 716,406 C 746,406 760,422 746,438 C 730,450 708,446 702,432 Z" fill="#F1F5F9" stroke="#0B1A30" stroke-width="4"/>
-
-    <!-- Car Body Hood & Fenders -->
-    <path d="
-      M 315,432 
-      C 245,444 180,488 168,546 
-      C 160,596 185,640 235,662 
-      L 290,675 
-      C 356,686 668,686 734,675 
-      L 789,662 
-      C 839,640 864,596 856,546 
-      C 844,488 779,444 709,432 
-      C 644,424 380,424 315,432 Z" 
-      fill="#FFFFFF" 
-      stroke="#0B1A30" 
-      stroke-width="9"
-    />
-
-    <!-- Front Grille -->
-    <path d="M 342,525 C 342,520 355,516 512,516 C 669,516 682,520 682,525 L 664,600 C 660,612 642,616 512,616 C 382,616 364,612 360,600 Z" fill="#081426" stroke="#0F2442" stroke-width="7"/>
-    <path d="M 360,538 Q 512,535 664,538" stroke="#38B6FF" stroke-width="4.5" opacity="0.9"/>
-    <path d="M 364,558 Q 512,555 660,558" stroke="#FFFFFF" stroke-width="4" opacity="0.85"/>
-    <path d="M 370,578 Q 512,575 654,578" stroke="#38B6FF" stroke-width="4.5" opacity="0.9"/>
-    <path d="M 382,598 Q 512,596 642,598" stroke="#CBD5E1" stroke-width="3.5" opacity="0.7"/>
-
-    <!-- Left Projector Headlight -->
-    <path d="M 200,510 C 240,510 310,518 324,556 C 310,567 240,571 196,545 C 187,530 189,516 200,510 Z" fill="#09182E" stroke="#0044BB" stroke-width="4.5"/>
-    <path d="M 210,521 C 245,523 300,532 311,552 C 278,561 234,559 210,541 Z" fill="url(#iconLight)"/>
-    <ellipse cx="258" cy="537" rx="16" ry="7" fill="#FFFFFF"/>
-
-    <!-- Right Projector Headlight -->
-    <path d="M 824,510 C 784,510 714,518 700,556 C 714,567 784,571 828,545 C 837,530 835,516 824,510 Z" fill="#09182E" stroke="#0044BB" stroke-width="4.5"/>
-    <path d="M 814,521 C 779,523 724,532 713,552 C 746,561 790,559 814,541 Z" fill="url(#iconLight)"/>
-    <ellipse cx="766" cy="537" rx="16" ry="7" fill="#FFFFFF"/>
-
-    <!-- Sweeping Wrench & Swoosh -->
-    <path d="
-      M 115,575
-      C 105,640 150,740 270,785
-      C 400,835 655,810 820,740
-      C 755,768 570,812 390,790
-      C 250,770 145,705 115,575 Z"
-      fill="url(#iconSwoosh)"
-    />
-
-    <path d="
-      M 135,590
-      C 130,662 200,745 345,768
-      C 510,792 710,738 810,672
-      L 805,630
-      C 820,618 855,585 900,585
-      C 945,585 978,618 984,658
-      C 990,695 968,735 928,758
-      C 900,774 845,785 810,782
-      C 690,830 480,835 315,800
-      C 195,775 120,690 135,590 Z"
-      fill="url(#iconChrome)"
-      stroke="#0B1A30"
-      stroke-width="8"
-      stroke-linejoin="round"
-    />
-
-    <!-- Wrench Jaws Cutout -->
-    <path d="
-      M 905,588
-      C 882,608 877,635 888,664
-      C 900,688 928,702 958,698
-      L 980,670
-      C 965,652 956,630 965,605
-      Z"
-      fill="#0B1A30"
-    />
+    <path d="M 22 104 C 32 94, 46 64, 76 52 C 102 42, 130 46, 154 78 C 160 86, 168 96, 172 104 C 174 108, 166 110, 158 108 C 138 104, 114 96, 86 96 C 58 96, 38 102, 22 104 Z" fill="url(#favCarStream)" />
+    <path d="M 48 88 C 70 62, 106 56, 142 80" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" />
+    <path d="M 80 78 L 94 62 C 108 60, 120 62, 128 76 Z" fill="#0A1526" stroke="#38BDF8" stroke-width="1.2" />
+    <path d="M 132 76 C 138 72, 144 74, 148 78 L 136 80 Z" fill="#0A1526" stroke="#38BDF8" stroke-width="1.2" />
+    <path d="M 158 98 L 174 102 L 160 106 Z" fill="#38BDF8" opacity="0.95" />
   </g>
 </svg>

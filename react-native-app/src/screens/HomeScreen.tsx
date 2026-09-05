@@ -536,10 +536,17 @@ export default function HomeScreen({ navigation, route, user }: any) {
     { id: 'tata', name: 'Tata' },
     { id: 'mahindra', name: 'Mahindra' },
     { id: 'toyota', name: 'Toyota' },
-    { id: 'honda', name: 'Honda' },
     { id: 'kia', name: 'Kia' },
+    { id: 'honda', name: 'Honda' },
     { id: 'volkswagen', name: 'Volkswagen' },
+    { id: 'skoda', name: 'Skoda' },
+    { id: 'renault', name: 'Renault' },
+    { id: 'mg', name: 'MG' },
+    { id: 'nissan', name: 'Nissan' },
     { id: 'ford', name: 'Ford' },
+    { id: 'bmw', name: 'BMW' },
+    { id: 'mercedes', name: 'Mercedes-Benz' },
+    { id: 'audi', name: 'Audi' },
   ];
 
   const popularCities = [
@@ -902,14 +909,6 @@ export default function HomeScreen({ navigation, route, user }: any) {
               <Text style={styles.sectionTitle}>Shop by Category</Text>
               <Text style={styles.sectionSubtitle}>Find verified OEM & aftermarket spare parts</Text>
             </View>
-            <TouchableOpacity 
-              style={styles.viewAllRow}
-              onPress={() => navigation.navigate('AllCategories', { categories: categoryGridItems.filter(c => c.id !== 'More') })}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.seeAllText}>See All</Text>
-              <Icon source="chevron-right" size={18} color="#0066FF" />
-            </TouchableOpacity>
           </View>
 
           <ScrollView 

@@ -12,17 +12,28 @@ export interface BrandLogoProps {
 }
 
 const BRAND_IMAGE_PATHS: Record<string, string> = {
-  maruti: '/assets/brands/maruti_suzuki.png',
-  suzuki: '/assets/brands/maruti_suzuki.png',
-  'maruti suzuki': '/assets/brands/maruti_suzuki.png',
-  hyundai: '/assets/brands/hyundai.png',
-  tata: '/assets/brands/tata.png',
-  mahindra: '/assets/brands/mahindra.png',
-  toyota: '/assets/brands/toyota.png',
-  honda: '/assets/brands/honda.png',
-  kia: '/assets/brands/kia.png',
-  volkswagen: '/assets/brands/volkswagen.png',
-  vw: '/assets/brands/volkswagen.png',
+  maruti: '/assets/brands/maruti_suzuki.svg',
+  suzuki: '/assets/brands/maruti_suzuki.svg',
+  'maruti suzuki': '/assets/brands/maruti_suzuki.svg',
+  hyundai: '/assets/brands/hyundai.svg',
+  tata: '/assets/brands/tata.svg',
+  mahindra: '/assets/brands/mahindra.svg',
+  toyota: '/assets/brands/toyota.svg',
+  honda: '/assets/brands/honda.svg',
+  kia: '/assets/brands/kia.svg',
+  volkswagen: '/assets/brands/volkswagen.svg',
+  vw: '/assets/brands/volkswagen.svg',
+  ford: '/assets/brands/ford.svg',
+  renault: '/assets/brands/renault.svg',
+  skoda: '/assets/brands/skoda.svg',
+  nissan: '/assets/brands/nissan.svg',
+  bmw: '/assets/brands/bmw.svg',
+  mercedes: '/assets/brands/mercedes.svg',
+  'mercedes-benz': '/assets/brands/mercedes.svg',
+  benz: '/assets/brands/mercedes.svg',
+  audi: '/assets/brands/audi.svg',
+  mg: '/assets/brands/mg.svg',
+  'morris garages': '/assets/brands/mg.svg',
 };
 
 const SIZE_MAP: Record<string, number> = {
@@ -50,8 +61,8 @@ export function BrandLogo({
   const safeSize = Number.isFinite(numericSize) && numericSize > 0 ? numericSize : 32;
   const brandKey = String(brand || '').toLowerCase().trim();
 
-  // If a car brand is specified (e.g. Maruti, Tata, Hyundai, Mahindra, Toyota)
-  if (brandKey) {
+  // If a car brand is specified (e.g. Maruti Suzuki, Tata, Hyundai, Mahindra, Toyota, Honda, Kia, VW, Ford, etc.)
+  if (brandKey && brandKey !== 'all' && brandKey !== 'all brands') {
     let matchedSrc = BRAND_IMAGE_PATHS[brandKey];
     if (!matchedSrc) {
       for (const key of Object.keys(BRAND_IMAGE_PATHS)) {
@@ -79,7 +90,7 @@ export function BrandLogo({
     const initial = (brand || name || 'A').charAt(0).toUpperCase();
     return (
       <div 
-        className={`flex items-center justify-center bg-slate-800 border border-slate-700 rounded-lg text-white font-bold text-xs shadow-xs shrink-0 ${className}`}
+        className={`flex items-center justify-center bg-slate-900 border border-slate-700 rounded-lg text-white font-bold text-xs shadow-xs shrink-0 ${className}`}
         style={{ width: safeSize, height: safeSize }}
       >
         {initial}
@@ -102,7 +113,6 @@ export function BrandLogo({
   }
 
   // Full / Horizontal / Default App Logo
-  const isCompact = safeSize <= 40;
   return (
     <div className={`flex items-center gap-2 select-none ${className}`}>
       <img
@@ -136,4 +146,3 @@ export function GearSpeedLogoIcon({ size = 48 }: { size?: number }) {
 }
 
 export default BrandLogo;
-
