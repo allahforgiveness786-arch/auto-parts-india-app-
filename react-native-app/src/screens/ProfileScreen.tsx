@@ -4,6 +4,8 @@ import { Text, Icon, Divider } from 'react-native-paper';
 import { getFirebaseAuth, getFirebaseFirestore, getCurrentUser } from '../services/firebase';
 import { signOutFromGoogle } from '../services/googleAuth';
 import { UserProfilePopupModal } from '../components/UserProfilePopupModal';
+import { promptImageSourceDialog } from '../services/imagePickerService';
+import { uploadImageToCloudinary } from '../services/cloudinary';
 
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250';
 
@@ -19,7 +21,9 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editLocation, setEditLocation] = useState('');
+  const [editPhoto, setEditPhoto] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const SUPER_ADMIN_EMAILS = [
     'wwwautoparts2@gmail.com',
@@ -73,7 +77,47 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
   const openEditModal = () => {
     setEditName(dbUserDoc?.displayName || displayName || '');
     setEditPhone(dbUserDoc?.phone || '');
+    setEditLocation(dbUserDoc?.location || '');
+    setEditPhoto(dbUserDoc?.photoURL || dbUserDoc?.profilePhoto || displayPhotoUrl || '');
     setIsEditProfileModalOpen(true);
+  };
+
+  const handlePickProfilePhoto = async () => {
+    try {
+      const selectedUri = await promptImageSourceDialog(
+        'Profile Picture',
+        'Choose Camera or Gallery to set your profile photo'
+      );
+      if (selectedUri) {
+        setUploadingPhoto(true);
+        const cloudinaryUrl = await uploadImageToCloudinary(selectedUri, 'profile_photos');
+        if (cloudinaryUrl) {
+          setEditPhoto(cloudinaryUrl);
+          setDisplayPhotoUrl(cloudinaryUrl);
+          
+          if (activeUid) {
+            const db = getFirebaseFirestore();
+            if (db && typeof db.collection === 'function') {
+              await db.collection('users').doc(activeUid).set({
+                photoURL: cloudinaryUrl,
+                profilePhoto: cloudinaryUrl,
+                updatedAt: Date.now(),
+              }, { merge: true });
+            }
+            const authUser = getCurrentUser();
+            if (authUser && typeof authUser.updateProfile === 'function') {
+              await authUser.updateProfile({ photoURL: cloudinaryUrl });
+            }
+          }
+          Alert.alert('Success', 'Profile picture updated successfully!');
+        }
+      }
+    } catch (err: any) {
+      console.warn('Profile photo pick error:', err);
+      Alert.alert('Error', err.message || 'Failed to update profile photo.');
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   const handleSaveProfileDetails = async () => {
@@ -82,18 +126,26 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
     try {
       const db = getFirebaseFirestore();
       if (db && typeof db.collection === 'function') {
-        await db.collection('users').doc(activeUid).set({
+        const payload: any = {
           displayName: editName.trim(),
           phone: editPhone.trim(),
+          location: editLocation.trim(),
           updatedAt: Date.now(),
-        }, { merge: true });
+        };
+        if (editPhoto.trim()) {
+          payload.photoURL = editPhoto.trim();
+          payload.profilePhoto = editPhoto.trim();
+          setDisplayPhotoUrl(editPhoto.trim());
+        }
+
+        await db.collection('users').doc(activeUid).set(payload, { merge: true });
 
         // Update auth profile
         const authUser = getCurrentUser();
         if (authUser && typeof authUser.updateProfile === 'function') {
-          await authUser.updateProfile({
-            displayName: editName.trim(),
-          });
+          const updatePayload: any = { displayName: editName.trim() };
+          if (editPhoto.trim()) updatePayload.photoURL = editPhoto.trim();
+          await authUser.updateProfile(updatePayload);
           setDisplayName(editName.trim());
         }
       }
@@ -153,10 +205,25 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
           <View style={styles.profileInfoWrap}>
             <Text style={styles.profileName}>{displayName}</Text>
             <Text style={styles.profileEmail}>{userEmail}</Text>
-            <TouchableOpacity style={styles.editProfileBtn} onPress={openEditModal}>
-              <Icon source="pencil-outline" size={14} color="#0F172A" />
-              <Text style={styles.editProfileBtnText}>Edit Profile</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+              <TouchableOpacity 
+                style={[styles.editProfileBtn, { flex: 1, backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]} 
+                onPress={() => {
+                  if (activeUid) {
+                    navigation.navigate('SellerProfileScreen', { sellerId: activeUid, sellerName: displayName });
+                  }
+                }}
+              >
+                <Icon source="eye-outline" size={14} color="#0066FF" />
+                <Text style={[styles.editProfileBtnText, { color: '#0066FF' }]}>View Public Profile</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.editProfileBtn, { paddingHorizontal: 12 }]} 
+                onPress={openEditModal}
+              >
+                <Icon source="pencil-outline" size={14} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -186,6 +253,16 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
               <Divider style={styles.divider} />
             </>
           )}
+
+          <TouchableOpacity style={styles.menuItem} onPress={openEditModal}>
+            <View style={[styles.menuIconBox, { backgroundColor: '#F0FDF4' }]}>
+              <Icon source="account-edit-outline" size={20} color="#16A34A" />
+            </View>
+            <Text style={styles.menuItemText}>Edit Profile Info</Text>
+            <Icon source="chevron-right" size={20} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <Divider style={styles.divider} />
 
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyAdsTab')}>
             <View style={[styles.menuIconBox, { backgroundColor: '#EFF6FF' }]}>
@@ -264,7 +341,7 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalSheetTitle}>Edit Profile Info</Text>
+              <Text style={styles.modalSheetTitle}>View & Edit Profile</Text>
               <TouchableOpacity onPress={() => setIsEditProfileModalOpen(false)}>
                 <Icon source="close" size={22} color="#0F172A" />
               </TouchableOpacity>
@@ -288,6 +365,44 @@ export default function ProfileScreen({ navigation, route, user: initialUser }: 
               placeholderTextColor="#94A3B8"
               keyboardType="phone-pad"
             />
+
+            <Text style={styles.inputLabel}>Location / City</Text>
+            <TextInput
+              style={styles.textInput}
+              value={editLocation}
+              onChangeText={setEditLocation}
+              placeholder="e.g. Chennai, Tamil Nadu"
+              placeholderTextColor="#94A3B8"
+            />
+
+            <Text style={styles.inputLabel}>Profile Photo</Text>
+            <TouchableOpacity 
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                backgroundColor: '#EFF6FF',
+                borderWidth: 1,
+                borderColor: '#BFDBFE',
+                borderRadius: 10,
+                paddingVertical: 12,
+                marginBottom: 16,
+              }}
+              onPress={handlePickProfilePhoto}
+              disabled={uploadingPhoto}
+            >
+              {uploadingPhoto ? (
+                <ActivityIndicator size="small" color="#1565FF" />
+              ) : (
+                <>
+                  <Icon source="camera-outline" size={18} color="#1565FF" />
+                  <Text style={{ color: '#1565FF', fontWeight: '700', fontSize: 14 }}>
+                    {editPhoto ? 'Change Photo (Camera / Gallery)' : 'Add Photo (Camera / Gallery)'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.saveModalBtn, savingProfile && styles.saveModalBtnDisabled]}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { Text, Icon } from 'react-native-paper';
+import { getFirebaseFirestore } from '../services/firebase';
 
 export interface CategoryItem {
   id: string;
@@ -169,21 +170,86 @@ export const ALL_AUTOMOTIVE_CATEGORIES: CategoryItem[] = [
   },
 ];
 
-export default function AllCategoriesScreen({ navigation }: any) {
+export default function AllCategoriesScreen({ navigation, route }: any) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [firestoreCategories, setFirestoreCategories] = useState<any[]>([]);
   const { width: screenWidth } = useWindowDimensions();
+
+  useEffect(() => {
+    try {
+      const db = getFirebaseFirestore();
+      if (db && typeof db.collection === 'function') {
+        const unsubscribe = db.collection('topCategories').onSnapshot((snapshot: any) => {
+          const list: any[] = [];
+          snapshot.forEach((doc: any) => {
+            list.push({ id: doc.id, ...doc.data() });
+          });
+          setFirestoreCategories(list);
+        }, (err: any) => {
+          console.warn('AllCategoriesScreen topCategories listener error:', err);
+        });
+        return () => unsubscribe();
+      }
+    } catch (e) {
+      console.warn('Error connecting to Firestore in AllCategoriesScreen:', e);
+    }
+  }, []);
+
+  const combinedCategories = useMemo(() => {
+    const map = new Map<string, CategoryItem>();
+
+    // 1. Default categories
+    ALL_AUTOMOTIVE_CATEGORIES.forEach(c => {
+      map.set(c.id.toLowerCase(), c);
+      map.set(c.name.toLowerCase(), c);
+    });
+
+    // 2. Passed categories from route.params
+    const passed = route?.params?.categories || [];
+    passed.forEach((c: any) => {
+      if (c.id === 'More') return;
+      const item: CategoryItem = {
+        id: c.id || c.name,
+        name: c.name || c.title,
+        icon: c.icon || 'car-cog',
+        bg: c.bg || '#F0F9FF',
+        color: c.color || '#0066FF',
+        description: c.description || c.subtitle || 'Verified automotive spare parts & OEM components',
+        popularParts: c.popularParts || ['OEM Part', 'Spare Part', 'Accessory'],
+      };
+      map.set(item.id.toLowerCase(), item);
+      map.set(item.name.toLowerCase(), item);
+    });
+
+    // 3. Firestore topCategories
+    firestoreCategories.forEach((c: any) => {
+      const item: CategoryItem = {
+        id: c.id || c.name,
+        name: c.name || c.title,
+        icon: c.icon || 'car-cog',
+        bg: c.bg || '#F0F9FF',
+        color: c.color || '#0066FF',
+        description: c.description || c.subtitle || 'Verified automotive spare parts & OEM components',
+        popularParts: c.popularParts || ['OEM Part', 'Spare Part', 'Accessory'],
+      };
+      map.set(item.id.toLowerCase(), item);
+      map.set(item.name.toLowerCase(), item);
+    });
+
+    return Array.from(map.values());
+  }, [route?.params?.categories, firestoreCategories]);
 
   // Filter categories based on search input
   const filteredCategories = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return ALL_AUTOMOTIVE_CATEGORIES;
-    return ALL_AUTOMOTIVE_CATEGORIES.filter((c) => {
+    if (!q) return combinedCategories;
+    return combinedCategories.filter((c) => {
       const matchName = c.name.toLowerCase().includes(q);
       const matchDesc = c.description.toLowerCase().includes(q);
       const matchParts = c.popularParts.some((p) => p.toLowerCase().includes(q));
       return matchName || matchDesc || matchParts;
     });
-  }, [searchQuery]);
+  }, [searchQuery, combinedCategories]);
 
   const handleCategorySelect = (category: CategoryItem) => {
     // Navigate back to HomeTab with the selected category filter

@@ -336,17 +336,17 @@ export default function ChatsScreen({ navigation, user: initialUser }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0B1220" />
+      <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
 
-      {/* Modern Navy Header matching Web & App Theme */}
+      {/* Modern Blue Header matching Home Screen Theme */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <BrandLogo size={32} />
+          <Text style={styles.headerTitle}>{translateDynamic('Chats & Messages')}</Text>
           <TouchableOpacity
             style={styles.notifIconBtn}
             onPress={() => navigation.navigate('Notifications')}
           >
-            <Icon source="bell-outline" size={22} color="#94A3B8" />
+            <Icon source="bell-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
@@ -357,8 +357,8 @@ export default function ChatsScreen({ navigation, user: initialUser }: any) {
           value={searchQuery}
           style={styles.searchbar}
           inputStyle={styles.searchInput}
-          iconColor="#94A3B8"
-          placeholderTextColor="#64748B"
+          iconColor="#FFFFFF"
+          placeholderTextColor="rgba(255, 255, 255, 0.7)"
         />
       </View>
 
@@ -424,12 +424,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    backgroundColor: '#0B1220',
-    paddingTop: 12,
-    paddingBottom: 14,
+    backgroundColor: '#0066FF',
+    paddingTop: Platform.OS === 'android' ? 12 : 6,
+    paddingBottom: 16,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -442,21 +442,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
   notifIconBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1E293B',
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   searchbar: {
-    backgroundColor: '#131D31',
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     borderRadius: 14,
     height: 42,
     elevation: 0,
-    borderWidth: 1,
-    borderColor: '#1E2D4A',
+    borderWidth: 0,
   },
   searchInput: {
     fontSize: 13,

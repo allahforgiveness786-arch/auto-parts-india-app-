@@ -195,11 +195,8 @@ export default function SellerProfileScreen({ route, navigation }: any) {
               <Icon source="check-circle" size={16} color="#1565FF" />
             </View>
             <View style={styles.metaRow}>
-              <Icon source="map-marker-outline" size={14} color="#64748B" />
-              <Text style={styles.metaText} numberOfLines={1}>{sellerLocation}</Text>
-              <Text style={styles.metaDot}>•</Text>
               <Icon source="calendar-outline" size={14} color="#64748B" />
-              <Text style={styles.metaText}>Member 2026</Text>
+              <Text style={styles.metaText}>Verified Auto Seller</Text>
             </View>
           </View>
         </View>
@@ -222,8 +219,32 @@ export default function SellerProfileScreen({ route, navigation }: any) {
           </View>
         </View>
 
-        {/* 3. Dynamic Action Buttons Row (Follow + Chat) */}
-        {!isOwnProfile && (
+        {/* 3. Dynamic Action Buttons Row */}
+        {isOwnProfile ? (
+          <View style={styles.actionRow}>
+            <Button
+              mode="contained"
+              onPress={() => navigation.navigate('SellPart')}
+              buttonColor="#1565FF"
+              textColor="#FFFFFF"
+              style={styles.actionBtn}
+              icon="plus-box-outline"
+              compact
+            >
+              Post New Ad
+            </Button>
+            <Button
+              mode="outlined"
+              onPress={() => navigation.navigate('MyAdsTab')}
+              textColor="#0F172A"
+              style={[styles.actionBtn, { borderColor: '#CBD5E1' }]}
+              icon="format-list-bulleted-square"
+              compact
+            >
+              My Ads
+            </Button>
+          </View>
+        ) : (
           <View style={styles.actionRow}>
             <Button
               mode={isFollowing ? 'outlined' : 'contained'}
