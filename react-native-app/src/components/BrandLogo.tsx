@@ -25,7 +25,7 @@ export interface BrandLogoProps {
 }
 
 const APP_LOGO = require('../assets/logo.png');
-const APP_LOGO_ICON = require('../assets/logo_icon.png');
+const APP_LOGO_ICON = require('../assets/logo.png');
 
 /**
  * 100% Native Vector Auto Parts India Square App Icon

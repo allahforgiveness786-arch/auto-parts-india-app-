@@ -104,9 +104,9 @@ export default function SplashScreen({ navigation }: any) {
 
         <View style={{ flex: 1 }} />
 
-        {/* FOOTER TAGLINE */}
+        {/* FOOTER TAGLINE MATCHING EXACT REFERENCE IMAGE */}
         <Animated.View style={[styles.footerBlock, { opacity: footerFade }]}>
-          <Text style={styles.footerTagline}>India’s leading auto parts marketplace</Text>
+          <Text style={styles.footerTagline}>India’s leading marketplace</Text>
         </Animated.View>
       </SafeAreaView>
     </View>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 44,
   },
   centerBrandBlock: {
     alignItems: 'center',
@@ -131,22 +131,22 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   brandLogoImage: {
-    width: Math.min(SCREEN_WIDTH * 0.84, 340),
-    height: Math.min(SCREEN_WIDTH * 0.84, 340) * 0.76,
+    width: Math.min(SCREEN_WIDTH * 0.82, 330),
+    height: Math.min(SCREEN_WIDTH * 0.82, 330) * 0.75,
   },
   footerBlock: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   footerTagline: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '400',
     textAlign: 'center',
-    letterSpacing: 0.3,
-    opacity: 0.95,
+    letterSpacing: 0.2,
+    opacity: 0.96,
   },
 });
 

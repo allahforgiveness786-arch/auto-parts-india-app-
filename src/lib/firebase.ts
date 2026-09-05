@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { 
   getFirestore, 
+  initializeFirestore,
   collection, 
   addDoc, 
   getDocs, 
@@ -95,21 +96,27 @@ if (isFirebaseConfigured) {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     storage = getStorage(app);
-    db = firebaseConfig.databaseId && firebaseConfig.databaseId !== "(default)"
-      ? getFirestore(app, firebaseConfig.databaseId)
-      : getFirestore(app);
-    useFirebase = true;
-    console.log("Firebase initialized successfully with configuration:", firebaseConfig.projectId, "Database:", firebaseConfig.databaseId);
     
-    async function testConnection() {
+    const dbOptions = {
+      experimentalForceLongPolling: true,
+    };
+
+    if (firebaseConfig.databaseId && firebaseConfig.databaseId !== "(default)") {
       try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
-      } catch (error) {
-        // Quietly log notice and continue
-        console.warn("Firebase connection notice:", error);
+        db = initializeFirestore(app, dbOptions, firebaseConfig.databaseId);
+      } catch (_) {
+        db = getFirestore(app, firebaseConfig.databaseId);
+      }
+    } else {
+      try {
+        db = initializeFirestore(app, dbOptions);
+      } catch (_) {
+        db = getFirestore(app);
       }
     }
-    testConnection();
+
+    useFirebase = true;
+    console.log("Firebase initialized successfully with configuration:", firebaseConfig.projectId, "Database:", firebaseConfig.databaseId);
   } catch (error) {
     console.error("Failed to initialize Firebase, falling back to LocalStorage:", error);
     useFirebase = false;

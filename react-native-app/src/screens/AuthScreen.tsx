@@ -9,8 +9,7 @@ import {
   SafeAreaView,
   useWindowDimensions,
   Platform,
-  Animated,
-  Image
+  Animated
 } from 'react-native';
 import { Text, Icon } from 'react-native-paper';
 import { signInWithGoogleNative } from '../services/googleAuth';
@@ -29,7 +28,7 @@ export default function AuthScreen({ navigation }: any) {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: 450,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -69,14 +68,11 @@ export default function AuthScreen({ navigation }: any) {
     }
   };
 
-  const logoWidth = Math.min(screenWidth * 0.82, 340);
-  const logoHeight = logoWidth * 0.625;
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0075FF" translucent={false} />
 
-      {/* Top Left Close/Back Button if opened from navigation */}
+      {/* Optional Top Left Close/Back Button if opened from navigation */}
       {navigation?.canGoBack && navigation.canGoBack() && (
         <TouchableOpacity 
           style={styles.backBtn}
@@ -89,31 +85,14 @@ export default function AuthScreen({ navigation }: any) {
       )}
 
       <SafeAreaView style={styles.safeArea}>
-        {/* TOP SPACER */}
-        <View style={{ flex: 1.1 }} />
+        {/* UPPER SPACER (Balanced to place button at ~55% height matching screenshot) */}
+        <View style={{ flex: 1.15 }} />
 
-        {/* CENTER BRAND LOGO */}
+        {/* CENTER ACTION: SIGN IN WITH GOOGLE PILL */}
         <Animated.View 
           style={[
-            styles.brandCenterContainer, 
+            styles.centerActionContainer,
             { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
-          ]}
-        >
-          <Image
-            source={require('../assets/logo.png')}
-            style={{ width: logoWidth, height: logoHeight }}
-            resizeMode="contain"
-          />
-        </Animated.View>
-
-        {/* MIDDLE SPACER */}
-        <View style={{ flex: 1 }} />
-
-        {/* BOTTOM ACTION: SIGN IN WITH GOOGLE */}
-        <Animated.View 
-          style={[
-            styles.bottomActionContainer,
-            { opacity: fadeAnim }
           ]}
         >
           {errorMessage && (
@@ -138,7 +117,7 @@ export default function AuthScreen({ navigation }: any) {
             ) : (
               <View style={styles.buttonInnerRow}>
                 {/* Official Multi-Color Google G Icon */}
-                <Svg width={24} height={24} viewBox="0 0 24 24">
+                <Svg width={26} height={26} viewBox="0 0 24 24">
                   <Path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
@@ -162,8 +141,8 @@ export default function AuthScreen({ navigation }: any) {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* BOTTOM PADDING */}
-        <View style={styles.bottomSpacer} />
+        {/* LOWER SPACER */}
+        <View style={{ flex: 1.0 }} />
       </SafeAreaView>
     </View>
   );
@@ -172,13 +151,13 @@ export default function AuthScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0075FF', // Electric Royal Blue matching user reference
+    backgroundColor: '#0075FF', // Pure vibrant royal blue matching reference image
   },
   safeArea: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   backBtn: {
     position: 'absolute',
@@ -192,29 +171,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  brandCenterContainer: {
+  centerActionContainer: {
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-  },
-  bottomActionContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 12,
   },
   googlePillButton: {
     width: '100%',
-    maxWidth: 360,
-    height: 58,
+    maxWidth: 320,
+    height: 56,
     backgroundColor: '#FFFFFF',
-    borderRadius: 30, // Full rounded capsule pill
+    borderRadius: 28, // Full capsule curve
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   googleBtnDisabled: {
     opacity: 0.75,
@@ -223,13 +197,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 14,
   },
   buttonText: {
     color: '#1F2937',
     fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    fontWeight: '500',
+    letterSpacing: 0.1,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -240,14 +214,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     marginBottom: 16,
-    maxWidth: 360,
+    maxWidth: 320,
   },
   errorText: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '500',
-  },
-  bottomSpacer: {
-    height: Platform.OS === 'android' ? 32 : 44,
   },
 });
