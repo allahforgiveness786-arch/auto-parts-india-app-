@@ -1,18 +1,29 @@
 
 import React, { useEffect, useRef } from 'react';
-import { Animated, View, StatusBar, StyleSheet, ActivityIndicator, Text } from 'react-native';
-import BrandLogo from '../components/BrandLogo';
+import { Animated, View, StatusBar, StyleSheet, ActivityIndicator, Image, Dimensions } from 'react-native';
 import { getCurrentUser } from '../services/firebase';
+
+const { width } = Dimensions.get('window');
+const LOGO_WIDTH = Math.min(width * 0.75, 320);
 
 export default function SplashScreen({ navigation }: any) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 700,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 40,
+        useNativeDriver: true,
+      })
+    ]).start();
 
     const timer = setTimeout(() => {
       try {
@@ -33,23 +44,21 @@ export default function SplashScreen({ navigation }: any) {
           navigation?.navigate('Auth');
         } catch (_) {}
       }
-    }, 1500);
+    }, 1600);
 
     return () => clearTimeout(timer);
   }, [navigation]);
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-        <BrandLogo size={110} style={styles.logoImage} />
-        <Text style={styles.title}>
-          AUTO PARTS <Text style={styles.accent}>INDIA</Text>
-        </Text>
-        <Text style={styles.subtitle}>
-          Direct Spare Parts Marketplace
-        </Text>
-        <ActivityIndicator size="large" color="#0066FF" style={styles.loader} />
+      <StatusBar barStyle="light-content" backgroundColor="#050811" />
+      <Animated.View style={[styles.logoContainer, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+        <Image
+          source={require('../assets/logo.png')}
+          style={{ width: LOGO_WIDTH, height: LOGO_WIDTH }}
+          resizeMode="contain"
+        />
+        <ActivityIndicator size="small" color="#0066FF" style={styles.loader} />
       </Animated.View>
     </View>
   );
@@ -58,33 +67,17 @@ export default function SplashScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#050811',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-  },
-  logoImage: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: '900',
-    letterSpacing: 1.5,
-  },
-  accent: {
-    color: '#0066FF',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#94A3B8',
-    marginTop: 8,
-    letterSpacing: 0.5,
+    justifyContent: 'center',
   },
   loader: {
-    marginTop: 32,
+    marginTop: 28,
   },
 });
+
 

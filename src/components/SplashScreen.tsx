@@ -55,8 +55,7 @@ export default function SplashScreen({
           id="app-native-splash-screen"
         >
           {/* Centered Brand Unit */}
-          <div className="flex flex-col items-center justify-center text-center relative z-10 bg-transparent">
-            {/* SVG Logo Icon (Gear + Speed Arrow) */}
+          <div className="flex flex-col items-center justify-center text-center relative z-10 bg-transparent max-w-xs sm:max-w-sm">
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ 
@@ -67,38 +66,29 @@ export default function SplashScreen({
                 duration: 0.7,
                 ease: [0.16, 1, 0.3, 1]
               }}
-              className="mb-4 flex items-center justify-center bg-transparent"
+              className="flex items-center justify-center bg-transparent"
             >
-              <GearSpeedLogoIcon size={84} />
+              <img
+                src="/assets/logo.svg"
+                alt="Auto Parts India"
+                className="w-64 sm:w-72 max-w-full h-auto drop-shadow-2xl select-none"
+              />
             </motion.div>
 
-            {/* Typography Heading */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
-              className="flex items-center gap-2"
-            >
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase font-sans">
-                AUTO PARTS
-              </h1>
-              <span className="bg-[#1565FF] text-white text-[11px] sm:text-xs font-black px-2 py-0.5 rounded uppercase tracking-wider">
-                INDIA
-              </span>
-            </motion.div>
-
-            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.35, duration: 0.5 }}
-              className="text-slate-400 text-xs font-semibold uppercase tracking-widest mt-2"
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="mt-6 flex items-center gap-2"
             >
-              Automotive Marketplace
-            </motion.p>
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-slate-400 text-xs font-semibold tracking-wider">Loading Marketplace...</span>
+            </motion.div>
           </div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
+
 

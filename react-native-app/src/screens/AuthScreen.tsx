@@ -65,7 +65,7 @@ export default function AuthScreen({ navigation }: any) {
       >
         {/* Header Branding */}
         <View style={styles.headerBox}>
-          <BrandLogo size={75} style={styles.logo} />
+          <BrandLogo size={80} variant="icon" style={styles.logo} />
           <Text variant="headlineSmall" style={styles.brandTitle}>
             AUTO PARTS <Text style={styles.accentText}>INDIA</Text>
           </Text>
